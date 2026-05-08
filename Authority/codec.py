@@ -46,41 +46,32 @@ DESERIALIZERS = {
 }
 
 # ============================================================
-# ENCODE OBJECT
+# ENCODE/DECODE OBJECT
 # ============================================================
 
 def encode_obj(obj):
     if isinstance(obj, list):
         s_list = [SERIALIZERS[type(o)] for o in obj]
-        return {
-            "__type__": [s["type"] for s in s_list],
-            "data": [s["encode"](o) for (s, o) in zip(s_list, obj)]
-        }
+        return ([s["type"] for s in s_list], [s["encode"](o) for (s, o) in zip(s_list, obj)])
 
     s = SERIALIZERS[type(obj)]
-    return {
-        "__type__": s["type"],
-        "data": s["encode"](obj)
-    }
-
-# ============================================================
-# DECODE OBJECT
-# ============================================================
+    return (s["type"], s["encode"](obj))
 
 def decode_obj(packet):
-    types = packet["__type__"]
+    types, data = packet
 
     if isinstance(types, list):
-        return [DESERIALIZERS[t](data) for (t, data) in zip(types, packet["data"])]
+        return [DESERIALIZERS[t](d) for (t, d) in zip(types, data)]
 
-    return DESERIALIZERS[types](packet["data"])
+    return DESERIALIZERS[types](data)
 
 # ============================================================
 # NETWORK ENCODE / DECODE
 # ============================================================
 
-def encode_msg(msg):
-    return (json.dumps(encode_obj(msg)) + "\n").encode()
+def encode_msg(msg, stage=None):
+    packet = (encode_obj(msg), stage)
+    return (json.dumps(packet) + "\n").encode()
 
 async def recv_msg(reader):
     data = await reader.readline()
@@ -88,5 +79,5 @@ async def recv_msg(reader):
     if not data:
         return None
 
-    msg = decode_obj(json.loads(data.decode()))
-    return msg
+    msg, stage = json.loads(data.decode())
+    return (decode_obj(msg), stage)

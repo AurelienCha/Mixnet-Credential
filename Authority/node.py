@@ -1,10 +1,16 @@
 import asyncio, argparse, json
 from mclbn256 import G1, G2, Fr
 from itertools import islice
+from enum import StrEnum
 
 from log import create_logger
 from network import Network
 from crypto import Crypto
+
+class Stage(StrEnum):
+    SETUP_SHARES = "SHARES"
+    SIGN_PARAM = "SIGN"
+    VERIF_SETUP = "VERIF"
 
 class BufferEvent:
     # # TODO: Currently working fine but may be more robust to use a different buffer per steps
@@ -47,7 +53,7 @@ class BufferEvent:
 class Authority:
     def __init__(self, id, ip, peers, threshold, generators):
         # Network
-        self.network = Network(ip, peers, port=5000)
+        self.network = Network(ip, peers, port=6114)
         self.network.on_message = self.handle_message  # connect layers (i.e. using authority.py fct)
 
         # Crypto
@@ -56,18 +62,29 @@ class Authority:
         # Other
         self.logs = create_logger("AUTH", id+1)
         self.buffer = BufferEvent()
-        self.logs.info("Starting")
+    
+    def log(self, msg, *, extra_param=None):
+        if extra_param is not None:
+            if isinstance(msg, list):
+                data = ' '.join([str(type(m))[8:-2].split('.')[-1] for m in msg])
+                self.logs.info(data, extra=extra_param)
+            else:
+                data = str(type(msg))[8:-2].split('.')[-1]
+                self.logs.info(data, extra=extra_param)
+        else:
+            self.logs.info(msg)
 
     async def send(self, peer_ip, message):
-        await self.network.send(peer_ip, message)
+        await self.network.send(peer_ip, message, self.stage)
 
-    async def handle_message(self, peer_ip, msg):
-        self.logs.info("Received packet", extra={"sender": peer_ip})
+    async def handle_message(self, peer_ip, msg, stage):
         self.buffer.add(msg)
+        self.log(msg, extra_param={"sender": peer_ip, "stage": stage})
     
     async def setup(self):
 
         async def send_shares():
+            self.stage = Stage.SETUP_SHARES
             self.buffer.add(self.crypto.polynomial(self.network.ip))
             for peer_ip in self.network.peers:
                 await self.send(peer_ip, self.crypto.polynomial(peer_ip))  
@@ -78,6 +95,7 @@ class Authority:
             self.crypto.aggregate_secret_key(y_shares)   
                    
         async def sign_params():
+            self.stage = Stage.SIGN_PARAM
             msg = self.crypto.sign_params()
             self.buffer.add(msg)
             
@@ -92,6 +110,8 @@ class Authority:
             return [Crypto.lagrange_interpolation(points) for points in points_list]
         
         async def verif_sign(signed_params):
+            self.stage = Stage.VERIF_SETUP
+
             # Send signed params hashed to a peer
             msg = Crypto.hash(signed_params)
             next_peer = next(iter(self.network.peers))
@@ -100,7 +120,7 @@ class Authority:
             # Verify with received hash
             answer = await self.buffer.wait(nbr_item=1)
             assert msg == answer[0]
-            self.logs.info("Setup finished succesfully")
+            self.log("Setup finished succesfully")
 
         await send_shares()
         await aggregate_shares()
@@ -110,8 +130,9 @@ class Authority:
 
     async def start(self):
         await self.network.start()
-        self.logs.info(f"Listening on ({self.network.ip}, {self.network.port})")
+        self.log(f"Listening on ({self.network.ip}, {self.network.port})")
         await self.network.connect()
+        self.log(f"CONNECTED TO PEERS: {sum([0 if p is None else 1 for p in self.network.peers.values()])}/{len(self.network.peers)}")
 
 # ===================== MAIN =====================
 async def main(ID):

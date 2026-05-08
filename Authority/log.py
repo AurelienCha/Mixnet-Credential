@@ -19,8 +19,9 @@ COLORS = {
     "RESET": "\033[0m"
 }
 
-class SenderFilter(logging.Filter):
-    def filter(self, record):
+class Filters(logging.Filter):
+
+    def filter_sender(self, record):
         sender = getattr(record, "sender", None)
         if sender is None:
             (record.sender, record.sender_colored) = ('', '')
@@ -34,6 +35,20 @@ class SenderFilter(logging.Filter):
                 (record.sender, record.sender_colored) = (f" [CLIENT {id}]", f" <-- {COLORS['CLIENT']}[CLIENT {id}]{COLORS['RESET']} :")
             else:
                 (record.sender, record.sender_colored) = (' [?]', '\033[91m[?]\033[0m')
+    
+    def filter_stage(self, record):
+        stage = getattr(record, "stage", None)
+        if stage is not None:
+            record.stage = f"({stage})"
+            record.stage_colored = f"\033[90m({stage})\033[0m"
+        else:
+            record.stage = ''
+            record.stage_colored = ''
+
+
+    def filter(self, record):
+        self.filter_sender(record)
+        self.filter_stage(record)
         return True
 
 def create_logger(role, node_id):
@@ -48,7 +63,7 @@ def create_logger(role, node_id):
     )
 
     file_formatter = logging.Formatter(
-        "[%(asctime)s]%(sender)s %(message)s",
+        "[%(asctime)s.%(msecs)03d]%(sender)s %(stage)s %(message)s",
         datefmt="%H:%M:%S"
     )
     
@@ -62,11 +77,11 @@ def create_logger(role, node_id):
     console_handler = logging.StreamHandler()
 
     console_formatter = logging.Formatter(
-        f"{color}[{role} {node_id}]{COLORS['RESET']}%(sender_colored)s %(message)s "
+        f"{color}[{role} {node_id}]{COLORS['RESET']}%(sender_colored)s %(stage_colored)s %(message)s"
     )
 
     console_handler.setFormatter(console_formatter)
-    logger.addFilter(SenderFilter())
+    logger.addFilter(Filters())
 
     # =========================
     logger.addHandler(file_handler)

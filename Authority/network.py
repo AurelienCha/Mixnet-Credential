@@ -25,16 +25,18 @@ class Network:
     async def listen(self, peer_ip, reader, writer):
         try:
             while True:
-                msg = await recv_msg(reader)
+                msg, stage = await recv_msg(reader)
                 if not msg:
                     break
 
                 if self.on_message:
-                    await self.on_message(peer_ip, msg)
+                    await self.on_message(peer_ip, msg, stage)
 
         except Exception as e:
-            print(f"[Network] error with {peer_ip}: {e}")
+            pass
+            # print(f"[{self.ip}] error with {peer_ip}: {e}")
         finally:
+
             self.peers[peer_ip] = None
             writer.close()
             await writer.wait_closed()
@@ -48,12 +50,11 @@ class Network:
         
         while any(v is None for v in self.peers.values()):
             await asyncio.sleep(0.01)
-        assert sum([0 if p is None else 1 for p in self.peers.values()]) == len(self.peers)
 
-    async def send(self, ip, msg):
+    async def send(self, ip, msg, stage=None):
         conn = self.peers.get(ip)
         if not conn:
             return
         _, writer = conn
-        writer.write(encode_msg(msg))
+        writer.write(encode_msg(msg, stage))
         await writer.drain()
