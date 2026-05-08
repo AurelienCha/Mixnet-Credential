@@ -21,7 +21,6 @@ class Network:
         
         self.server = await asyncio.start_server(handle_conn, self.ip, self.port)
         await asyncio.sleep(0.1)
-        print(f"Listening on ({self.ip}, {self.port})")
 
     async def listen(self, peer_ip, reader, writer):
         try:

@@ -1,17 +1,10 @@
 import asyncio, argparse, json
-from mclbn256 import G1, G2, GT, Fr
+from mclbn256 import G1, G2, Fr
 from itertools import islice
 
+from log import create_logger
 from network import Network
 from crypto import Crypto
-
-# def yes():
-#     return f"\033[92m✔\033[0m"
-# def no():
-#     return f"\033[91m✖\033[0m"
-
-# 1000x 0.06                                                                                                                                        │sten() done, defined at /home/garuda/PhD/2. Credentia
-# 1000x
 
 class BufferEvent:
     # # TODO: Currently working fine but may be more robust to use a different buffer per steps
@@ -52,7 +45,7 @@ class BufferEvent:
         return tmp
 
 class Authority:
-    def __init__(self, ip, peers, threshold, generators):
+    def __init__(self, id, ip, peers, threshold, generators):
         # Network
         self.network = Network(ip, peers, port=5000)
         self.network.on_message = self.handle_message  # connect layers (i.e. using authority.py fct)
@@ -61,12 +54,15 @@ class Authority:
         self.crypto = Crypto(ip, threshold, generators)
 
         # Other
+        self.logs = create_logger("AUTH", id+1)
         self.buffer = BufferEvent()
+        self.logs.info("Starting")
 
     async def send(self, peer_ip, message):
         await self.network.send(peer_ip, message)
 
     async def handle_message(self, peer_ip, msg):
+        self.logs.info("Received packet", extra={"sender": peer_ip})
         self.buffer.add(msg)
     
     async def setup(self):
@@ -104,7 +100,7 @@ class Authority:
             # Verify with received hash
             answer = await self.buffer.wait(nbr_item=1)
             assert msg == answer[0]
-            print(f"Setup correct")
+            self.logs.info("Setup finished succesfully")
 
         await send_shares()
         await aggregate_shares()
@@ -114,6 +110,7 @@ class Authority:
 
     async def start(self):
         await self.network.start()
+        self.logs.info(f"Listening on ({self.network.ip}, {self.network.port})")
         await self.network.connect()
 
 # ===================== MAIN =====================
@@ -122,6 +119,7 @@ async def main(ID):
         config = json.load(f)
 
     node = Authority(
+        id = ID,
         ip = config["authorities"][ID],
         peers = config["authorities"][ID+1:] + config["authorities"][:ID],
         threshold = config['threshold'],

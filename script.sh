@@ -1,16 +1,27 @@
 #!/bin/bash
 
-SESSION="nodes"
+# ==========================================
+# CLEAN LOGS
+# ==========================================
 
-tmux kill-session -t $SESSION 2>/dev/null
+rm -rf logs
+mkdir logs
+mkdir logs/auth
 
-tmux new-session -d -s $SESSION "python3 Authority/node.py --id 0; read;" # echo 'CRASHED'; read"
+# ==========================================
+# GENERATE CONFIG
+# ==========================================
 
-for i in {1..4}
+python3 config.py || exit 1
+
+# ==========================================
+# LAUNCH NODES
+# ==========================================
+
+for i in {0..4}
 do
-    tmux split-window -h -t $SESSION "python3 Authority/node.py --id $i;" # echo 'CRASHED'; read"
+    python3 Authority/node.py --id $i &
 done
 
-tmux select-layout -t $SESSION even-horizontal
-
-tmux attach -t $SESSION
+# Wait for all background processes
+wait

@@ -7,7 +7,7 @@ NBR_AUTHORITIES = 5
 
 data = {
     "threshold": 3,
-    "authorities": [f"127.0.0.{randint(1,255)}" for i in range(NBR_AUTHORITIES)],
+    "authorities": [f"127.0.1.{i}" for i in range(1,NBR_AUTHORITIES+1)],
     "generators": [str(G1().randomize()) for _ in range(7)],
 }
 
