@@ -69,15 +69,10 @@ def decode_obj(packet):
 # NETWORK ENCODE / DECODE
 # ============================================================
 
-def encode_msg(msg, stage=None):
-    packet = (encode_obj(msg), stage)
+def encode_msg(msg_type, msg):
+    packet = (msg_type, encode_obj(msg))
     return (json.dumps(packet) + "\n").encode()
 
-async def recv_msg(reader):
-    data = await reader.readline()
-
-    if not data:
-        return None
-
-    msg, stage = json.loads(data.decode())
-    return (decode_obj(msg), stage)
+def decode_msg(data):
+    msg_type, msg = json.loads(data.decode())
+    return (msg_type, decode_obj(msg))

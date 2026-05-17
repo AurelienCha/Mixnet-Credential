@@ -1,60 +1,44 @@
 import asyncio
 import json
 
-from codec import encode_msg, recv_msg
+from codec import encode_msg, decode_msg
 
-class Network:
+PORT = 5000
+
+class Network(asyncio.DatagramProtocol):
     
-    def __init__(self, ip, peers, port):
+    def __init__(self, ip, peers, handle_message):
         self.ip = ip
-        self.port = port
 
-        self.peers = {p: None for p in peers}
-        self.on_message = None  # callback
+        self.peers = peers
+        self.on_message = handle_message  # callback  # connect layers (i.e. using authority.py fct)
+
+    # =========================
+    # START
+    # =========================
 
     async def start(self):
-        async def handle_conn(reader, writer):
+        loop = asyncio.get_running_loop()
 
-            peer_ip, _ = writer.get_extra_info("peername")
-            self.peers[peer_ip] = (reader, writer)
-            asyncio.create_task(self.listen(peer_ip, reader, writer))  
+        self.transport, _ = await loop.create_datagram_endpoint(
+            lambda: self,
+            local_addr=(self.ip, PORT)
+        )
+
+    # =========================
+    # RECEIVE
+    # =========================
+
+    def datagram_received(self, data, addr):
+        ip, _ = addr
+        msg_type, msg = decode_msg(data)
         
-        self.server = await asyncio.start_server(handle_conn, self.ip, self.port)
-        await asyncio.sleep(0.1)
+        if self.on_message:
+            asyncio.create_task(self.on_message(ip, msg_type, msg))
 
-    async def listen(self, peer_ip, reader, writer):
-        try:
-            while True:
-                msg, stage = await recv_msg(reader)
-                if not msg:
-                    break
+    # =========================
+    # SEND
+    # =========================
 
-                if self.on_message:
-                    await self.on_message(peer_ip, msg, stage)
-
-        except Exception as e:
-            pass
-            # print(f"[{self.ip}] error with {peer_ip}: {e}")
-        finally:
-
-            self.peers[peer_ip] = None
-            writer.close()
-            await writer.wait_closed()
-
-    async def connect(self):
-        for peer_ip in self.peers:
-            if self.ip < peer_ip: # Do not duplicate connections
-                reader, writer = await asyncio.open_connection(peer_ip, self.port, local_addr=(self.ip, 0))
-                self.peers[peer_ip] = (reader, writer)
-                asyncio.create_task(self.listen(peer_ip, reader, writer))
-        
-        while any(v is None for v in self.peers.values()):
-            await asyncio.sleep(0.01)
-
-    async def send(self, ip, msg, stage=None):
-        conn = self.peers.get(ip)
-        if not conn:
-            return
-        _, writer = conn
-        writer.write(encode_msg(msg, stage))
-        await writer.drain()
+    async def send(self, ip, msg_type, msg):
+         self.transport.sendto(encode_msg(msg_type, msg), (ip, PORT))
