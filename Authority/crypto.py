@@ -7,7 +7,7 @@ class Crypto:
         self.generators = [G2().base_point()] + [G1().fromstr(g.encode()) for g in generators]
 
         self.x = Fr(Crypto.hash(ip))
-        self.coefficients = [Fr().randomize() for _ in range(threshold)]
+        self.coefficients = [self.x, self.x*Fr(2), self.x*Fr(5)] # [Fr().randomize() for _ in range(threshold)] # TODO
         self.secret_share = None
 
     def polynomial(self, x): # Horner polynomial evaluation -> efficient 
@@ -31,7 +31,7 @@ class Crypto:
     @staticmethod
     def lagrange_interpolation(points):
 
-        result = points[0][1] * Fr(0) # init to zero point
+        result = points[0][1] * Fr(0)  # init to zero point
 
         for k, (xk, yk) in enumerate(points):
 
