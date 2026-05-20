@@ -39,23 +39,13 @@ class Authority:
         self.crypto = Crypto(ip, threshold, generators)
 
         # Other
-        self.logs = create_logger("AUTH", id)
+        self.log = create_logger("AUTH", id)
         self.buffer = {
             Stage.SETUP_SHARES: Buffer(), 
             Stage.SIGN_PARAM: Buffer(), 
             Stage.VERIF_SETUP: Buffer(), 
         }
-    
-    def log(self, msg, *, extra_param=None):
-        if extra_param is not None:
-            if isinstance(msg, list):
-                data = ' '.join([str(type(m))[8:-2].split('.')[-1] for m in msg])
-                self.logs.info(data, extra=extra_param)
-            else:
-                data = str(type(msg))[8:-2].split('.')[-1]
-                self.logs.info(data, extra=extra_param)
-        else:
-            self.logs.info(msg)
+        self.stage = None
 
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
@@ -69,10 +59,11 @@ class Authority:
             case Stage.VERIF_SETUP:
                 await self.buffer[msg_type].add(message)
             case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, (self.crypto.x, self.crypto.sign(message)))  # message = PK -> sign PK
+                await self.send(ip, Stage.SIGN_MIX, self.crypto.sign(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
-                await self.send(ip, Stage.SIGN_CLIENT, (self.crypto.x, self.crypto.sign(message))) 
-        #self.log(message, extra_param={"sender": ip, "stage": msg_type})
+                await self.send(ip, Stage.SIGN_CLIENT, self.crypto.sign(message)) 
+        self.log(message, extra_param={"sender": ip, "stage": msg_type})
+        self.log(self.stage, extra_param={"sender": ip, "stage": msg_type})
     
     async def setup(self):
 
@@ -87,8 +78,7 @@ class Authority:
             # Before aggregation needs to wait all shares
             y_shares = await self.buffer[self.stage].wait(len(self.peers)+1)
             self.crypto.aggregate_secret_key(y_shares)
-            #self.log(f"P = (Fr({str(self.crypto.x)}), Fr({str(self.crypto.secret_share)}))")
-            print(f"P{self.network.ip.split('.')[-1]} = (Fr({str(self.crypto.x)}), Fr({str(self.crypto.secret_share)}))")
+            self.log(self.crypto.secret_share, extra_param={"stage": self.stage})
                    
         async def sign_params():
             self.stage = Stage.SIGN_PARAM
@@ -130,7 +120,7 @@ class Authority:
   
     async def start(self):
         await self.network.start()
-        #self.log(f"Starting: {self.network.ip}")
+        self.log(f"Starting: {self.network.ip}")
 
 # ===================== MAIN =====================
 async def main(ID):
@@ -147,10 +137,11 @@ async def main(ID):
 
     # == START ==
     await node.start()
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(1)
 
     # == SETUP Authority ==
     authority_PK, *signed_generators = await node.setup()
+    print(node.network.ip, "FINISH")
 
     if ID == 1:  # One of the authority make signature public
         config.update({"signed_generators": [str(sign_G) for sign_G in signed_generators]})

@@ -11,7 +11,7 @@ class Header:
     def encode(self):
         return [self.alpha] + self.beta + [self.gamma, self.credential]
 
-    def decode(self, message): # TODO
+    def decode(self, message):
         self.alpha, *self.beta, self.gamma, self.credential = message
     
     def build(self, destination, mixes, shared_secrets, credential, alpha):
@@ -23,7 +23,6 @@ class Header:
     def _compute_layers(self, destination, mixes, shared_secrets):
 
         def initial_layer(destination, s): 
-            print("init destination:", destination)
             beta = [
                 destination + self.G_i[0] * s[2],
                 - (self.G_i[-4] * s[1] + self.G_i[-2] * s[0]),

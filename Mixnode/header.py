@@ -1,28 +1,10 @@
 from mclbn256 import Fr, G1, G2
 import secrets, hashlib
+
 ################################################################
-##########
-## FROM ##
-##########
 def from_G1(self, other=None):
     return Fr(int(hashlib.sha256(self.serialize()).hexdigest(), 16) >> 3)
 G1.__rshift__ = from_G1
-def from_G2(self, other=None):
-    return Fr(int(hashlib.sha256(self.serialize()).hexdigest(), 16) >> 3)
-G2.__rshift__ = from_G2
-def from_Fr(self, other):
-    return other.mapfrom(self)
-Fr.__rshift__ = from_Fr
-
-# 253 bits (not 256, because BN uses a prime of 254 bits)
-def encode_ip(ip): 
-    a, b, c, d = map(int, ip.split('.'))
-    ip = (a << 24) | (b << 16) | (c << 8) | d
-    return G1().mapfrom(Fr((ip << (221))))# + secrets.randbits(221))) # padding: 221 = (256 - 3) - 32 # TODO
-
-def decode_ip(G): # IP-Point to IPv6
-    n = int(G.tostr().split()[1].decode(), 16) >> 221 # unpadding
-    return f"{(n>>24)&255}.{(n>>16)&255}.{(n>>8)&255}.{n&255}"
 #################################################################
 
 class Header:
@@ -47,7 +29,7 @@ class Header:
     def encode(self):
         return [self.alpha] + self.beta + [self.gamma, self.credential]
 
-    def decode(self, message): # TODO
+    def decode(self, message):
         self.alpha, *self.beta, self.gamma, self.credential = message
     
     def build(self, destination, mixes, shared_secrets, credential, alpha):
@@ -91,10 +73,6 @@ class Header:
 
     def verify_credential(self, authority_PK):
         X = self.beta[0] + self.beta[2] + self.beta[4]
-        print("X:", X)
-        print()
-        print("PK:", authority_PK)
-        print("C:", self.credential)
         assert (X @ authority_PK) == (self.credential @ G2().base_point())
 
     def compute_shared_secret(self, sk):
@@ -116,14 +94,7 @@ class Header:
     def update_alpha(self, s):
         self.alpha =  self.alpha * s
 
-    def update_credential(self, s, sign_gen_sum, mixnodes):
-        sign_next_hop = next((node["sign_PK"] for node in mixnodes.values() if node["PK"] == str(self.next_hop)), None)
-        if sign_next_hop is None:
-            print("FINAL DESTINATION", self.next_hop)
-            #self.credential = G1() # TODO (default val to not crash)
-        else:
-            try:
-                print("s_G", sign_gen_sum)
-                self.credential = self.credential - sign_gen_sum * s - G1().fromstr(sign_next_hop.encode())
-            except KeyError:
-                print("Key error: ignore if last iteration of the loop")
+    def update_credential(self, s, sign_gen_sum, mixnodes): # TODO improve efficiency
+        sign_next_hop = next((G1().fromstr(node["sign_PK"].encode()) for node in mixnodes.values() if node["PK"] == str(self.next_hop)), G1().randomize()) 
+        # If last mixnode, won't find the next sign PK, tbut credential is not needed anymore so just randomly update: G1().randomize()
+        self.credential = self.credential - sign_gen_sum * s - sign_next_hop

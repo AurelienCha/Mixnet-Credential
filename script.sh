@@ -1,9 +1,9 @@
 #!/bin/bash
 
-THRESHOLD=3
-AUTHORITIES=3
-MIXNODES=3
-CLIENTS=1
+THRESHOLD=7
+AUTHORITIES=50
+MIXNODES=30
+CLIENTS=10
 
 clear 
 
@@ -23,6 +23,7 @@ rm -rf logs
 
 mkdir -p logs/auth
 mkdir -p logs/mix
+mkdir -p logs/client
 
 rm config.json
 rm public.json
@@ -46,12 +47,12 @@ done
 # WAIT FOR SETUP COMPLETION
 # ==========================================
 
-#echo "Waiting for authorities setup..."
+echo "Waiting for authorities setup..."
 while [ ! -f public.json ]
 do
     sleep 0.1
 done
-#echo "Authorities setup complete"
+echo "Authorities setup complete"
 
 # ==========================================
 # START MIXNODES
