@@ -31,7 +31,7 @@ class Network(asyncio.DatagramProtocol):
     def datagram_received(self, data, addr):
         ip, _ = addr
         msg_type, msg = decode_msg(data)
-        self.log(msg, extra_param={"sender": ip, "stage": msg_type})
+        self.log({"data":msg, "sender": ip, "stage": msg_type})
         
         if self.on_message:
             asyncio.create_task(self.on_message(ip, msg_type, msg))
@@ -41,5 +41,5 @@ class Network(asyncio.DatagramProtocol):
     # =========================
 
     async def send(self, ip, msg_type, msg):
-        self.log(msg, extra_param={"recipient": ip, "stage": msg_type})
+        self.log({"data": msg, "recipient": ip, "stage": msg_type})
         self.transport.sendto(encode_msg(msg_type, msg), (ip, PORT))

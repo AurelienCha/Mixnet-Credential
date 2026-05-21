@@ -17,6 +17,7 @@ COLORS = {
     "MIX": "\033[93m",    # yellow
     "CLIENT": "\033[94m", # blue
     "ERROR": "\033[91m",  # red
+    "COMMENT": "\033[90m", # gray
     "RESET": "\033[0m"
 }
 
@@ -43,26 +44,23 @@ class Filters(logging.Filter):
         _, _, node, node_id = correspondent.split('.')
         record.direction = '<--' if sender is not None else '-->'
         role, color = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
-        record.correspondent = f"{role}, {node_id}"
+        record.correspondent = f"{role.center}, {node_id}"
         record.correspondent_colored = f"{color}[{role} {node_id}]{COLORS['RESET']}"
 
-    def filter_stage(self, record):
-        stage = getattr(record, "stage", None)
-        if stage is not None:
-            record.stage = f"({stage})"
-            record.stage_colored = f"\033[90m({stage})\033[0m"
-        else:
-            record.stage = ''
-            record.stage_colored = ''
+    def filter_comment(self, record):
+        comment = getattr(record, "comment", None)
+        record.comment = f"{comment}" if comment is not None else ''
     
-    def filter_hash(self, record):
-        record.hash = Crypto.hash(getattr(record, "data", ''), short=True)
+    def filter_data(self, record):
+        data = getattr(record, "data", '')
+        record.type = str(type(data)).split('.')[-1][:-2] if not isinstance(data, str) else ''
+        record.hash = Crypto.hash(data, short=True)
 
 
     def filter(self, record):
         self.filter_correspondent(record)
-        self.filter_stage(record)
-        self.filter_hash(record)
+        self.filter_comment(record)
+        self.filter_data(record)
         return True
 
 class LoggerWrapper:
@@ -70,12 +68,8 @@ class LoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
 
-    def __call__(self, msg, *, extra_param=None):
-        if isinstance(msg, list):
-            msg = ' '.join([str(type(m))[8:-2].split('.')[-1] for m in msg])
-        elif not isinstance(msg, str):
-            msg = str(type(msg))[8:-2].split('.')[-1]
-        self.logger.info(msg, extra=extra_param)
+    def __call__(self, extra_param):
+        self.logger.info('', extra=extra_param)
 
 
 def create_logger(role, node_id):
@@ -90,7 +84,7 @@ def create_logger(role, node_id):
     )
 
     file_formatter = logging.Formatter(
-        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(correspondent)s, %(message)s, %(hash)s, %(stage)s",
+        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(correspondent)s, %(type)s, %(hash)s, %(comment)s",
         datefmt="%H:%M:%S"
     )
     
@@ -99,14 +93,12 @@ def create_logger(role, node_id):
     # =========================
     # TERMINAL LOGGER
     # =========================
-    color = COLORS.get(role, "")
-
-    console_handler = logging.StreamHandler()
-
     console_formatter = logging.Formatter(
-        f"{color}[{role} {node_id}]{COLORS['RESET']} %(direction)s %(correspondent_colored)s %(stage_colored)s %(message)s"
+        f"{COLORS.get(role, "")}{f'[{role} {node_id}]':>12}{COLORS['RESET']}" + 
+        f" %(direction)s %(correspondent_colored)-20s {COLORS['COMMENT']}%(type)10s{COLORS['RESET']} %(hash)10s {COLORS['COMMENT']}%(comment)20s{COLORS['RESET']}"
     )
 
+    console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_formatter)
     logger.addFilter(Filters())
 

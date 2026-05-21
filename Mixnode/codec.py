@@ -1,12 +1,18 @@
 import pickle
 
 from mclbn256 import G1, G2, Fr
+from header import Header
 
 # ============================================================
 # SERIALIZER REGISTRY
 # ============================================================
 
 SERIALIZERS = {
+    Header: {
+        "type": "Header",
+        "encode": lambda x: x.encode(),
+        "decode": lambda x: Header(x)
+    },
     G1: {
         "type": "G1",
         "encode": lambda x: x.serialize(),

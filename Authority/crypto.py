@@ -49,7 +49,7 @@ class Crypto:
         return result
 
     @staticmethod
-    def hash(values):
+    def hash(values, short=False):
         h = hashlib.sha256()
         if not isinstance(values, (list, tuple)):
             values = [values]
@@ -58,4 +58,6 @@ class Crypto:
             h.update(str(v).encode())
             h.update(b"|")
 
+        if short:
+            return h.hexdigest()[:8]
         return int(h.hexdigest(), 16) >> 44

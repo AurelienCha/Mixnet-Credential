@@ -56,19 +56,19 @@ class Mixnode:
         match msg_type:
             case Stage.SIGN_MIX:  # Authority
                 await self.buffer.add((Fr(Crypto.hash(ip)), message))
-                self.log(message, extra_param={"sender": ip, "stage": msg_type})
+                self.log({"data": message, "sender": ip, "stage": msg_type})
             case Stage.HEADER:  # Header to process
                 if self.mixnodes is None: # if first time, fetch mixnodes signatures from public file
                     with open("public.json") as f:
                         self.mixnodes =  json.load(f)["mixnodes"]
-                header = Header(self.generators, message)
-                self.log(f"Received", extra_param={"sender": ip, "stage": msg_type})
+                header = message
+                self.log({"comment": "Received", "sender": ip, "stage": msg_type})
                 msg = await self.process_packet(header)
                 next_ip = next((ip for ip, node in self.mixnodes.items() if node["PK"] == str(header.next_hop)), None) # Header
                 if next_ip is None:
                     next_ip = decode_ip(header.next_hop)
                 await self.send(next_ip, Stage.HEADER, msg)
-                self.log(f"Send", extra_param={"recipient": next_ip, "stage": msg_type})
+                self.log({"comment": "Send", "recipient": next_ip, "stage": msg_type})
 
     async def start(self):
         await self.network.start()
@@ -84,10 +84,10 @@ class Mixnode:
         shared_secret = header.compute_shared_secret(self.sk)
         
         header.verify_integrity(shared_secret)
-        header.decrypt_beta(shared_secret)
+        header.decrypt_beta(shared_secret, self.generators)
         header.update_alpha(shared_secret)
         header.update_credential(shared_secret, self.signed_generator_sum, self.mixnodes)
-        return header.encode()
+        return header
     
 # ===================== MAIN =====================
 async def main(ID):
@@ -105,9 +105,9 @@ async def main(ID):
     await node.start()
 
     # == SIGN PK ==
-    node.log("Signing public key", extra_param={"stage": Stage.SIGN_MIX})
+    node.log({"comment": "Signing public key", "stage": Stage.SIGN_MIX})
     sign_PK = await node.sign_public_key(config['authorities'], config['threshold'])
-    node.log("Public key is signed", extra_param={"stage": Stage.SIGN_MIX})
+    node.log({"comment": "Public key is signed", "stage": Stage.SIGN_MIX})
     # Update config file with mutex to prevent concurrent overwrite
     with open("public.json", "r+", encoding="utf-8") as file:
         fcntl.flock(file.fileno(), fcntl.LOCK_EX)
@@ -117,7 +117,7 @@ async def main(ID):
         json.dump(config, file, indent=4)
         file.truncate()
         fcntl.flock(file.fileno(), fcntl.LOCK_UN)
-    node.log("Public Key and its signature are published (.json)", extra_param={"stage": Stage.SIGN_MIX})
+    node.log({"stage": Stage.SIGN_MIX, "comment": "Public Key and its signature are published (.json)"})
     
     # == WAIT TO PROCESS PACKET ==
     await asyncio.Event().wait()  # <- keeps alive
