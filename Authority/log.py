@@ -41,7 +41,7 @@ class Filters(logging.Filter):
         _, _, node, node_id = correspondent.split('.')
         arrow = '<--' if sender is not None else '-->'
         role, color = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
-        record.correspondent = f" [{role} {node_id}]"
+        record.correspondent = f" {arrow} [{role} {node_id}]"
         record.correspondent_colored = (f" {arrow} {color}[{role} {node_id}]{COLORS['RESET']} :")
 
     def filter_stage(self, record):
@@ -80,7 +80,7 @@ def create_logger(role, node_id):
     # FILE LOGGER
     # =========================
     file_handler = logging.FileHandler(
-        f"logs/{role.lower()}/{role.lower()}_{node_id}.log"
+        f".logs/{role.lower()}/{role.lower()}_{node_id}.log"
     )
 
     file_formatter = logging.Formatter(

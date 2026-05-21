@@ -1,5 +1,6 @@
 import logging
 import os
+from crypto import Crypto
 
 # ANSI colors (value-60 =  darker/discret, e.g. 30=black)
 # FG    BG      COLOR
@@ -34,15 +35,16 @@ class Filters(logging.Filter):
 
         correspondent = sender or recipient
         if correspondent is None:
-            record.correspondent = ''
+            record.direction = ''
+            record.correspondent = ', '
             record.correspondent_colored = ''
             return
 
         _, _, node, node_id = correspondent.split('.')
-        arrow = '<--' if sender is not None else '-->'
+        record.direction = '<--' if sender is not None else '-->'
         role, color = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
-        record.correspondent = f" [{role} {node_id}]"
-        record.correspondent_colored = (f" {arrow} {color}[{role} {node_id}]{COLORS['RESET']} :")
+        record.correspondent = f"{role}, {node_id}"
+        record.correspondent_colored = f"{color}[{role} {node_id}]{COLORS['RESET']}"
 
     def filter_stage(self, record):
         stage = getattr(record, "stage", None)
@@ -52,11 +54,15 @@ class Filters(logging.Filter):
         else:
             record.stage = ''
             record.stage_colored = ''
+    
+    def filter_hash(self, record):
+        record.hash = Crypto.hash(getattr(record, "data", ''), short=True)
 
 
     def filter(self, record):
         self.filter_correspondent(record)
         self.filter_stage(record)
+        self.filter_hash(record)
         return True
 
 class LoggerWrapper:
@@ -80,11 +86,11 @@ def create_logger(role, node_id):
     # FILE LOGGER
     # =========================
     file_handler = logging.FileHandler(
-        f"logs/{role.lower()}/{role.lower()}_{node_id}.log"
+        f".logs/{role.lower()}/{role.lower()}_{node_id}.csv"
     )
 
     file_formatter = logging.Formatter(
-        "[%(asctime)s.%(msecs)03d]%(correspondent)s %(stage)s %(message)s",
+        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(correspondent)s, %(message)s, %(hash)s, %(stage)s",
         datefmt="%H:%M:%S"
     )
     
@@ -98,7 +104,7 @@ def create_logger(role, node_id):
     console_handler = logging.StreamHandler()
 
     console_formatter = logging.Formatter(
-        f"{color}[{role} {node_id}]{COLORS['RESET']}%(correspondent_colored)s %(stage_colored)s %(message)s"
+        f"{color}[{role} {node_id}]{COLORS['RESET']} %(direction)s %(correspondent_colored)s %(stage_colored)s %(message)s"
     )
 
     console_handler.setFormatter(console_formatter)

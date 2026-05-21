@@ -3,7 +3,7 @@
 
 # Ignore TEST folder
 TEST/
-logs/
+.logs/
 
 # Python cache
 __pycache__/

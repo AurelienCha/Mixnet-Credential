@@ -31,13 +31,6 @@ class Buffer:
 
 class Authority:
     def __init__(self, id, ip, peers, threshold, generators):
-        # Network
-        self.peers = peers
-        self.network = Network(ip, self.handle_message)
-
-        # Crypto
-        self.crypto = Crypto(ip, threshold, generators)
-
         # Other
         self.log = create_logger("AUTH", id)
         self.buffer = {
@@ -47,6 +40,12 @@ class Authority:
         }
         self.stage = None
 
+        # Network
+        self.peers = peers
+        self.network = Network(ip, self.handle_message, self.log)
+
+        # Crypto
+        self.crypto = Crypto(ip, threshold, generators)
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
 

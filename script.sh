@@ -19,11 +19,11 @@ pkill -f Client/node.py
 # CLEAN LOGS and config
 # ==========================================
 
-rm -rf logs
+rm -rf .logs
 
-mkdir -p logs/auth
-mkdir -p logs/mix
-mkdir -p logs/client
+mkdir -p .logs/auth
+mkdir -p .logs/mix
+mkdir -p .logs/client
 
 rm config.json
 rm public.json

@@ -53,8 +53,8 @@ class Buffer:
 class Client:
 
     def __init__(self, config, id):
-        self.network = Network(f"127.0.100.{id}", self.handle_message)
         self.log = create_logger("CLIENT", id)
+        self.network = Network(f"127.0.100.{id}", self.handle_message, self.log)
         self.threshold = config['threshold']
         self.authorities = config['authorities']
 
@@ -81,17 +81,16 @@ class Client:
         match msg_type:
             case Stage.SIGN_CLIENT:  # Authority
                 await self.buffer.add((Fr(Crypto.hash(ip)), message))    
-                self.log(message, extra_param={"sender": ip, "stage": Stage.SIGN_CLIENT})
             case Stage.HEADER:
-                self.log(f"RECEIVED packet", extra_param={"sender": ip, "stage": Stage.HEADER})
+                pass
     
     async def get_credential(self, destination): # TODO hide value with salt
-        self.log("Ask credential", extra_param={"stage": Stage.SIGN_CLIENT})
+        self.log({"comment": "Ask credential"})
         for authority in sample(self.authorities, k=self.threshold):
             await self.send(authority, Stage.SIGN_CLIENT, destination)
         points = await self.buffer.wait(self.threshold)
         credential = Crypto.lagrange_interpolation(points)
-        self.log("Credential completed", extra_param={"stage": Stage.SIGN_CLIENT})
+        self.log({"comment": "Credential completed"})
         return credential
 
     async def send_packet(self, destination):
@@ -134,7 +133,6 @@ class Client:
 
         header = Header(self.generators)
         header.build(encode_ip(destination), PK_mixes, s, credential, G1().base_point() * x)
-        self.log("SEND packet", extra_param={"stage": Stage.HEADER})
         await self.send(first_hop, Stage.HEADER, header.encode())
 
 

@@ -1,5 +1,6 @@
 import logging
 import os
+from crypto import Crypto
 
 # ANSI colors (value-60 =  darker/discret, e.g. 30=black)
 # FG    BG      COLOR
@@ -34,29 +35,35 @@ class Filters(logging.Filter):
 
         correspondent = sender or recipient
         if correspondent is None:
-            record.correspondent = ''
+            record.direction = ''
+            record.correspondent = ', '
             record.correspondent_colored = ''
             return
 
         _, _, node, node_id = correspondent.split('.')
-        arrow = '<--' if sender is not None else '-->'
+        record.direction = '<--' if sender is not None else '-->'
         role, color = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
-        record.correspondent = f" [{role} {node_id}]"
-        record.correspondent_colored = (f" {arrow} {color}[{role} {node_id}]{COLORS['RESET']} :")
+        record.correspondent = f"{role}, {node_id}"
+        record.correspondent_colored = f"{color}[{role} {node_id}]{COLORS['RESET']}"
 
-    def filter_stage(self, record):
-        stage = getattr(record, "stage", None)
-        if stage is not None:
-            record.stage = f"({stage})"
-            record.stage_colored = f"\033[90m({stage})\033[0m"
+    def filter_comment(self, record):
+        comment = getattr(record, "comment", None)
+        if comment is not None:
+            record.comment = f"{comment}"
+            record.comment_colored = f"\033[90m({comment})\033[0m"
         else:
-            record.stage = ''
-            record.stage_colored = ''
+            record.comment = ''
+            record.comment_colored = ''
+    
+    def filter_hash(self, record):
+        record.hash = Crypto.hash(getattr(record, "data", ''), short=True)
 
 
     def filter(self, record):
         self.filter_correspondent(record)
-        self.filter_stage(record)
+        self.filter_comment(record)
+        self.filter_hash(record)
+        record.type = getattr(record, "data", '')
         return True
 
 class LoggerWrapper:
@@ -64,12 +71,8 @@ class LoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
 
-    def __call__(self, msg, *, extra_param=None):
-        if isinstance(msg, list):
-            msg = ' '.join([str(type(m))[8:-2].split('.')[-1] for m in msg])
-        elif not isinstance(msg, str):
-            msg = str(type(msg))[8:-2].split('.')[-1]
-        self.logger.info(msg, extra=extra_param)
+    def __call__(self, extra_param):
+        self.logger.info('', extra=extra_param)
 
 
 def create_logger(role, node_id):
@@ -80,11 +83,11 @@ def create_logger(role, node_id):
     # FILE LOGGER
     # =========================
     file_handler = logging.FileHandler(
-        f"logs/{role.lower()}/{role.lower()}_{node_id}.log"
+        f".logs/{role.lower()}/{role.lower()}_{node_id}.csv"
     )
 
     file_formatter = logging.Formatter(
-        "[%(asctime)s.%(msecs)03d]%(correspondent)s %(stage)s %(message)s",
+        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(correspondent)s, %(type)s, %(hash)s, %(comment)s",
         datefmt="%H:%M:%S"
     )
     
@@ -93,14 +96,11 @@ def create_logger(role, node_id):
     # =========================
     # TERMINAL LOGGER
     # =========================
-    color = COLORS.get(role, "")
-
-    console_handler = logging.StreamHandler()
-
     console_formatter = logging.Formatter(
-        f"{color}[{role} {node_id}]{COLORS['RESET']}%(correspondent_colored)s %(stage_colored)s %(message)s"
+        f"{COLORS.get(role, "")}[{role} {node_id}]{COLORS['RESET']} %(direction)s %(correspondent_colored)s %(type)s %(hash)s %(comment_colored)s"
     )
 
+    console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_formatter)
     logger.addFilter(Filters())
 

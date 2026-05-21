@@ -39,7 +39,7 @@ class Mixnode:
         self.buffer = Buffer()
         self.log = create_logger("MIX", id)
         # Network
-        self.network = Network(self.ip, self.handle_message)
+        self.network = Network(self.ip, self.handle_message, self.log)
         self.mixnodes = None
         # Crypto
         self.authority_PK = G2().fromstr(authority_PK.encode())
