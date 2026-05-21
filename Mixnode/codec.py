@@ -1,5 +1,4 @@
 import pickle
-import base64
 
 from mclbn256 import G1, G2, Fr
 
@@ -10,20 +9,20 @@ from mclbn256 import G1, G2, Fr
 SERIALIZERS = {
     G1: {
         "type": "G1",
-        "encode": lambda x: base64.b64encode(x.serialize()).decode(),
-        "decode": lambda x: G1().deserialize(base64.b64decode(x))
+        "encode": lambda x: x.serialize(),
+        "decode": lambda x: G1().deserialize(x)
     },
 
     G2: {
         "type": "G2",
-        "encode": lambda x: base64.b64encode(x.serialize()).decode(),
-        "decode": lambda x: G2().deserialize(base64.b64decode(x))
+        "encode": lambda x: x.serialize(),
+        "decode": lambda x: G2().deserialize(x)
     },
 
     Fr: {
         "type": "Fr",
-        "encode": lambda x: base64.b64encode(x.serialize()).decode(),
-        "decode": lambda x: Fr().deserialize(base64.b64decode(x))
+        "encode": lambda x: x.serialize(),
+        "decode": lambda x: Fr().deserialize(x)
     },
 
     str: {
