@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from typing import Any
 from mclbn256 import Fr, G1, G2

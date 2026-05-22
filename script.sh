@@ -15,6 +15,8 @@ pkill -f Authority/node.py
 pkill -f Mixnode/node.py
 pkill -f Client/node.py
 
+pkill -f Mixnode/main.py
+
 # ==========================================
 # CLEAN LOGS and config
 # ==========================================
@@ -60,7 +62,7 @@ echo "Authorities setup complete"
 
 for ((i=1; i<=MIXNODES; i++))
 do
-    python3 Mixnode/node.py --id $i &
+    python3 Mixnode/main.py --id $i &
 done
 
 # ==========================================
