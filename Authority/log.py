@@ -37,15 +37,12 @@ class Filters(logging.Filter):
         correspondent = sender or recipient
         if correspondent is None:
             record.direction = ''
-            record.correspondent = ', '
-            record.correspondent_colored = ''
+            record.id2, record.role2, record.color2 = '', '', ''
             return
 
-        _, _, node, node_id = correspondent.split('.')
+        _, _, node, record.id2 = correspondent.split('.')
         record.direction = '<--' if sender is not None else '-->'
-        role, color = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
-        record.correspondent = f"{role.center}, {node_id}"
-        record.correspondent_colored = f"{color}[{role} {node_id}]{COLORS['RESET']}"
+        record.role2, record.color2 = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
 
     def filter_comment(self, record):
         comment = getattr(record, "comment", None)
@@ -84,7 +81,7 @@ def create_logger(role, node_id):
     )
 
     file_formatter = logging.Formatter(
-        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(correspondent)s, %(type)s, %(hash)s, %(comment)s",
+        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(role2)s, %(id2)s, %(type)s, %(hash)s, %(comment)s",
         datefmt="%H:%M:%S"
     )
     
@@ -94,8 +91,7 @@ def create_logger(role, node_id):
     # TERMINAL LOGGER
     # =========================
     console_formatter = logging.Formatter(
-        f"{COLORS.get(role, "")}{f'[{role} {node_id}]':>12}{COLORS['RESET']}" + 
-        f" %(direction)s %(correspondent_colored)-20s {COLORS['COMMENT']}%(type)10s{COLORS['RESET']} %(hash)10s {COLORS['COMMENT']}%(comment)20s{COLORS['RESET']}"
+        f"{COLORS.get(role, "")}{role:<6} {node_id:>2}{COLORS['RESET']}  %(direction)3s  %(color2)s %(role2)-6s %(id2)2s {COLORS['COMMENT']} %(type)6s {COLORS['RESET']} %(hash)s {COLORS['COMMENT']} %(comment)s {COLORS['RESET']}"
     )
 
     console_handler = logging.StreamHandler()

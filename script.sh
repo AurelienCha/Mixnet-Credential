@@ -90,4 +90,4 @@ done
 # WAIT FOR EVERYTHING
 # ==========================================
 
-wait
+# wait
