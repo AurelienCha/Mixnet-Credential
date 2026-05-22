@@ -5,6 +5,9 @@
 TEST/
 .logs/
 
+# Ignore TODO file
+todo.md
+
 # Python cache
 __pycache__/
 *.pyc
