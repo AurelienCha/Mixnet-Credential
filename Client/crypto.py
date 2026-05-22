@@ -1,6 +1,5 @@
-import hashlib
 from typing import Any
-
+from hashlib import sha256
 from mclbn256 import G1, G2, Fr
 
 class Crypto:
@@ -22,9 +21,10 @@ class Crypto:
 
         return result
 
+
     @staticmethod
     def hash(values: Any, short: bool = False) -> int | str:
-        hasher = hashlib.sha256()
+        hasher = sha256()
 
         if not isinstance(values, (list, tuple)):
             values = [values]

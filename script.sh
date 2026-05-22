@@ -3,7 +3,7 @@
 THRESHOLD=3
 AUTHORITIES=5
 MIXNODES=3
-CLIENTS=10
+CLIENTS=1
 
 clear 
 
@@ -16,6 +16,7 @@ pkill -f Mixnode/node.py
 pkill -f Client/node.py
 
 pkill -f Mixnode/main.py
+pkill -f Client/main.py
 
 # ==========================================
 # CLEAN LOGS and config
@@ -85,7 +86,7 @@ done
 
 for ((i=1; i<=CLIENTS; i++))
 do
-    python3 Client/node.py --id $i &
+    python3 Client/main.py --id $i &
 done
 
 # ==========================================

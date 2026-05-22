@@ -31,16 +31,26 @@ class Header:
     credential: G1
     next_hop: G1 | None = None
 
+    # ========================================================
+    # SERIALIZATION
+    # ========================================================
 
     @classmethod
     def from_encoded(cls, message: list[Any]) -> "Header":
-        alpha, *beta, gamma, credential = [G1().deserialize(m) for m in message]
+        alpha, *beta, gamma, credential = [G1().deserialize(value) for value in message]
         return cls(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
 
+    def encode(self) -> list[bytes]:
+        return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize(), self.credential.serialize()]
 
     def encode(self) -> list[Any]:
         return [self.alpha.serialize(), self.beta[0].serialize(), self.beta[1].serialize(), self.beta[2].serialize(), 
         self.beta[3].serialize(), self.beta[4].serialize(), self.gamma.serialize(), self.credential.serialize()]
+
+
+    # ========================================================
+    # PROCESSING
+    # ========================================================
 
 
     def process(self, secret_key: Fr, authority_pk: G2, generators: list[G1], signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
@@ -69,7 +79,7 @@ class Header:
     
 
     def verify_integrity(self, shared_secret: Fr) -> None: # TODO modify integrity
-        expected_gamma = sum(self.beta, start=G1().clear() + G1().base_point() * shared_secret)
+        expected_gamma = sum(self.beta, start=G1().base_point() * shared_secret)
 
         if self.gamma != expected_gamma:
             raise IntegrityError("Header integrity verification failed")

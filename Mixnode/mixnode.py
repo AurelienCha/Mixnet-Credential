@@ -73,7 +73,6 @@ class Mixnode:
                 if not self.mixnodes:
                     self.mixnodes = load_public_config().mixnodes
 
-
                     self.pk_to_ip = {
                         node["PK"]: ip
                         for ip, node in self.mixnodes.items()
