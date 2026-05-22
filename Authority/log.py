@@ -2,16 +2,6 @@ import logging
 import os
 from crypto import Crypto
 
-# ANSI colors (value-60 =  darker/discret, e.g. 30=black)
-# FG    BG      COLOR
-# 90	100     Gray
-# 91	101	    Red	
-# 92	102	    Green	
-# 93	103	    Yellow	
-# 94	104	    Blue	
-# 95	105	    Magenta	
-# 96	106	    Cyan	
-# 97	107	    White
 COLORS = {
     "AUTH": "\033[92m",   # green
     "MIX": "\033[93m",    # yellow
@@ -21,7 +11,7 @@ COLORS = {
     "RESET": "\033[0m"
 }
 
-class Filters(logging.Filter):
+class LogFilter(logging.Filter):
 
     NODE_TYPES = {
         '1': ("AUTH", COLORS['AUTH']),
@@ -29,49 +19,52 @@ class Filters(logging.Filter):
         '100': ("CLIENT", COLORS['CLIENT']),
     }
 
-    def filter_correspondent(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
 
+        # Sender / Receiver
         sender = getattr(record, "sender", None)
         recipient = getattr(record, "recipient", None)
-
         correspondent = sender or recipient
-        if correspondent is None:
-            record.direction = ''
-            record.id2, record.role2, record.color2 = '', '', ''
-            return
 
-        _, _, node, record.id2 = correspondent.split('.')
-        record.direction = '<--' if sender is not None else '-->'
-        record.role2, record.color2 = self.NODE_TYPES.get(node,("?", COLORS['ERROR']))
+        if correspondent:
+            _, _, node, record.id2 = correspondent.split(".")
+            record.direction = "<--" if sender else "-->"
+            record.role2, record.color2 = self.NODE_TYPES.get(node, ("?", COLORS["ERROR"]))
+        else:
+            record.direction = ""
+            record.id2 = ""
+            record.role2 = ""
+            record.color2 = ""
 
-    def filter_comment(self, record):
-        comment = getattr(record, "comment", None)
-        record.comment = f"{comment}" if comment is not None else ''
-    
-    def filter_data(self, record):
-        data = getattr(record, "data", '')
-        record.type = str(type(data)).split('.')[-1][:-2] if not isinstance(data, str) else ''
+        # Data / Type
+        data = getattr(record, "data", "")
+
+        record.type = type(data).__name__ if not isinstance(data, str) else ""
         record.hash = Crypto.hash(data, short=True)
 
+        # Comment
+        record.comment = getattr(record, "comment", "")
 
-    def filter(self, record):
-        self.filter_correspondent(record)
-        self.filter_comment(record)
-        self.filter_data(record)
         return True
 
 class LoggerWrapper:
 
-    def __init__(self, logger):
+    def __init__(self, logger: logging.Logger):
         self.logger = logger
 
-    def __call__(self, extra_param):
-        self.logger.info('', extra=extra_param)
+    def __call__(self, *, data=None, sender=None, recipient=None, comment=None) -> None:
+        self.logger.info('', extra={'data': data, 'sender': sender, 'recipient': recipient, 'comment': comment})
 
+# ============================================================
+# LOGGING
+# ============================================================
 
-def create_logger(role, node_id):
+def create_logger(role: str, node_id: int) -> LoggerWrapper:
     logger = logging.getLogger(f"{role}_{node_id}")
     logger.setLevel(logging.INFO)
+
+    if logger.handlers:
+        return LoggerWrapper(logger)
 
     # =========================
     # FILE LOGGER
@@ -80,25 +73,42 @@ def create_logger(role, node_id):
         f".logs/{role.lower()}/{role.lower()}_{node_id}.csv"
     )
 
-    file_formatter = logging.Formatter(
-        f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, %(direction)s, %(role2)s, %(id2)s, %(type)s, %(hash)s, %(comment)s",
-        datefmt="%H:%M:%S"
+    file_handler.setFormatter(
+        logging.Formatter(
+            (
+                f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, "
+                "%(direction)s, %(role2)s, %(id2)s, "
+                "%(type)s, %(hash)s, %(comment)s"
+            ),
+            datefmt="%H:%M:%S",
+        )
     )
-    
-    file_handler.setFormatter(file_formatter)
 
     # =========================
     # TERMINAL LOGGER
     # =========================
-    console_formatter = logging.Formatter(
-        f"{COLORS.get(role, "")}{role:<6} {node_id:>2}{COLORS['RESET']}  %(direction)3s  %(color2)s %(role2)-6s %(id2)2s {COLORS['COMMENT']} %(type)6s {COLORS['RESET']} %(hash)s {COLORS['COMMENT']} %(comment)s {COLORS['RESET']}"
-    )
 
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(console_formatter)
-    logger.addFilter(Filters())
+
+    console_handler.setFormatter(
+        logging.Formatter(
+            (
+                f"{COLORS.get(role, '')}{role:<6} {node_id:>2}"
+                f"{COLORS['RESET']} %(direction)3s "
+                "%(color2)s %(role2)-6s %(id2)2s "
+                f"{COLORS['COMMENT']} %(type)6s "
+                f"{COLORS['RESET']} %(hash)s "
+                f"{COLORS['COMMENT']} %(comment)s "
+                f"{COLORS['RESET']}"
+            )
+        )
+    )
 
     # =========================
+    # FILTER / HANDLERS
+    # =========================
+
+    logger.addFilter(LogFilter())
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 

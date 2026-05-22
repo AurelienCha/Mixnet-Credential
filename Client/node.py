@@ -85,12 +85,12 @@ class Client:
                 pass
     
     async def get_credential(self, destination): # TODO hide value with salt
-        self.log({"comment": "Ask credential"})
+        self.log(comment="Ask credential")
         for authority in sample(self.authorities, k=self.threshold):
             await self.send(authority, Stage.SIGN_CLIENT, destination)
         points = await self.buffer.wait(self.threshold)
         credential = Crypto.lagrange_interpolation(points)
-        self.log({"comment": "Credential completed"})
+        self.log(comment="Credential completed")
         return credential
 
     async def send_packet(self, destination):

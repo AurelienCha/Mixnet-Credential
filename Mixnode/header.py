@@ -1,60 +1,92 @@
-from mclbn256 import Fr, G1, G2
-import secrets, hashlib
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Any
 
 ################################################################
+# To remove when adding metrics.py 
+from hashlib import sha256
+from mclbn256 import Fr, G1, G2
 def from_G1(self, other=None):
-    return Fr(int(hashlib.sha256(self.serialize()).hexdigest(), 16) >> 3)
+    return Fr(int(sha256(self.serialize()).hexdigest(), 16) >> 3)
 G1.__rshift__ = from_G1
 #################################################################
 
+class ProtocolError(Exception):
+    """Base protocol exception."""
+
+
+class IntegrityError(ProtocolError):
+    """Raised when packet integrity verification fails."""
+
+
+class CredentialError(ProtocolError):
+    """Raised when credential verification fails."""
+
+
+@dataclass
 class Header:
+    alpha: G1
+    beta: list[G1]
+    gamma: G1
+    credential: G1
+    next_hop: G1 | None = None
 
-    def __init__(self,message=None):
-        if message is not None:
-            self.decode(message)
+
+    @classmethod
+    def from_encoded(cls, message: list[Any]) -> "Header":
+        alpha, *beta, gamma, credential = message
+        return cls(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
+
+
+    def encode(self) -> list[Any]:
+        return [self.alpha, *self.beta, self.gamma, self.credential]
+
+
+    def process(self, secret_key: Fr, authority_pk: G2, generators: list[G1], signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
+        self.verify_credential(authority_pk)
+
+        shared_secret = self.compute_shared_secret(secret_key)
+
+        self.verify_integrity(shared_secret)
+        self.decrypt_beta(shared_secret, generators)
+        self.update_alpha(shared_secret)
+
+        self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
+
+        return self
+
+
+    def verify_credential(self, authority_pk: G2) -> None:
+        x_value = self.beta[0] + self.beta[2] + self.beta[4]
+
+        if (x_value @ authority_pk) != (self.credential @ G2().base_point()):
+            raise CredentialError("Credential verification failed")
+
+
+    def compute_shared_secret(self, secret_key: Fr) -> Fr:
+        return (self.alpha * secret_key) >> Fr()    
     
-    # def __repr__(self):
-    #     return f"""
-    #         alpha = {self.alpha}
-    #         beta = {self.beta[0]}
-    #                {self.beta[1]}
-    #                {self.beta[2]}
-    #                {self.beta[3]}
-    #                {self.beta[4]}
-    #         gamma = {self.gamma}
-    #         cred = {self.credential}
-    #     """
-    
-    def encode(self):
-        return [self.alpha] + self.beta + [self.gamma, self.credential]
 
-    def decode(self, message):
-        self.alpha, *self.beta, self.gamma, self.credential = message
+    def verify_integrity(self, shared_secret: Fr) -> None: # TODO modify integrity
+        expected_gamma = sum(self.beta, start=G1().clear() + G1().base_point() * shared_secret)
 
-    def verify_credential(self, authority_PK):
-        X = self.beta[0] + self.beta[2] + self.beta[4]
-        assert (X @ authority_PK) == (self.credential @ G2().base_point())
+        if self.gamma != expected_gamma:
+            raise IntegrityError("Header integrity verification failed")
 
-    def compute_shared_secret(self, sk):
-        return (self.alpha * sk) >> Fr()
 
-    def verify_integrity(self, s):
-        Gamma = G1().base_point() * s
-        for i in range(5):
-            Gamma += self.beta[i]
-        assert self.gamma == Gamma
+    def decrypt_beta(self, shared_secret: Fr, generators: list[G1]) -> None:
+        header = [*self.beta, G1().clear(), G1().clear()]
 
-    def decrypt_beta(self, s, G_i):
-        beta = self.beta + [G1().clear(), G1().clear()]
-        for i in range(len(beta)):                       
-            beta[i] = beta[i] - G_i[i] * s
-        self.next_hop, self.gamma, *self.beta = beta
-        # self.next_hop = inverse_map(next_hop)
+        for index, value in enumerate(header):
+            header[index] = value - generators[index] * shared_secret
 
-    def update_alpha(self, s):
-        self.alpha =  self.alpha * s
+        self.next_hop, self.gamma, *self.beta = header
 
-    def update_credential(self, s, sign_gen_sum, mixnodes): # TODO improve efficiency
-        sign_next_hop = next((G1().fromstr(node["sign_PK"].encode()) for node in mixnodes.values() if node["PK"] == str(self.next_hop)), G1().randomize()) 
-        # If last mixnode, won't find the next sign PK, tbut credential is not needed anymore so just randomly update: G1().randomize()
-        self.credential = self.credential - sign_gen_sum * s - sign_next_hop
+
+    def update_alpha(self, shared_secret: Fr) -> None:
+        self.alpha *= shared_secret
+
+
+    def update_credential(self, shared_secret: Fr, signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> None:
+        sign_next_hop = sign_pk_lookup.get(str(self.next_hop), G1().randomize()) # If not found, means final destination just randomize credential
+        self.credential -= (signed_generator_sum * shared_secret + sign_next_hop)

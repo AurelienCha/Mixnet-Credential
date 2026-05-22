@@ -1,38 +1,41 @@
-import hashlib
+from typing import Any
+from hashlib import sha256
 from mclbn256 import G1, G2, Fr
 
 class Crypto:
 
     @staticmethod
-    def lagrange_interpolation(points):
-
+    def lagrange_interpolation(points: list[tuple[Fr, G1]]) -> G1:
         result = points[0][1] * Fr(0)  # init to zero point
 
         for k, (xk, yk) in enumerate(points):
-
-            num = Fr(1)
-            den = Fr(1)
+            numerator = Fr(1)
+            denominator = Fr(1)
 
             for i, (xi, _) in enumerate(points):
-
                 if i != k:
-                    num *= -xi
-                    den *= (xk - xi)
+                    numerator *= -xi
+                    denominator *= (xk - xi)
 
-            result += yk * (num * ~den)
+            result += yk * (numerator * ~denominator)
 
         return result
 
+
     @staticmethod
-    def hash(values, short=False):
-        h = hashlib.sha256()
+    def hash(values: Any, short: bool = False) -> int | str:
+        hasher = sha256()
+
         if not isinstance(values, (list, tuple)):
             values = [values]
 
-        for v in values:
-            h.update(str(v).encode())
-            h.update(b"|")
+        for value in values:
+            hasher.update(str(value).encode())
+            hasher.update(b"|")
+
+        digest = hasher.hexdigest()
 
         if short:
-            return h.hexdigest()[:8]
-        return int(h.hexdigest(), 16) >> 44
+            return digest[:8]
+
+        return int(digest, 16) >> 44

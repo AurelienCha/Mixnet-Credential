@@ -61,8 +61,8 @@ class Authority:
                 await self.send(ip, Stage.SIGN_MIX, self.crypto.sign(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
                 await self.send(ip, Stage.SIGN_CLIENT, self.crypto.sign(message)) 
-        self.log({"data": message, "sender": ip, "stage": msg_type})
-        self.log({"data": self.stage, "sender": ip, "stage": msg_type})
+        self.log(data=message, sender=ip, comment=msg_type)
+        self.log(data=self.stage, sender=ip, comment=msg_type)
     
     async def setup(self):
 
@@ -77,7 +77,7 @@ class Authority:
             # Before aggregation needs to wait all shares
             y_shares = await self.buffer[self.stage].wait(len(self.peers)+1)
             self.crypto.aggregate_secret_key(y_shares)
-            self.log({"data": self.crypto.secret_share, "stage": self.stage})
+            self.log(data=self.crypto.secret_share, comment=self.stage)
                    
         async def sign_params():
             self.stage = Stage.SIGN_PARAM
@@ -119,7 +119,7 @@ class Authority:
   
     async def start(self):
         await self.network.start()
-        self.log({"data": f"Starting: {self.network.ip}"})
+        self.log(comment=f"Starting: {self.network.ip}")
 
 # ===================== MAIN =====================
 async def main(ID):
