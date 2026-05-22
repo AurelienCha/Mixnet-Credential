@@ -1,4 +1,3 @@
-import pickle
 from typing import Any
 
 from mclbn256 import G1, G2, Fr
@@ -21,7 +20,7 @@ SERIALIZERS = {
 
 
 DESERIALIZERS = {
-    "Header": lambda value: Header(value),
+    "Header": lambda value: Header.from_encoded(value),
     "G1": lambda value: G1().deserialize(value),
     "G2": lambda value: G2().deserialize(value),
     "Fr": lambda value: Fr().deserialize(value),
@@ -59,10 +58,10 @@ def decode_object(packet: tuple[str, Any]) -> Any:
 # ============================================================
 
 def encode_message(message_type: str, message: Any) -> bytes:
-    packet = (message_type, encode_object(message))
-    return pickle.dumps(packet)
-
+    m = [message_type.value, *encode_object(message)]
+    return str(m).encode()
 
 def decode_message(data: bytes) -> tuple[str, Any]:
-    message_type, message = pickle.loads(data)
+    message_type, *message = eval(data.decode())
     return (message_type, decode_object(message))
+

@@ -34,12 +34,13 @@ class Header:
 
     @classmethod
     def from_encoded(cls, message: list[Any]) -> "Header":
-        alpha, *beta, gamma, credential = message
+        alpha, *beta, gamma, credential = [G1().deserialize(m) for m in message]
         return cls(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
 
 
     def encode(self) -> list[Any]:
-        return [self.alpha, *self.beta, self.gamma, self.credential]
+        return [self.alpha.serialize(), self.beta[0].serialize(), self.beta[1].serialize(), self.beta[2].serialize(), 
+        self.beta[3].serialize(), self.beta[4].serialize(), self.gamma.serialize(), self.credential.serialize()]
 
 
     def process(self, secret_key: Fr, authority_pk: G2, generators: list[G1], signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:

@@ -131,8 +131,7 @@ class Client:
         # Update Credential to the path
         credential = compute_credential(credential, s, sign_PK) 
 
-        header = Header()
-        header.build(encode_ip(destination), PK_mixes, s, credential, G1().base_point() * x, self.generators)
+        header = Header.build(encode_ip(destination), PK_mixes, s, credential, G1().base_point() * x, self.generators)
         await self.send(first_hop, Stage.HEADER, header)
 
 

@@ -1,4 +1,3 @@
-import pickle
 from typing import Any
 
 from mclbn256 import G1, G2, Fr
@@ -56,10 +55,9 @@ def decode_object(packet: tuple[str, Any]) -> Any:
 # ============================================================
 
 def encode_message(message_type: str, message: Any) -> bytes:
-    packet = (message_type, encode_object(message))
-    return pickle.dumps(packet)
-
+    m = [message_type.value, *encode_object(message)]
+    return str(m).encode()
 
 def decode_message(data: bytes) -> tuple[str, Any]:
-    message_type, message = pickle.loads(data)
+    message_type, *message = eval(data.decode())
     return (message_type, decode_object(message))
