@@ -1,5 +1,5 @@
 import logging
-
+import os
 from crypto import Crypto
 
 COLORS = {
@@ -10,7 +10,6 @@ COLORS = {
     "COMMENT": "\033[90m", # gray
     "RESET": "\033[0m"
 }
-
 
 class LogFilter(logging.Filter):
 
@@ -38,16 +37,19 @@ class LogFilter(logging.Filter):
             record.color2 = ""
 
         # Data / Type
-        data = getattr(record, "data", "")
+        data = getattr(record, "data", None)
+        if data:
+            record.type = type(data).__name__
+            record.hash = Crypto.hash(data, short=True)
+        else:
+            record.type = ''
+            record.hash = ''
 
-        record.type = type(data).__name__ if not isinstance(data, str) else ""
-        record.hash = Crypto.hash(data, short=True)
 
         # Comment
         record.comment = getattr(record, "comment", "")
 
         return True
-
 
 class LoggerWrapper:
 
@@ -57,11 +59,9 @@ class LoggerWrapper:
     def __call__(self, *, data=None, sender=None, recipient=None, comment=None) -> None:
         self.logger.info('', extra={'data': data, 'sender': sender, 'recipient': recipient, 'comment': comment})
 
-
 # ============================================================
 # LOGGING
 # ============================================================
-
 
 def create_logger(role: str, node_id: int) -> LoggerWrapper:
     logger = logging.getLogger(f"{role}_{node_id}")

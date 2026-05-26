@@ -37,10 +37,14 @@ class LogFilter(logging.Filter):
             record.color2 = ""
 
         # Data / Type
-        data = getattr(record, "data", "")
+        data = getattr(record, "data", None)
+        if data:
+            record.type = type(data).__name__
+            record.hash = Crypto.hash(data, short=True)
+        else:
+            record.type = ''
+            record.hash = ''
 
-        record.type = type(data).__name__ if not isinstance(data, str) else ""
-        record.hash = Crypto.hash(data, short=True)
 
         # Comment
         record.comment = getattr(record, "comment", "")

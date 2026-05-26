@@ -1,9 +1,9 @@
 #!/bin/bash
 
-THRESHOLD=3
-AUTHORITIES=5
-MIXNODES=3
-CLIENTS=1
+THRESHOLD=7
+AUTHORITIES=20
+MIXNODES=30
+CLIENTS=10
 
 clear 
 
@@ -12,9 +12,6 @@ clear
 # ==========================================
 
 pkill -f Authority/node.py
-pkill -f Mixnode/node.py
-pkill -f Client/node.py
-
 pkill -f Mixnode/main.py
 pkill -f Client/main.py
 

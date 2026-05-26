@@ -70,7 +70,7 @@ class Client:
             case Stage.SIGN_CLIENT:
                 await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
             case Stage.HEADER:
-                self.log(sender=ip, comment="Received packet")
+                pass 
     
 
     # ========================================================
@@ -154,5 +154,4 @@ class Client:
             generators=self.generators,
         )
 
-        self.log(recipient=first_hop, comment="Sending packet")
         await self.send(first_hop, Stage.HEADER, header)
