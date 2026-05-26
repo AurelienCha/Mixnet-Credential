@@ -2,14 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-################################################################
-# To remove when adding metrics.py 
-from hashlib import sha256
-from mclbn256 import Fr, G1, G2
-def from_G1(self, other=None):
-    return Fr(int(sha256(self.serialize()).hexdigest(), 16) >> 3)
-G1.__rshift__ = from_G1
-#################################################################
+from ECC import *
 
 class ProtocolError(Exception):
     """Base protocol exception."""

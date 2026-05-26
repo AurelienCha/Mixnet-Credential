@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
-from mclbn256 import Fr, G1
+
+from ECC import *
 
 @dataclass
 class Header:
@@ -44,7 +45,7 @@ def compute_gamma(beta: list[G1], shared_secret: Fr) -> G1: # TODO modify integr
 
 
 def initial_layer(destination: G1, shared_secrets: list[Fr], generators: list[G1], PATH_SIZE, BETA_SIZE):
-    beta = [destination + generators[0] * shared_secrets[-1]] + [-sum([generators[BETA_SIZE + j - 2*i] * shared_secrets[i] for i in range(j//2, PATH_SIZE-1)], start=G1().clear()) for j in range(BETA_SIZE-1)]
+    beta = [destination + generators[0] * shared_secrets[-1]] + [-sum([generators[BETA_SIZE + j - 2*i] * shared_secrets[i] for i in range(j//2, PATH_SIZE-1)]) for j in range(BETA_SIZE-1)]
     gamma = compute_gamma(beta,  shared_secrets[-1])
     return beta, gamma
 

@@ -8,27 +8,7 @@ from log import create_logger
 from network import Network
 from crypto import Crypto
 from header import Header
-
-################################################################
-# To remove when adding metrics.py 
-from mclbn256 import Fr, G1, G2
-from hashlib import sha256
-def from_G1(self, other=None):
-    return Fr(int(sha256(self.serialize()).hexdigest(), 16) >> 3)
-G1.__rshift__ = from_G1
-def from_G2(self, other=None):
-    return Fr(int(sha256(self.serialize()).hexdigest(), 16) >> 3)
-G2.__rshift__ = from_G2
-def from_Fr(self, other):
-    return other.mapfrom(self)
-Fr.__rshift__ = from_Fr
-
-# 253 bits (not 256, because BN uses a prime of 254 bits)
-def encode_ip(ip: str) -> G1: 
-    a, b, c, d = map(int, ip.split('.'))
-    ip = (a << 24) | (b << 16) | (c << 8) | d
-    return G1().mapfrom(Fr((ip << (221))))# + secrets.randbits(221))) # padding: 221 = (256 - 3) - 32 # TODO
-#################################################################
+from ECC import *
 
 class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT"
@@ -69,6 +49,7 @@ class Client:
             case Stage.SIGN_CLIENT:
                 await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
             case Stage.HEADER:
+                print(OP_COUNT)
                 pass 
     
 
@@ -120,8 +101,8 @@ class Client:
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return (
             credential
-            + sum([signed_public_keys[i] for i in range(-1, -self.path_length, -1)], start=G1().clear())
-            + sum([self.signed_generators[i] * sum(shared_secrets[:self.path_length-i], start=Fr(0)) for i in range(self.path_length)], start=G1().clear())
+            + sum([signed_public_keys[i] for i in range(-1, -self.path_length, -1)])
+            + sum([self.signed_generators[i] * sum(shared_secrets[:self.path_length-i]) for i in range(self.path_length)])
         )
 
     # ========================================================

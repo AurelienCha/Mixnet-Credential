@@ -1,7 +1,7 @@
 from typing import Any
 
-from mclbn256 import G1, G2, Fr
 from header import Header
+from ECC import *
 
 # ============================================================
 # SERIALIZER 

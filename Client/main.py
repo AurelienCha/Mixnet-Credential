@@ -6,8 +6,8 @@ import asyncio
 import json
 
 from client import Client, encode_ip
+from ECC import *
 
-from mclbn256 import Fr, G1, G2 
 # ============================================================
 # CONFIG LOADER
 # ============================================================
@@ -63,6 +63,11 @@ async def main(node_id: int) -> None:
 
     # == SEND packet ==
     await client.send_packet(own_ip)
+
+    #print(OP_COUNT)
+    # path=5: {'RND': {'Fr': 1, 'G1': 0, 'G2': 0}, 'ADD': {'Fr': 10, 'G1': 106, 'G2': 0, 'GT': 0}, 'MUL': {'Fr': 20, 'G1': 77, 'G2': 0, 'GT': 0}, 'FROM': {'G1': 5, 'G2': 0}, 'TO': {'G1': 0, 'G2': 0}, 'PAIR': 0, 'MAP': 2, 'UNMAP': 0}
+    # path=3: {'RND': {'Fr': 1, 'G1': 0, 'G2': 0}, 'ADD': {'Fr': 3, 'G1': 36, 'G2': 0, 'GT': 0}, 'MUL': {'Fr': 18, 'G1': 31, 'G2': 0, 'GT': 0}, 'FROM': {'G1': 3, 'G2': 0}, 'TO': {'G1': 0, 'G2': 0}, 'PAIR': 0, 'MAP': 2, 'UNMAP': 0}
+
 
     await asyncio.Event().wait()  # <- keeps program alive
 

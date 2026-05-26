@@ -9,23 +9,7 @@ from network import Network
 from crypto import Crypto
 from header import Header
 from log import create_logger
-
-################################################################
-# To remove when adding metrics.py
-from mclbn256 import Fr, G1, G2 
-def decode_ip(point: G1) -> str: # IP-Point to IPv4
-    """Decode an IP address embedded inside a G1 point."""
-
-    value = int(point.tostr().split()[1].decode(), 16) >> 221
-
-    return (
-        f"{(value >> 24) & 255}."
-        f"{(value >> 16) & 255}."
-        f"{(value >> 8) & 255}."
-        f"{value & 255}"
-    )
-################################################################
-
+from ECC import *
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"

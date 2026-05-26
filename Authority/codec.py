@@ -1,6 +1,6 @@
 from typing import Any
 
-from mclbn256 import G1, G2, Fr
+from ECC import *
 
 # TODO: pickel is not secure 
 

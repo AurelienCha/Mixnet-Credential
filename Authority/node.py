@@ -1,11 +1,12 @@
 import asyncio, argparse, json
-from mclbn256 import G1, G2, Fr
 from itertools import islice
 from enum import StrEnum
 
 from log import create_logger
 from network import Network
 from crypto import Crypto
+
+from ECC import *
 
 class Stage(StrEnum):
     SETUP_SHARES = "SHARES"
@@ -46,7 +47,7 @@ class Authority:
 
         # Crypto
         self.crypto = Crypto(ip, threshold, generators)
-        
+
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
 

@@ -1,5 +1,6 @@
 import hashlib
-from mclbn256 import G1, G2, Fr
+
+from ECC import *
 
 class Crypto:
     def __init__(self, ip, threshold, generators):

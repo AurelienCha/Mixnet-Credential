@@ -1,8 +1,8 @@
 
 import asyncio, argparse, json, fcntl
-from mclbn256 import Fr, G1, G2 
 
 from mixnode import Mixnode, load_public_config
+from ECC import *
 
 
 async def publish_mixnode(node: Mixnode, signed_public_key: G1) -> None:

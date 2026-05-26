@@ -1,6 +1,7 @@
 from typing import Any
 from hashlib import sha256
-from mclbn256 import G1, G2, Fr
+
+from ECC import *
 
 class Crypto:
 
