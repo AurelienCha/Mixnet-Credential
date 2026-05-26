@@ -9,8 +9,6 @@ from network import Network
 from crypto import Crypto
 from header import Header
 
-PATH_LENGTH = 3 # TODO any path length
-
 ################################################################
 # To remove when adding metrics.py 
 from mclbn256 import Fr, G1, G2
@@ -40,6 +38,7 @@ class Client:
 
     def __init__(self, node_id: int, config: PublicConfig):
         self.log = create_logger("CLIENT", node_id)
+        self.path_length = config.path_length
 
         self.network = Network(f"127.0.100.{node_id}", self.handle_message, self.log)
 
@@ -93,8 +92,8 @@ class Client:
     # PATH SELECTION
     # ========================================================
 
-    def select_mixnodes(self, path_length: int = PATH_LENGTH):
-        path = sample(list(self.mixnodes.keys()), k=path_length)
+    def select_mixnodes(self):
+        path = sample(list(self.mixnodes.keys()), k=self.path_length)
         mixnodes = [self.mixnodes[ip] for ip in path]
         public_keys = [node.public_key for node in mixnodes]
         signed_public_keys = [node.signed_public_key for node in mixnodes]
@@ -121,10 +120,8 @@ class Client:
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return (
             credential
-            + signed_public_keys[-1] + signed_public_keys[-2]
-            + self.signed_generators[0] * (shared_secrets[2] + shared_secrets[1] + shared_secrets[0])
-            + self.signed_generators[1] * (shared_secrets[1] + shared_secrets[0])
-            + self.signed_generators[2] * shared_secrets[0]
+            + sum([signed_public_keys[i] for i in range(-1, -self.path_length, -1)], start=G1().clear())
+            + sum([self.signed_generators[i] * sum(shared_secrets[:self.path_length-i], start=Fr(0)) for i in range(self.path_length)], start=G1().clear())
         )
 
     # ========================================================
@@ -152,6 +149,7 @@ class Client:
             credential=updated_credential,
             alpha=alpha,
             generators=self.generators,
+            PATH_SIZE=self.path_length
         )
 
         await self.send(first_hop, Stage.HEADER, header)

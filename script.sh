@@ -1,5 +1,6 @@
 #!/bin/bash
 
+PATH_LENGTH=5
 THRESHOLD=7
 AUTHORITIES=20
 MIXNODES=30
@@ -32,7 +33,7 @@ rm public.json
 # GENERATE CONFIG
 # ==========================================
 
-python3 config.py --threshold $THRESHOLD --authorities $AUTHORITIES || exit 1
+python3 config.py --threshold $THRESHOLD --authorities $AUTHORITIES --path_length $PATH_LENGTH || exit 1
 
 # ==========================================
 # START AUTHORITIES

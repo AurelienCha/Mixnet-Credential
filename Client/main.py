@@ -19,6 +19,7 @@ class MixnodeInfo:
 
 @dataclass
 class PublicConfig:
+    path_length: int
     authority_pk: G2
     generators: list[G1]
     signed_generators: list[G1]
@@ -31,6 +32,7 @@ def load_public_config() -> PublicConfig:
         raw = json.load(file)
 
     return PublicConfig(
+        path_length=raw["path_length"],
         authority_pk=G2().fromstr(raw["authority_PK"].encode()),
         generators=[G1().fromstr(value.encode()) for value in raw["generators"]],
         signed_generators=[G1().fromstr(value.encode()) for value in raw["signed_generators"]],

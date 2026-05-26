@@ -44,8 +44,7 @@ class Header:
         return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize(), self.credential.serialize()]
 
     def encode(self) -> list[Any]:
-        return [self.alpha.serialize(), self.beta[0].serialize(), self.beta[1].serialize(), self.beta[2].serialize(), 
-        self.beta[3].serialize(), self.beta[4].serialize(), self.gamma.serialize(), self.credential.serialize()]
+        return [self.alpha.serialize(), *[beta.serialize() for beta in self.beta], self.gamma.serialize(), self.credential.serialize()]
 
 
     # ========================================================
@@ -68,7 +67,7 @@ class Header:
 
 
     def verify_credential(self, authority_pk: G2) -> None:
-        x_value = self.beta[0] + self.beta[2] + self.beta[4]
+        x_value = sum(self.beta[::2], start=G1().clear())
 
         if (x_value @ authority_pk) != (self.credential @ G2().base_point()):
             raise CredentialError("Credential verification failed")

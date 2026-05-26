@@ -46,6 +46,7 @@ class Authority:
 
         # Crypto
         self.crypto = Crypto(ip, threshold, generators)
+        
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
 
@@ -136,7 +137,6 @@ async def main(ID):
 
     # == SETUP Authority ==
     authority_PK, *signed_generators = await node.setup()
-    print(node.network.ip, "FINISH")
 
     if ID == 1:  # One of the authority make signature public
         config.update({"signed_generators": [str(sign_G) for sign_G in signed_generators]})
