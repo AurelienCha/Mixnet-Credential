@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from hashlib import sha256
+import hmac
 
 from ECC import *
 
@@ -40,8 +42,9 @@ class Header:
 # LAYER COMPUTATION
 # ============================================================
 
-def compute_gamma(beta: list[G1], shared_secret: Fr) -> G1: # TODO modify integrity
-    return sum(beta, start=G1().base_point() * shared_secret)
+def compute_gamma(betas: list[G1], shared_secret: Fr) -> G1:
+    concatenate_encoding = b"".join(beta.serialize() for beta in betas) 
+    return G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
 
 def initial_layer(destination: G1, shared_secrets: list[Fr], generators: list[G1], PATH_SIZE, BETA_SIZE):

@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
+from hashlib import sha256
+import hmac
 
 from ECC import *
 
@@ -69,9 +71,10 @@ class Header:
     def compute_shared_secret(self, secret_key: Fr) -> Fr:
         return (self.alpha * secret_key) >> Fr()    
     
-
-    def verify_integrity(self, shared_secret: Fr) -> None: # TODO modify integrity
-        expected_gamma = sum(self.beta, start=G1().base_point() * shared_secret)
+    
+    def verify_integrity(self, shared_secret: Fr) -> None:
+        concatenate_encoding = b"".join(beta.serialize() for beta in self.beta) 
+        expected_gamma = G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
         if self.gamma != expected_gamma:
             raise IntegrityError("Header integrity verification failed")
