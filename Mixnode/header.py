@@ -6,6 +6,8 @@ import hmac
 
 from ECC import *
 
+from config import GENERATORS, AUTHORITY_PK
+
 class ProtocolError(Exception):
     """Base protocol exception."""
 
@@ -17,8 +19,7 @@ class IntegrityError(ProtocolError):
 class CredentialError(ProtocolError):
     """Raised when credential verification fails."""
 
-
-@dataclass
+@dataclass(slots=True)
 class Header:
     alpha: G1
     beta: list[G1]
@@ -47,13 +48,13 @@ class Header:
     # ========================================================
 
 
-    def process(self, secret_key: Fr, authority_pk: G2, generators: list[G1], signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
-        self.verify_credential(authority_pk)
+    def process(self, secret_key: Fr, signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
+        self.verify_credential()
 
         shared_secret = self.compute_shared_secret(secret_key)
 
         self.verify_integrity(shared_secret)
-        self.decrypt_beta(shared_secret, generators)
+        self.decrypt_beta(shared_secret)
         self.update_alpha(shared_secret)
 
         self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
@@ -61,10 +62,10 @@ class Header:
         return self
 
 
-    def verify_credential(self, authority_pk: G2) -> None:
+    def verify_credential(self) -> None:
         x_value = sum(self.beta[::2], start=G1().clear())
 
-        if (x_value @ authority_pk) != (self.credential @ G2().base_point()):
+        if (x_value @ AUTHORITY_PK) != (self.credential @ G2().base_point()):
             raise CredentialError("Credential verification failed")
 
 
@@ -80,11 +81,11 @@ class Header:
             raise IntegrityError("Header integrity verification failed")
 
 
-    def decrypt_beta(self, shared_secret: Fr, generators: list[G1]) -> None:
+    def decrypt_beta(self, shared_secret: Fr) -> None:
         header = [*self.beta, G1().clear(), G1().clear()]
 
         for index, value in enumerate(header):
-            header[index] = value - generators[index] * shared_secret
+            header[index] = value - GENERATORS[index] * shared_secret
 
         self.next_hop, self.gamma, *self.beta = header
 

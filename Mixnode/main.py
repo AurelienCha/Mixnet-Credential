@@ -23,15 +23,14 @@ async def publish_mixnode(node: Mixnode, signed_public_key: G1) -> None:
 # ============================================================ 
 
 async def main(node_id: int) -> None:
-    config = load_public_config()
 
-    node = Mixnode(node_id=node_id, config=config)
+    node = Mixnode(node_id=node_id)
 
     # == START ==
     await node.start()
 
     # == SIGN and PUBLISH PK ==
-    signed_public_key = await node.sign_public_key(config.authorities, config.threshold)
+    signed_public_key = await node.sign_public_key()
     await publish_mixnode(node, signed_public_key)  # UPDATE config file with mutex to prevent concurrent overwrite
     
     # == WAIT TO PROCESS PACKET ==

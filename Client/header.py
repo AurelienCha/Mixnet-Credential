@@ -9,7 +9,7 @@ from ECC import *
 
 from config import GENERATORS, PATH_LENGTH, BETA_SIZE
 
-@dataclass
+@dataclass(slots=True)
 class Header:
     alpha: G1
     beta: list[G1]
