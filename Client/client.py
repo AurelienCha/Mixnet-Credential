@@ -10,26 +10,18 @@ from crypto import Crypto
 from header import Header
 from ECC import *
 
+from config import  GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
+
 class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT"
     HEADER = "HEADER"
 
 class Client:
 
-    def __init__(self, node_id: int, config: PublicConfig):
+    def __init__(self, node_id: int):
         self.log = create_logger("CLIENT", node_id)
-        self.path_length = config.path_length
 
         self.network = Network(f"127.0.100.{node_id}", self.handle_message, self.log)
-
-        self.mixnodes = config.mixnodes
-
-        self.threshold = config.threshold
-        self.authorities = config.authorities      
-        self.authority_public_key = config.authority_pk
-
-        self.generators = config.generators
-        self.signed_generators = config.signed_generators
 
         self.signature_queue: asyncio.Queue = asyncio.Queue()
         self.credentials: dict[str, G1] = {}
@@ -57,13 +49,14 @@ class Client:
     # CREDENTIALS
     # ========================================================
 
-    async def get_credential(self, destination: G1) -> G1:  # TODO hide value with salt
+    async def get_credential(self, destination: str) -> G1:  # TODO hide value with salt
+        destination = encode_ip(destination)
         self.log(comment="Requesting credential")
 
-        for authority in sample(self.authorities, k=self.threshold):
+        for authority in sample(AUTHORITIES, k=THRESHOLD):
             await self.send(authority, Stage.SIGN_CLIENT, destination)
 
-        points = [await self.signature_queue.get() for _ in range(self.threshold)]
+        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
         credential = Crypto.lagrange_interpolation(points)
         
         self.log(comment="Credential completed")
@@ -74,8 +67,8 @@ class Client:
     # ========================================================
 
     def select_mixnodes(self):
-        path = sample(list(self.mixnodes.keys()), k=self.path_length)
-        mixnodes = [self.mixnodes[ip] for ip in path]
+        path = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
+        mixnodes = [MIXNODES[ip] for ip in path]
         public_keys = [node.public_key for node in mixnodes]
         signed_public_keys = [node.signed_public_key for node in mixnodes]
         return (path[0], public_keys, signed_public_keys)
@@ -101,8 +94,8 @@ class Client:
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return (
             credential
-            + sum([signed_public_keys[i] for i in range(-1, -self.path_length, -1)])
-            + sum([self.signed_generators[i] * sum(shared_secrets[:self.path_length-i]) for i in range(self.path_length)])
+            + sum([signed_public_keys[i] for i in range(-1, -PATH_LENGTH, -1)])
+            + sum([SIGNED_GENERATORS[i] * sum(shared_secrets[:PATH_LENGTH-i]) for i in range(PATH_LENGTH)])
         )
 
     # ========================================================
@@ -129,8 +122,6 @@ class Client:
             shared_secrets=shared_secrets,
             credential=updated_credential,
             alpha=alpha,
-            generators=self.generators,
-            PATH_SIZE=self.path_length
         )
 
         await self.send(first_hop, Stage.HEADER, header)

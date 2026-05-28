@@ -6,6 +6,13 @@ AUTHORITIES=20
 MIXNODES=50
 CLIENTS=10
 
+if [ "$1" = "--without-credential" ]; then
+    CREDENTIALS=true
+else
+    CREDENTIALS=false
+fi
+export CREDENTIALS
+
 clear 
 
 # ==========================================
