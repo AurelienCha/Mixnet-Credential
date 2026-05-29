@@ -5,8 +5,7 @@ from hashlib import sha256
 import hmac
 
 from ECC import *
-
-from config import GENERATORS, AUTHORITY_PK
+from config import CREDENTIALS, GENERATORS, AUTHORITY_PK
 
 class ProtocolError(Exception):
     """Base protocol exception."""
@@ -39,17 +38,14 @@ class Header:
     def encode(self) -> list[bytes]:
         return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize(), self.credential.serialize()]
 
-    def encode(self) -> list[Any]:
-        return [self.alpha.serialize(), *[beta.serialize() for beta in self.beta], self.gamma.serialize(), self.credential.serialize()]
-
-
     # ========================================================
     # PROCESSING
     # ========================================================
 
 
     def process(self, secret_key: Fr, signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
-        self.verify_credential()
+        if CREDENTIALS:
+            self.verify_credential()
 
         shared_secret = self.compute_shared_secret(secret_key)
 
@@ -57,13 +53,14 @@ class Header:
         self.decrypt_beta(shared_secret)
         self.update_alpha(shared_secret)
 
-        self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
+        if CREDENTIALS:
+            self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
 
         return self
 
 
     def verify_credential(self) -> None:
-        x_value = sum(self.beta[::2], start=G1().clear())
+        x_value = sum(self.beta[::2])
 
         if (x_value @ AUTHORITY_PK) != (self.credential @ G2().base_point()):
             raise CredentialError("Credential verification failed")

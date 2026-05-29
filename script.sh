@@ -1,15 +1,15 @@
 #!/bin/bash
 
-PATH_LENGTH=5
-THRESHOLD=7
-AUTHORITIES=20
-MIXNODES=50
-CLIENTS=10
+PATH_LENGTH=3
+THRESHOLD=3
+AUTHORITIES=3
+MIXNODES=3
+CLIENTS=1
 
 if [ "$1" = "--without-credential" ]; then
-    CREDENTIALS=true
+    CREDENTIALS=0
 else
-    CREDENTIALS=false
+    CREDENTIALS=1
 fi
 export CREDENTIALS
 
@@ -33,8 +33,8 @@ mkdir -p .logs/auth
 mkdir -p .logs/mix
 mkdir -p .logs/client
 
-rm config.json
-rm public.json
+rm -f config.json
+rm -f public.json
 
 # ==========================================
 # GENERATE CONFIG
@@ -46,10 +46,14 @@ python3 config.py --threshold $THRESHOLD --authorities $AUTHORITIES --path_lengt
 # START AUTHORITIES
 # ==========================================
 
-for ((i=1; i<=AUTHORITIES; i++))
-do
-    python3 Authority/node.py --id $i &
-done
+if [ $CREDENTIALS -eq 1 ]; then
+    for ((i=1; i<=AUTHORITIES; i++))
+    do
+        python3 Authority/node.py --id $i &
+    done
+else
+    cp config.json public.json
+fi
 
 # ==========================================
 # WAIT FOR SETUP COMPLETION

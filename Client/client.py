@@ -9,7 +9,7 @@ from crypto import Crypto
 from header import Header
 from ECC import *
 
-from config import  GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
+from config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
 
 class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT"
@@ -112,14 +112,18 @@ class Client:
         alpha = G1().base_point() * nonce
 
         # Credential
-        credential = self.credentials[destination_ip]
-        updated_credential = self.update_credential(credential, shared_secrets, signed_public_keys)
+        if CREDENTIALS:
+            print("ok")
+            credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys)
+        else:
+            print("nop")
+            credential = G1().base_point()
 
         header = Header.build(
             destination=destination,
             mixes=public_keys,
             shared_secrets=shared_secrets,
-            credential=updated_credential,
+            credential=credential,
             alpha=alpha,
         )
 

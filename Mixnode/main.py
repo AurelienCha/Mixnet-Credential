@@ -2,6 +2,7 @@
 import asyncio, argparse, json, fcntl
 
 from mixnode import Mixnode, load_public_config
+from config import CREDENTIALS
 from ECC import *
 
 
@@ -10,7 +11,10 @@ async def publish_mixnode(node: Mixnode, signed_public_key: G1) -> None:
         fcntl.flock(file.fileno(), fcntl.LOCK_EX)
 
         config = json.load(file)
-        config["mixnodes"][node.ip] = {"PK": str(node.public_key), "sign_PK": str(signed_public_key)}
+        if CREDENTIALS:
+            config["mixnodes"][node.ip] = {"PK": str(node.public_key), "sign_PK": str(signed_public_key)}
+        else:
+            config["mixnodes"][node.ip] = {"PK": str(node.public_key)}
 
         file.seek(0)
         json.dump(config, file, indent=4)
@@ -30,8 +34,10 @@ async def main(node_id: int) -> None:
     await node.start()
 
     # == SIGN and PUBLISH PK ==
-    signed_public_key = await node.sign_public_key()
-    await publish_mixnode(node, signed_public_key)  # UPDATE config file with mutex to prevent concurrent overwrite
+    if CREDENTIALS:
+        await publish_mixnode(node, await node.sign_public_key())  # UPDATE config file with mutex to prevent concurrent overwrite
+    else:
+        await publish_mixnode(node, None)
     
     # == WAIT TO PROCESS PACKET ==
     await asyncio.Event().wait()  # <- keeps alive

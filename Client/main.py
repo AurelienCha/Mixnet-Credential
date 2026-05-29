@@ -2,6 +2,7 @@ import argparse
 import asyncio
 
 from client import Client
+from config import CREDENTIALS
 
 # ============================================================
 # MAIN
@@ -15,9 +16,11 @@ async def main(node_id: int) -> None:
     await client.start()
     await asyncio.sleep(1)
 
+
     # == SIGN Credentials ==
     own_ip = client.network.ip
-    client.credentials[own_ip] = (await client.get_credential(own_ip))
+    if CREDENTIALS:
+        client.credentials[own_ip] = (await client.get_credential(own_ip))
 
     # == SEND packet ==
     await client.send_packet(own_ip)

@@ -10,7 +10,7 @@ from header import Header
 from log import create_logger
 from ECC import *
 
-from config import GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS, load_public_config
+from config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS, load_public_config
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -29,7 +29,7 @@ class Mixnode:
         self.signature_queue: asyncio.Queue = asyncio.Queue() # TODO... instead of buffer
 
         # Crypto
-        self.signed_generator_sum = sum(SIGNED_GENERATORS, start=G1().clear()) # TODO instad of self.signed_generator_sum = sum([G1().fromstr(g.encode()) for g in signed_generators[1:]], start=G1().fromstr(signed_generators[0].encode()))
+        self.signed_generator_sum = sum(SIGNED_GENERATORS) if CREDENTIALS else None
 
         self.secret_key = Fr().randomize()
         self.public_key = G1().base_point() * self.secret_key
@@ -63,7 +63,7 @@ class Mixnode:
                     self.sign_pk_lookup = {
                         node["PK"]: G1().fromstr(node["sign_PK"].encode())
                         for node in self.mixnodes.values()
-                    }
+                    } if CREDENTIALS else None
 
                 header: Header = message
 
