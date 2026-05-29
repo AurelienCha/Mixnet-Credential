@@ -33,8 +33,8 @@ mkdir -p .logs/auth
 mkdir -p .logs/mix
 mkdir -p .logs/client
 
-rm -f config.json
-rm -f public.json
+rm -f .config.json
+rm -f .public.json
 
 # ==========================================
 # GENERATE CONFIG
@@ -47,29 +47,29 @@ python3 config.py --threshold $THRESHOLD --authorities $AUTHORITIES --path_lengt
 # ==========================================
 
 if [ $CREDENTIALS -eq 1 ]; then
+    echo "AUTHORITIES SETUP ..."
     for ((i=1; i<=AUTHORITIES; i++))
     do
         python3 Authority/node.py --id $i &
     done
 else
-    cp config.json public.json
+    cp .config.json .public.json
 fi
 
 # ==========================================
 # WAIT FOR SETUP COMPLETION
 # ==========================================
 
-echo "Waiting for authorities setup..."
-while [ ! -f public.json ]
+while [ ! -f .public.json ]
 do
     sleep 0.1
 done
-echo "Authorities setup complete"
 
 # ==========================================
 # START MIXNODES
 # ==========================================
 
+echo "MIXNODES SETUP ..."
 for ((i=1; i<=MIXNODES; i++))
 do
     python3 Mixnode/main.py --id $i &
@@ -81,7 +81,7 @@ done
 
 while true
 do
-    COUNT=$(jq '.mixnodes | length' public.json)
+    COUNT=$(jq '.mixnodes | length' .public.json)
 
     if [ "$COUNT" -ge "$MIXNODES" ]; then
         break
@@ -93,6 +93,8 @@ done
 # START Client
 # ==========================================
 
+
+echo "RUNNING CLIENTS ..."
 for ((i=1; i<=CLIENTS; i++))
 do
     python3 Client/main.py --id $i &

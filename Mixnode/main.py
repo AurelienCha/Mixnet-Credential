@@ -7,7 +7,7 @@ from ECC import *
 
 
 async def publish_mixnode(node: Mixnode, signed_public_key: G1) -> None:
-    with open("public.json", "r+", encoding="utf-8") as file:
+    with open(".public.json", "r+", encoding="utf-8") as file:
         fcntl.flock(file.fileno(), fcntl.LOCK_EX)
 
         config = json.load(file)

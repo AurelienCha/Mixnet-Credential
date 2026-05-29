@@ -107,6 +107,6 @@ if __name__ == '__main__':
     from os.path import dirname
     import time
 
-    measure(it=pow(10,4))
+    measure(it=pow(10,3))
 else:
     raise ImportError("SHOULD NOT BE IMPORTED")

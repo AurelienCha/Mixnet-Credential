@@ -17,5 +17,5 @@ data = {
     "generators": [str(G1().randomize()) for _ in range(2 * args.path_length + 1)],
 }
 
-with open("config.json", "w", encoding="utf-8") as file:
+with open(".config.json", "w", encoding="utf-8") as file:
     json.dump(data, file, indent=4)

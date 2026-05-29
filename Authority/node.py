@@ -121,7 +121,7 @@ class Authority:
 
 # ===================== MAIN =====================
 async def main(ID):
-    with open("config.json") as f:
+    with open(".config.json") as f:
         config = json.load(f)
 
     node = Authority(
@@ -142,7 +142,7 @@ async def main(ID):
     if ID == 1:  # One of the authority make signature public
         config.update({"signed_generators": [str(sign_G) for sign_G in signed_generators]})
         config.update({"authority_PK": str(authority_PK)})
-        with open("public.json", "w", encoding="utf-8") as file:
+        with open(".public.json", "w", encoding="utf-8") as file:
             json.dump(config, file, indent=4)
 
     await asyncio.Event().wait()  # <- keeps program alive

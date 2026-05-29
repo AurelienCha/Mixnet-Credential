@@ -34,7 +34,7 @@ if CREDENTIALS:
         mixnodes: dict[str, Any]
 
     def load_public_config() -> PublicConfig:
-        with open("public.json", encoding="utf-8") as file:
+        with open(".public.json", encoding="utf-8") as file:
             raw = json.load(file)
 
         return PublicConfig(
@@ -63,7 +63,7 @@ else:
         mixnodes: dict[str, Any]
 
     def load_public_config() -> PublicConfig:
-        with open("public.json", encoding="utf-8") as file:
+        with open(".public.json", encoding="utf-8") as file:
             raw = json.load(file)
 
         return PublicConfig(
