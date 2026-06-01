@@ -1,5 +1,6 @@
-import logging
-import os
+import logging, os, inspect
+from functools import wraps
+
 from crypto import Crypto
 
 COLORS = {
@@ -117,3 +118,32 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
     logger.addHandler(console_handler)
 
     return LoggerWrapper(logger)
+
+
+
+from time import process_time, thread_time, perf_counter_ns
+
+def timing(func):
+    if inspect.iscoroutinefunction(func):
+        @wraps(func)
+        async def async_wrapper(self, *args, **kwargs):
+            self.log(comment=f"{func.__name__} started")
+            start, start_ns = thread_time(), perf_counter_ns()
+            try:
+                return await func(self, *args, **kwargs)
+            finally:
+                end, end_ns = thread_time(),perf_counter_ns()
+                self.log(comment=f"{func.__name__} finished in (CPU: {1000 * (end - start):.6f} ms; wall: {(end_ns - start_ns) / 1_000_000:.6f} ms)") 
+        return async_wrapper
+
+    else:
+        @wraps(func)
+        def sync_wrapper(self, *args, **kwargs):
+            self.log(comment=f"{func.__name__} started")
+            start, start_ns = process_time(), perf_counter_ns()
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                end, end_ns = process_time(),perf_counter_ns()
+                self.log(comment=f"{func.__name__} finished in (CPU: {1000 * (end - start):.6f} ms; wall: {(end_ns - start_ns) / 1_000_000:.6f} ms)") 
+        return sync_wrapper
