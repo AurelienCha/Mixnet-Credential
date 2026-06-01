@@ -12,6 +12,10 @@ COLORS = {
     "RESET": "\033[0m"
 }
 
+class ConsoleFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return bool(getattr(record, "direction", ""))
+        
 class LogFilter(logging.Filter):
 
     NODE_TYPES = {
@@ -63,7 +67,7 @@ class LoggerWrapper:
 # ============================================================
 # LOGGING
 # ============================================================
-
+LOGGING: LoggerWrapper | None = None
 def create_logger(role: str, node_id: int) -> LoggerWrapper:
     logger = logging.getLogger(f"{role}_{node_id}")
     logger.setLevel(logging.INFO)
@@ -94,6 +98,7 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
     # =========================
 
     console_handler = logging.StreamHandler()
+    console_handler.addFilter(ConsoleFilter())
 
     console_handler.setFormatter(
         logging.Formatter(
@@ -117,33 +122,33 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
-    return LoggerWrapper(logger)
+    global LOGGING
+    LOGGING = LoggerWrapper(logger)
+    return LOGGING
 
 
 
-from time import process_time, thread_time, perf_counter_ns
+from time import process_time, perf_counter_ns
 
 def timing(func):
     if inspect.iscoroutinefunction(func):
         @wraps(func)
-        async def async_wrapper(self, *args, **kwargs):
-            self.log(comment=f"{func.__name__} started")
-            start, start_ns = thread_time(), perf_counter_ns()
+        async def async_wrapper(*args, **kwargs):
+            start, start_ns = process_time(), perf_counter_ns()
             try:
-                return await func(self, *args, **kwargs)
+                return await func(*args, **kwargs)
             finally:
-                end, end_ns = thread_time(),perf_counter_ns()
-                self.log(comment=f"{func.__name__} finished in (CPU: {1000 * (end - start):.6f} ms; wall: {(end_ns - start_ns) / 1_000_000:.6f} ms)") 
+                end, end_ns = process_time(),perf_counter_ns()
+                LOGGING(comment=f"{func.__name__}, CPU: {1000 * (end - start):.6f} ms, wall: {(end_ns - start_ns) / 1_000_000:.6f} ms") 
         return async_wrapper
 
     else:
         @wraps(func)
-        def sync_wrapper(self, *args, **kwargs):
-            self.log(comment=f"{func.__name__} started")
+        def sync_wrapper(*args, **kwargs):
             start, start_ns = process_time(), perf_counter_ns()
             try:
-                return func(self, *args, **kwargs)
+                return func(*args, **kwargs)
             finally:
                 end, end_ns = process_time(),perf_counter_ns()
-                self.log(comment=f"{func.__name__} finished in (CPU: {1000 * (end - start):.6f} ms; wall: {(end_ns - start_ns) / 1_000_000:.6f} ms)") 
+                LOGGING(comment=f"{func.__name__}, CPU: {1000 * (end - start):.6f} ms, wall: {(end_ns - start_ns) / 1_000_000:.6f} ms") 
         return sync_wrapper

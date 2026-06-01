@@ -3,7 +3,7 @@ from enum import StrEnum
 from random import sample
 import asyncio
 
-from log import create_logger
+from log import timing
 from network import Network
 from crypto import Crypto
 from header import Header
@@ -11,16 +11,16 @@ from ECC import *
 
 from config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
 
+
 class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT"
     HEADER = "HEADER"
 
+
 class Client:
 
     def __init__(self, node_id: int):
-        self.log = create_logger("CLIENT", node_id)
-
-        self.network = Network(f"127.0.100.{node_id}", self.handle_message, self.log)
+        self.network = Network(f"127.0.100.{node_id}", self.handle_message)
 
         self.signature_queue: asyncio.Queue = asyncio.Queue()
         self.credentials: dict[str, G1] = {}
@@ -42,29 +42,26 @@ class Client:
             case Stage.HEADER:
                 print(OP_COUNT)
                 pass 
-    
 
     # ========================================================
     # CREDENTIALS
     # ========================================================
 
+    @timing
     async def get_credential(self, destination: str) -> G1:  # TODO hide value with salt
         destination = encode_ip(destination)
-        self.log(comment="Requesting credential")
 
         for authority in sample(AUTHORITIES, k=THRESHOLD):
             await self.send(authority, Stage.SIGN_CLIENT, destination)
-
-        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        credential = Crypto.lagrange_interpolation(points)
         
-        self.log(comment="Credential completed")
-        return credential
+        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
+        return Crypto.lagrange_interpolation(points)
 
     # ========================================================
     # PATH SELECTION
     # ========================================================
 
+    @timing
     def select_mixnodes(self):
         path = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
         mixnodes = [MIXNODES[ip] for ip in path]
@@ -76,20 +73,24 @@ class Client:
     # SHARED SECRETS
     # ========================================================
 
-    def derive_shared_secrets(self, nonce: Fr, public_keys: list[G1]) -> list[Fr]:
-        shared_secrets = []
+    @timing
+    def derive_shared_secrets(self, public_keys: list[G1]) -> list[Fr]:
+        nonce = Fr().randomize()
+        alpha = G1().base_point() * nonce
 
+        shared_secrets = []
         for public_key in public_keys:
             s = (public_key * nonce) >> Fr()
             shared_secrets.append(s)
             nonce *= s
 
-        return shared_secrets
+        return alpha, shared_secrets
     
     # ========================================================
     # CREDENTIAL UPDATE
     # ========================================================
 
+    @timing
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return (
             credential
@@ -102,29 +103,29 @@ class Client:
     # ========================================================
 
     async def send_packet(self, destination_ip: str) -> None:
+        first_hop, header = self.build_packet(destination_ip)
+        await self.send(first_hop, Stage.HEADER, header)
+
+    @timing
+    def build_packet(self, destination_ip: str) -> None:
+
+        delta = encode_ip(destination_ip) # TODO: 0.25 ms not taking into account in log because of this... make a list of destination en their encoding
+
         # Path
-        destination = encode_ip(destination_ip)
         (first_hop, public_keys, signed_public_keys) = self.select_mixnodes()
 
         # Shared secret
-        nonce = Fr().randomize()
-        shared_secrets = self.derive_shared_secrets(nonce, public_keys)
-        alpha = G1().base_point() * nonce
+        alpha, shared_secrets = self.derive_shared_secrets(public_keys)
 
         # Credential
-        if CREDENTIALS:
-            print("ok")
-            credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys)
-        else:
-            print("nop")
-            credential = G1().base_point()
+        credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys) if CREDENTIALS else None
 
         header = Header.build(
-            destination=destination,
+            destination= delta,
             mixes=public_keys,
             shared_secrets=shared_secrets,
-            credential=credential,
             alpha=alpha,
+            credential=credential,
         )
 
-        await self.send(first_hop, Stage.HEADER, header)
+        return (first_hop, header)
