@@ -49,8 +49,6 @@ class Mixnode:
             case Stage.SIGN_MIX:
                 await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
 
-            # case Stage.HEADER if isinstance(message, Header):
-            #     header = message
             case Stage.HEADER:
                 if not self.mixnodes:
                     self.mixnodes = load_public_config().mixnodes

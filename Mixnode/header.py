@@ -5,7 +5,7 @@ from hashlib import sha256
 import hmac
 
 from ECC import *
-from config import CREDENTIALS, GENERATORS, AUTHORITY_PK
+from config import GENERATORS, AUTHORITY_PK
 
 class ProtocolError(Exception):
     """Base protocol exception."""
@@ -23,7 +23,7 @@ class Header:
     alpha: G1
     beta: list[G1]
     gamma: G1
-    credential: G1
+    credential: G1 | None
     next_hop: G1 | None = None
 
     # ========================================================
@@ -32,19 +32,28 @@ class Header:
 
     @classmethod
     def from_encoded(cls, message: list[Any]) -> "Header":
-        alpha, *beta, gamma, credential = [G1().deserialize(value) for value in message]
+        values = [G1().deserialize(value) for value in message]
+        if len(values) == 8:
+            alpha, *beta, gamma, credential = values
+        elif len(values) == 7:
+            alpha, *beta, gamma = values
+            credential = None
+        else:
+            raise ValueError(f"Unexpected message length: {len(values)}")
         return cls(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
 
     def encode(self) -> list[bytes]:
-        return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize(), self.credential.serialize()]
+        if self.credential:
+            return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize(), self.credential.serialize()]
+        return [self.alpha.serialize(), *(value.serialize() for value in self.beta), self.gamma.serialize()]
 
     # ========================================================
     # PROCESSING
     # ========================================================
 
 
-    def process(self, secret_key: Fr, signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> Header:
-        if CREDENTIALS:
+    def process(self, secret_key: Fr, signed_generator_sum: G1 | None, sign_pk_lookup: dict[str, G1] | None) -> Header:
+        if self.credential:
             self.verify_credential()
 
         shared_secret = self.compute_shared_secret(secret_key)
@@ -53,7 +62,7 @@ class Header:
         self.decrypt_beta(shared_secret)
         self.update_alpha(shared_secret)
 
-        if CREDENTIALS:
+        if self.credential:
             self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
 
         return self

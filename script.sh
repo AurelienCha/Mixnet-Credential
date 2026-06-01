@@ -4,7 +4,7 @@ PATH_LENGTH=3
 THRESHOLD=3
 AUTHORITIES=3
 MIXNODES=3
-CLIENTS=1
+CLIENTS=2
 
 if [ "$1" = "--without-credential" ]; then
     CREDENTIALS=0
