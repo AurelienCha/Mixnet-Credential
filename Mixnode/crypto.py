@@ -24,19 +24,13 @@ class Crypto:
 
 
     @staticmethod
-    def hash(values: Any, short: bool = False) -> int | str:
-        hasher = sha256()
-
+    def hash(values: Any) -> int | str:
+        h = sha256()
         if not isinstance(values, (list, tuple)):
             values = [values]
 
-        for value in values:
-            hasher.update(str(value).encode())
-            hasher.update(b"|")
+        for v in values:
+            h.update(str(v).encode())
+            h.update(b"|")
 
-        digest = hasher.hexdigest()
-
-        if short:
-            return digest[:8]
-
-        return int(digest, 16) >> 44
+        return int(h.hexdigest(), 16) >> 44

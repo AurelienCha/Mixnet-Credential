@@ -1,6 +1,7 @@
-import hashlib
+from hashlib import sha256
 
 from ECC import *
+from log import timing
 
 class Crypto:
     def __init__(self, ip, threshold, generators):
@@ -23,9 +24,17 @@ class Crypto:
     def aggregate_secret_key(self, y_shares):
         self.secret_share = sum(y_shares, Fr(0))
 
+    @timing
+    def sign_mix(self, P):
+        return self.sign(P)
+
+    @timing
+    def sign_client(self, P):
+        return self.sign(P)
+
     def sign(self, P):
         return P * self.secret_share
-    
+
     def sign_params(self):
         return [self.x, self.sign(self.generators[0])] + [self.sign(G) for G in self.generators[1::2]]
     
@@ -50,8 +59,8 @@ class Crypto:
         return result
 
     @staticmethod
-    def hash(values, short=False):
-        h = hashlib.sha256()
+    def hash(values):
+        h = sha256()
         if not isinstance(values, (list, tuple)):
             values = [values]
 
@@ -59,6 +68,4 @@ class Crypto:
             h.update(str(v).encode())
             h.update(b"|")
 
-        if short:
-            return h.hexdigest()[:8]
         return int(h.hexdigest(), 16) >> 44

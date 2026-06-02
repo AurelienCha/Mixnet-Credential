@@ -1,7 +1,7 @@
 import logging, os, inspect
 from functools import wraps
 
-from crypto import Crypto
+from hashlib import sha256
 
 COLORS = {
     "AUTH": "\033[92m",   # green
@@ -11,6 +11,17 @@ COLORS = {
     "COMMENT": "\033[90m", # gray
     "RESET": "\033[0m"
 }
+
+def small_hash(values):
+    h = sha256()
+    if not isinstance(values, (list, tuple)):
+        values = [values]
+
+    for v in values:
+        h.update(str(v).encode())
+        h.update(b"|")
+
+    return h.hexdigest()[:8]
 
 class ConsoleFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
@@ -45,7 +56,7 @@ class LogFilter(logging.Filter):
         data = getattr(record, "data", None)
         if data:
             record.type = type(data).__name__
-            record.hash = Crypto.hash(data, short=True)
+            record.hash = small_hash(data)
         else:
             record.type = ''
             record.hash = ''

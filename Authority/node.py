@@ -2,7 +2,7 @@ import asyncio, argparse, json
 from itertools import islice
 from enum import StrEnum
 
-from log import create_logger
+from log import create_logger, timing
 from network import Network
 from crypto import Crypto
 
@@ -33,7 +33,6 @@ class Buffer:
 class Authority:
     def __init__(self, id, ip, peers, threshold, generators):
         # Other
-        self.log = create_logger("AUTH", id)
         self.buffer = {
             Stage.SETUP_SHARES: Buffer(), 
             Stage.SIGN_PARAM: Buffer(), 
@@ -43,7 +42,7 @@ class Authority:
 
         # Network
         self.peers = peers
-        self.network = Network(ip, self.handle_message, self.log)
+        self.network = Network(ip, self.handle_message)
 
         # Crypto
         self.crypto = Crypto(ip, threshold, generators)
@@ -60,12 +59,14 @@ class Authority:
             case Stage.VERIF_SETUP:
                 await self.buffer[msg_type].add(message)
             case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, self.crypto.sign(message))  # message = PK -> sign PK
+                await self.send(ip, Stage.SIGN_MIX, self.crypto.sign_mix(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
-                await self.send(ip, Stage.SIGN_CLIENT, self.crypto.sign(message)) 
+                await self.send(ip, Stage.SIGN_CLIENT, self.crypto.sign_client(message)) 
     
+    @timing
     async def setup(self):
-
+        
+        @timing
         async def send_and_aggregate_shares():
             self.stage = Stage.SETUP_SHARES
 
@@ -78,6 +79,7 @@ class Authority:
             y_shares = await self.buffer[self.stage].wait(len(self.peers)+1)
             self.crypto.aggregate_secret_key(y_shares)
                    
+        @timing
         async def sign_params():
             self.stage = Stage.SIGN_PARAM
 
@@ -98,7 +100,8 @@ class Authority:
             # Lagrange interpolation
             return [Crypto.lagrange_interpolation(points) for points in points_list]
         
-        async def verif_sign(signed_params):
+        @timing
+        async def verif_sign_params(signed_params):
             self.stage = Stage.VERIF_SETUP
 
             # Send signed params hashed to a peer (next one)
@@ -109,11 +112,10 @@ class Authority:
             # Verify with received hash
             answer = await self.buffer[self.stage].wait(1)
             assert msg == answer[0]
-            #self.log("Setup finished succesfully")
 
         await send_and_aggregate_shares()
         signed_params = await sign_params()
-        await verif_sign(signed_params)
+        await verif_sign_params(signed_params)
         return signed_params
   
     async def start(self):
@@ -124,6 +126,8 @@ async def main(ID):
     with open(".config.json") as f:
         config = json.load(f)
 
+
+    create_logger("AUTH", ID)
     node = Authority(
         id = ID,
         ip = config["authorities"][ID-1],
