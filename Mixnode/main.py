@@ -1,27 +1,10 @@
+import asyncio, argparse
 
-import asyncio, argparse, json, fcntl
-
-from config import CREDENTIALS, NBR_MIXNODES, load_public_config
+from config import CREDENTIALS, NBR_MIXNODES, load_public_config, publish_mixnode
 from mixnode import Mixnode
 from log import create_logger
 from ECC import *
 
-
-async def publish_mixnode(node: Mixnode, signed_public_key: G1) -> None:
-    with open(".public.json", "r+", encoding="utf-8") as file:
-        fcntl.flock(file.fileno(), fcntl.LOCK_EX)
-
-        config = json.load(file)
-        if CREDENTIALS:
-            config["mixnodes"][node.ip] = {"PK": str(node.public_key), "sign_PK": str(signed_public_key)}
-        else:
-            config["mixnodes"][node.ip] = {"PK": str(node.public_key)}
-
-        file.seek(0)
-        json.dump(config, file, indent=4)
-        file.truncate()
-
-        fcntl.flock(file.fileno(), fcntl.LOCK_UN)
 
 # ============================================================
 # MAIN

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-PATH_LENGTH=3
-THRESHOLD=3
-AUTHORITIES=3
-MIXNODES=3
-CLIENTS=2
+PATH_LENGTH=7
+THRESHOLD=10
+AUTHORITIES=50
+MIXNODES=50
+CLIENTS=20
 
 if [ "$1" = "--without-credential" ]; then
     CREDENTIALS=0
@@ -104,4 +104,25 @@ done
 # WAIT FOR EVERYTHING
 # ==========================================
 
-# wait
+tshark -l -i lo -f "udp port 5000" 2>/dev/null |
+sleep 0.1
+while read -r line; do
+    touch /tmp/udp_activity
+done &
+
+while true; do
+    last=$(stat -c %Y /tmp/udp_activity)
+    now=$(date +%s)
+
+    if (( now - last >= 1 )); then
+        echo "No activity for 1 seconds - exiting..."
+
+        pkill -f Authority/node.py
+        pkill -f Mixnode/main.py
+        pkill -f Client/main.py
+        rm -f /tmp/udp_activity
+
+        exit 0
+    fi
+    sleep 1
+done
