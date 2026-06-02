@@ -1,0 +1,31 @@
+import pandas as pd
+from pathlib import Path
+
+# Get all CSV files
+root_dir = Path(".logs/")
+csv_files = list(root_dir.rglob("*.csv"))
+print(f"{len(csv_files)} CSV files found")
+
+
+dfs = []
+for file in csv_files:
+    df = pd.read_csv(file, names=["timestamp", "entity", "entity_id", "direction", "DESTINATION", "DESTINATION_ID", "type", "Hash", "function", "CPU_time_ms", "wall_time_ms", "credential"])
+
+    # Drop unused columns
+    df.drop(columns=["direction", "DESTINATION", "DESTINATION_ID", "type", "Hash"], inplace=True)
+
+    # Extract time
+    df["CPU_time_ms"] = df["CPU_time_ms"].str.extract(r"([\d.]+)").astype(float)
+    df["wall_time_ms"] = df["wall_time_ms"].str.extract(r"([\d.]+)").astype(float)
+
+    # Keep only rows with timing info
+    df = df[df["CPU_time_ms"].notna()]
+
+    # add source file for debugging
+    df["source_file"] = file
+
+    dfs.append(df)
+
+table = pd.concat(dfs, ignore_index=True)
+table["timestamp"] = table["timestamp"].str.strip("[]")
+print(table)

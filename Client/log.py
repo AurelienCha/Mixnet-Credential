@@ -1,7 +1,8 @@
 import logging, os, inspect
 from functools import wraps
-
 from hashlib import sha256
+
+from config import CREDENTIALS
 
 COLORS = {
     "AUTH": "\033[92m",   # green
@@ -65,7 +66,7 @@ class LogFilter(logging.Filter):
         # Comment
         record.comment = getattr(record, "comment", "")
         if ',' not in record.comment:
-            record.comment += ', ,'
+            record.comment += ', , '
 
         return True
 
@@ -100,7 +101,8 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
             (
                 f"[%(asctime)s.%(msecs)03d], {role}, {node_id}, "
                 "%(direction)s, %(role2)s, %(id2)s, "
-                "%(type)s, %(hash)s, %(comment)s"
+                "%(type)s, %(hash)s, %(comment)s, "
+                f"{1 if CREDENTIALS else 0}"
             ),
             datefmt="%H:%M:%S",
         )

@@ -101,7 +101,7 @@ do
 done
 
 # ==========================================
-# WAIT FOR EVERYTHING
+# Automatically stop the script if no UDP activity is detected
 # ==========================================
 
 tshark -l -i lo -f "udp port 5000" 2>/dev/null |
