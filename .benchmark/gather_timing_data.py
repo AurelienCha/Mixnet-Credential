@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 # Get all CSV files
-root_dir = Path(".logs/")
+root_dir = Path(".benchmark/.data/.logs")
 csv_files = list(root_dir.rglob("*.csv"))
 print(f"{len(csv_files)} CSV files found")
 
@@ -21,11 +21,12 @@ for file in csv_files:
     # Keep only rows with timing info
     df = df[df["CPU_time_ms"].notna()]
 
-    # add source file for debugging
+    # Add source file for debugging
     df["source_file"] = file
 
     dfs.append(df)
 
 table = pd.concat(dfs, ignore_index=True)
 table["timestamp"] = table["timestamp"].str.strip("[]")
-print(table)
+
+table.to_csv(".benchmark/.data/timing.csv", index=False)

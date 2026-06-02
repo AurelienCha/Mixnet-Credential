@@ -2,15 +2,24 @@
 
 PATH_LENGTH=7
 THRESHOLD=10
-AUTHORITIES=50
+AUTHORITIES=20
 MIXNODES=50
-CLIENTS=20
+CLIENTS=10
+CREDENTIALS=1
 
-if [ "$1" = "--without-credential" ]; then
-    CREDENTIALS=0
-else
-    CREDENTIALS=1
-fi
+# Override defaults if provided
+while getopts "p:t:a:m:c:z:" opt; do
+  case $opt in
+    p) PATH_LENGTH="$OPTARG" ;;
+    t) THRESHOLD="$OPTARG" ;;
+    a) AUTHORITIES="$OPTARG" ;;
+    m) MIXNODES="$OPTARG" ;;
+    c) CLIENTS="$OPTARG" ;;
+    z) CREDENTIALS="$OPTARG" ;;
+    *) echo "Invalid option"; exit 1 ;;
+  esac
+done
+
 export CREDENTIALS
 
 clear 
@@ -121,7 +130,8 @@ while true; do
         pkill -f Mixnode/main.py
         pkill -f Client/main.py
         rm -f /tmp/udp_activity
-
+        
+        sleep 0.1
         exit 0
     fi
     sleep 1
