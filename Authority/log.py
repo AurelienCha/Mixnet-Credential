@@ -64,6 +64,8 @@ class LogFilter(logging.Filter):
 
         # Comment
         record.comment = getattr(record, "comment", "")
+        if ',' not in record.comment:
+            record.comment += ', ,'
 
         return True
 
