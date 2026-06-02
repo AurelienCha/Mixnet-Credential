@@ -5,6 +5,7 @@ from hashlib import sha256
 import hmac
 
 from ECC import *
+from log import timing
 from config import GENERATORS, AUTHORITY_PK
 
 class ProtocolError(Exception):
@@ -51,8 +52,8 @@ class Header:
     # PROCESSING
     # ========================================================
 
-
-    def process(self, secret_key: Fr, signed_generator_sum: G1 | None, sign_pk_lookup: dict[str, G1] | None) -> Header:
+    @timing
+    def process_header(self, secret_key: Fr, signed_generator_sum: G1 | None, sign_pk_lookup: dict[str, G1] | None, pk_to_ip: dict[str, str]| None) -> tuple[str, Header]:
         if self.credential:
             self.verify_credential()
 
@@ -65,20 +66,20 @@ class Header:
         if self.credential:
             self.update_credential(shared_secret, signed_generator_sum, sign_pk_lookup)
 
-        return self
+        return (self.get_next_hop(pk_to_ip), self)
 
-
+    @timing
     def verify_credential(self) -> None:
         x_value = sum(self.beta[::2])
 
         if (x_value @ AUTHORITY_PK) != (self.credential @ G2().base_point()):
             raise CredentialError("Credential verification failed")
 
-
+    @timing
     def compute_shared_secret(self, secret_key: Fr) -> Fr:
         return (self.alpha * secret_key) >> Fr()    
     
-    
+    @timing
     def verify_integrity(self, shared_secret: Fr) -> None:
         concatenate_encoding = b"".join(beta.serialize() for beta in self.beta) 
         expected_gamma = G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
@@ -86,7 +87,7 @@ class Header:
         if self.gamma != expected_gamma:
             raise IntegrityError("Header integrity verification failed")
 
-
+    @timing
     def decrypt_beta(self, shared_secret: Fr) -> None:
         header = [*self.beta, G1().clear(), G1().clear()]
 
@@ -95,11 +96,15 @@ class Header:
 
         self.next_hop, self.gamma, *self.beta = header
 
-
+    @timing
     def update_alpha(self, shared_secret: Fr) -> None:
         self.alpha *= shared_secret
 
-
+    @timing
     def update_credential(self, shared_secret: Fr, signed_generator_sum: G1, sign_pk_lookup: dict[str, G1]) -> None:
         sign_next_hop = sign_pk_lookup.get(str(self.next_hop), G1().randomize()) # If not found, means final destination just randomize credential
         self.credential -= (signed_generator_sum * shared_secret + sign_next_hop)
+
+    @timing
+    def get_next_hop(self, pk_to_ip: dict[str, str]) -> str:
+        return pk_to_ip.get(str(self.next_hop), decode_ip(self.next_hop))

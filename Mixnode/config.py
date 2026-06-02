@@ -25,6 +25,7 @@ if CREDENTIALS:
         signed_generators: list[G1]
         authorities: list[str]
         threshold: int
+        nbr_mixnodes: int
         mixnodes: dict[str, Any]
 
     def load_public_config() -> PublicConfig:
@@ -38,6 +39,7 @@ if CREDENTIALS:
             signed_generators=[G1().fromstr(value.encode()) for value in raw["signed_generators"]],
             authorities=raw["authorities"],
             threshold=raw["threshold"],
+            nbr_mixnodes=raw["nbr_mixnodes"],
             mixnodes=raw["mixnodes"],
         )
 
@@ -46,6 +48,7 @@ else:
     class PublicConfig:
         path_length: int
         generators: list[G1]
+        nbr_mixnodes: int
         mixnodes: dict[str, Any]
 
     def load_public_config() -> PublicConfig:
@@ -55,12 +58,14 @@ else:
         return PublicConfig(
             path_length=raw["path_length"],
             generators=[G1().fromstr(value.encode()) for value in raw["generators"]],
+            nbr_mixnodes=raw["nbr_mixnodes"],
             mixnodes=raw["mixnodes"],
         )
 
 config = load_public_config()
 
 GENERATORS = config.generators
+NBR_MIXNODES = config.nbr_mixnodes
 MIXNODES = config.mixnodes
 
 PATH_LENGTH = config.path_length

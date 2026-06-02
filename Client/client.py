@@ -105,11 +105,15 @@ class Client:
     async def send_packet(self, destination_ip: str) -> None:
         first_hop, header = self.build_packet(destination_ip)
         await self.send(first_hop, Stage.HEADER, header)
+    
+    @timing 
+    def encode_destination(self, ip: str) -> G1:  # TODO:  make a list of destination en their encoding
+        return encode_ip(ip)
 
     @timing
     def build_packet(self, destination_ip: str) -> None:
 
-        delta = encode_ip(destination_ip) # TODO: 0.25 ms not taking into account in log because of this... make a list of destination en their encoding
+        delta = self.encode_destination(destination_ip) 
 
         # Path
         (first_hop, public_keys, signed_public_keys) = self.select_mixnodes()

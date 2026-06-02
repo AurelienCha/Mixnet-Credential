@@ -40,7 +40,7 @@ rm -f .public.json
 # GENERATE CONFIG
 # ==========================================
 
-python3 config.py --threshold $THRESHOLD --authorities $AUTHORITIES --path_length $PATH_LENGTH || exit 1
+python3 config.py --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES || exit 1
 
 # ==========================================
 # START AUTHORITIES
