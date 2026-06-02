@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
+SHORT_NAME ={'p': 'PATH_LENGTH', 'm': 'NBR_MIXNODES', 'c': 'NBR_CLIENT', 't':'THRESHOLD', 'a':'NBR_AUTHORITIES', 'z':'CREDENTIAL'}
+
 # Get all CSV files
 root_dir = Path(".benchmark/.data/.logs")
 csv_files = list(root_dir.rglob("*.csv"))
@@ -21,8 +23,9 @@ for file in csv_files:
     # Keep only rows with timing info
     df = df[df["CPU_time_ms"].notna()]
 
-    # Add source file for debugging
-    df["source_file"] = file
+    # Add script parameters
+    for val in file._str.split('/')[3].split('_'):
+        df[SHORT_NAME[val[0]]] = int(val[1:])
 
     dfs.append(df)
 

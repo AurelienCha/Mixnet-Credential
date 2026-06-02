@@ -3,6 +3,9 @@ from functools import wraps
 
 from hashlib import sha256
 
+from os import getenv
+VERBOSE = True if getenv("VERBOSE") == "1" else False
+
 COLORS = {
     "AUTH": "\033[92m",   # green
     "MIX": "\033[93m",    # yellow
@@ -111,22 +114,23 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
     # TERMINAL LOGGER
     # =========================
 
-    console_handler = logging.StreamHandler()
-    console_handler.addFilter(ConsoleFilter())
+    if VERBOSE:
+        console_handler = logging.StreamHandler()
+        console_handler.addFilter(ConsoleFilter())
 
-    console_handler.setFormatter(
-        logging.Formatter(
-            (
-                f"{COLORS.get(role, '')}{role:<6} {node_id:>2}"
-                f"{COLORS['RESET']} %(direction)3s "
-                "%(color2)s %(role2)-6s %(id2)2s "
-                f"{COLORS['COMMENT']} %(type)6s "
-                f"{COLORS['RESET']} %(hash)s "
-                f"{COLORS['COMMENT']} %(comment)s "
-                f"{COLORS['RESET']}"
+        console_handler.setFormatter(
+            logging.Formatter(
+                (
+                    f"{COLORS.get(role, '')}{role:<6} {node_id:>2}"
+                    f"{COLORS['RESET']} %(direction)3s "
+                    "%(color2)s %(role2)-6s %(id2)2s "
+                    f"{COLORS['COMMENT']} %(type)6s "
+                    f"{COLORS['RESET']} %(hash)s "
+                    f"{COLORS['COMMENT']} %(comment)s "
+                    f"{COLORS['RESET']}"
+                )
             )
         )
-    )
 
     # =========================
     # FILTER / HANDLERS
@@ -134,7 +138,8 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
 
     logger.addFilter(LogFilter())
     logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+    if VERBOSE:
+        logger.addHandler(console_handler)
 
     global LOGGING
     LOGGING = LoggerWrapper(logger)

@@ -1,14 +1,15 @@
 #!/bin/bash
 
-PATH_LENGTH=7
+PATH_LENGTH=19
 THRESHOLD=10
 AUTHORITIES=20
 MIXNODES=50
-CLIENTS=10
+CLIENTS=1
 CREDENTIALS=1
+VERBOSE=1
 
 # Override defaults if provided
-while getopts "p:t:a:m:c:z:" opt; do
+while getopts "p:t:a:m:c:z:v:" opt; do
   case $opt in
     p) PATH_LENGTH="$OPTARG" ;;
     t) THRESHOLD="$OPTARG" ;;
@@ -16,13 +17,13 @@ while getopts "p:t:a:m:c:z:" opt; do
     m) MIXNODES="$OPTARG" ;;
     c) CLIENTS="$OPTARG" ;;
     z) CREDENTIALS="$OPTARG" ;;
+    v) VERBOSE="$OPTARG" ;;
     *) echo "Invalid option"; exit 1 ;;
   esac
 done
 
 export CREDENTIALS
-
-clear 
+export VERBOSE
 
 # ==========================================
 # KILL OLD PROCESSES
@@ -56,7 +57,7 @@ python3 config.py --path_length $PATH_LENGTH --threshold $THRESHOLD --authoritie
 # ==========================================
 
 if [ $CREDENTIALS -eq 1 ]; then
-    echo "AUTHORITIES SETUP ..."
+    # echo "AUTHORITIES SETUP ..."
     for ((i=1; i<=AUTHORITIES; i++))
     do
         python3 Authority/node.py --id $i &
@@ -78,7 +79,7 @@ done
 # START MIXNODES
 # ==========================================
 
-echo "MIXNODES SETUP ..."
+# echo "MIXNODES SETUP ..."
 for ((i=1; i<=MIXNODES; i++))
 do
     python3 Mixnode/main.py --id $i &
@@ -103,7 +104,7 @@ done
 # ==========================================
 
 
-echo "RUNNING CLIENTS ..."
+# echo "RUNNING CLIENTS ..."
 for ((i=1; i<=CLIENTS; i++))
 do
     python3 Client/main.py --id $i &
@@ -113,6 +114,7 @@ done
 # Automatically stop the script if no UDP activity is detected
 # ==========================================
 
+touch /tmp/udp_activity
 tshark -l -i lo -f "udp port 5000" 2>/dev/null |
 sleep 0.1
 while read -r line; do
@@ -123,8 +125,8 @@ while true; do
     last=$(stat -c %Y /tmp/udp_activity)
     now=$(date +%s)
 
-    if (( now - last >= 1 )); then
-        echo "No activity for 1 seconds - exiting..."
+    if (( now - last >= 3 )); then
+        # echo "No activity for 3 seconds - exiting..."
 
         pkill -f Authority/node.py
         pkill -f Mixnode/main.py
