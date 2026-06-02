@@ -25,6 +25,8 @@ async def main(node_id: int) -> None:
 
     # == SEND packet == 
     await client.send_packet(own_ip) # TODO: send to self just for testing, change to real destination later
+    await client.send_packet(own_ip)
+    await client.send_packet(own_ip)
 
     #print(OP_COUNT) 
     # path=5: {'RND': {'Fr': 1, 'G1': 0, 'G2': 0}, 'ADD': {'Fr': 10, 'G1': 65, 'G2': 0, 'GT': 0}, 'MUL': {'Fr': 96, 'G1': 76, 'G2': 0, 'GT': 0}, 'FROM': {'G1': 5, 'G2': 0}, 'TO': {'G1': 0, 'G2': 0}, 'PAIR': 0, 'MAP': 2, 'UNMAP': 0}

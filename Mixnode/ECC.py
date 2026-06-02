@@ -3,10 +3,6 @@ from hashlib import sha256
 
 def reset_OP_COUNT(): 
     global OP_COUNT;
-    try:
-        print(OP_COUNT);
-    except:
-        pass
     OP_COUNT = {
         "RND":{
             "Fr":0,

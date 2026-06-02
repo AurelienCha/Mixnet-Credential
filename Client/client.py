@@ -40,7 +40,6 @@ class Client:
             case Stage.SIGN_CLIENT:
                 await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
             case Stage.HEADER:
-                print(OP_COUNT)
                 pass 
 
     # ========================================================

@@ -18,8 +18,6 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     import csv
-
-    RESULT_FOLDER = '.results/'
     
     times_packages = []
     times_processes = []
@@ -36,7 +34,7 @@ if __name__ == "__main__":
             print(f"Error occurred for path_length {r}: {e}")
 
     # Save CSV
-    with open(f"{RESULT_FOLDER}original_sphinx_computation_time.csv", "w", newline="") as f:
+    with open(f".data/original_sphinx_computation_time.csv", "w", newline="") as f:
         writer = csv.writer(f)
 
         writer.writerow([
@@ -69,7 +67,7 @@ if __name__ == "__main__":
     plt.tight_layout()
 
     # Save figure
-    plt.savefig(f"{RESULT_FOLDER}original_sphinx_computation_time.png", dpi=300)
+    plt.savefig(f".results/original_sphinx_computation_time.png", dpi=300)
 
     # Optional: display the plot interactively
     plt.show() 
