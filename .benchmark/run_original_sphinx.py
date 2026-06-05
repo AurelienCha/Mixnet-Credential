@@ -1,6 +1,6 @@
 if __name__ == "__main__":
     # IMPORT AND ADAPT THE TEST FUNCTION
-    import _external_code.sphinxmix.SphinxClient as sc
+    import external_code.sphinxmix.SphinxClient as sc
     import inspect
 
     source = inspect.getsource(sc.test_c25519)
@@ -23,18 +23,18 @@ if __name__ == "__main__":
     times_processes = []
 
     # Run test_c25519 for path lengths 1 to 7 and collect timings of Original Sphinx implementation of G. Danezis
-    for r in range(1, 8):
+    for r in range(1, 11):
         try:
             T_package, T_process = test_c25519(r)
 
-            times_packages.append((r, T_package))
-            times_processes.append((r, T_process))
+            times_packages.append((r, 1000*T_package))
+            times_processes.append((r, 1000*T_process))
 
         except Exception as e:
             print(f"Error occurred for path_length {r}: {e}")
 
     # Save CSV
-    with open(f".data/original_sphinx_computation_time.csv", "w", newline="") as f:
+    with open(f".benchmark/.data/original_sphinx_time.csv", "w", newline="") as f:
         writer = csv.writer(f)
 
         writer.writerow([
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     plt.plot(x, y_process, marker="s", label="Processing")
 
     plt.xlabel("Path length")
-    plt.ylabel("Time (seconds)")
+    plt.ylabel("Time (ms)")
     plt.title("Sphinx Timing Benchmark")
 
     plt.grid(True)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     plt.tight_layout()
 
     # Save figure
-    plt.savefig(f".results/original_sphinx_computation_time.png", dpi=300)
+    plt.savefig(f".benchmark/.results/original_sphinx_time.png", dpi=300)
 
     # Optional: display the plot interactively
     plt.show() 

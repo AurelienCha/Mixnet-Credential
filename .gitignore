@@ -4,6 +4,7 @@
 # Ignore TEST folder
 TEST/
 .logs/
+.tmp/
 
 # Ignore TODO file
 todo.md

@@ -3,29 +3,23 @@ clear
 rm -rf .benchmark/.data/.logs/
 
 # First compute the number of runs
-total_runs=0
-for ((p=3; p<=11; p+=2)); do # PATH LENGTH 
-    for ((m=p; m<=50; m+=20)); do # NBR MIXNODES
-        for ((c=1; c<=50; c+=20)); do # NBR CLIENT
 
-            # NO CREDENTIALS
-            total_runs=$((total_runs + 1))
+# Parameters values
+PATH_LENGTH=(3 4 5 6 7)
+THRESHOLD=(3 6 12) 
+BIG_VALUES=(15 30 60) # for NBR_MIXNODES, NBR_CLIENTS & NBR_AUTHORITIES
 
-            # WITH CREDENTIALS
-            for ((t=3; t<=20; t+=5)); do # THRESHOLD
-                for ((a=t; a<=50; a+=20)); do # NBR AUTHORITIES
-                    total_runs=$((total_runs + 1))
-                done
-            done
-        done
-    done
-done
+# Compute the number of runs
+PATH_SIZE=${#PATH_LENGTH[@]}
+THRESHOLD_SIZE=${#THRESHOLD[@]}
+SIZE_BIG=${#BIG_VALUES[@]}
+total_runs=$((THRESHOLD_SIZE * PATH_SIZE * SIZE_BIG**3 + PATH_SIZE * SIZE_BIG**2))
 
-# Run all the configs
 i=0
-for ((p=3; p<=11; p+=2)); do # PATH LENGTH 
-    for ((m=p; m<=50; m+=20)); do # NBR MIXNODES
-        for ((c=1; c<=50; c+=20)); do # NBR CLIENT
+# Run all tests
+for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
+    for m in "${BIG_VALUES[@]}"; do  # NBR_MIXNODES
+        for c in "${BIG_VALUES[@]}"; do  # NBR_CLIENT
 
             # NO CREDENTIALS
             i=$((i + 1))
@@ -35,8 +29,9 @@ for ((p=3; p<=11; p+=2)); do # PATH LENGTH
             mkdir -p $dir
             mv .logs/* -t $dir
 
-            for ((t=3; t<=20; t+=5)); do # THRESHOLD
-                for ((a=t; a<=50; a+=20)); do # NBR AUTHORITIES
+            # WITH CREDENTIALS
+            for t in "${THRESHOLD[@]}"; do  # THRESHOLD
+                for a in "${BIG_VALUES[@]}"; do  # NBR_AUTHORITIES
 
                     # WITH CREDENTIALS
                     i=$((i + 1))
@@ -48,9 +43,11 @@ for ((p=3; p<=11; p+=2)); do # PATH LENGTH
 
                 done
             done
+
         done
     done
 done
+
 
 echo "Gathering all CSV files..."
 python .benchmark/gather_timing_data.py
