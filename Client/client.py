@@ -9,7 +9,7 @@ from crypto import Crypto
 from header import Header
 from ECC import *
 
-from config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
+from config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 
 class Stage(StrEnum):
@@ -93,8 +93,8 @@ class Client:
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return (
             credential
-            + sum([signed_public_keys[i] for i in range(-1, -PATH_LENGTH, -1)])
-            + sum([SIGNED_GENERATORS[i] * sum(shared_secrets[:PATH_LENGTH-i]) for i in range(PATH_LENGTH)])
+            + sum([signed_public_keys[i] for i in range(-1, -PATH_LENGTH, -1)])  
+            + sum([SIGNED_GENERATOR_SUMS[i] * shared_secrets[-i-1] for i in range(PATH_LENGTH)])
         )
 
     # ========================================================

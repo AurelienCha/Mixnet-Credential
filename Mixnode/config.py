@@ -25,7 +25,7 @@ if CREDENTIALS:
         path_length: int
         authority_pk: G2
         generators: list[G1]
-        signed_generators: list[G1]
+        signed_generator_sum: G1
         authorities: list[str]
         threshold: int
         nbr_mixnodes: int
@@ -41,7 +41,7 @@ if CREDENTIALS:
                 path_length=raw["path_length"],
                 authority_pk=G2().fromstr(raw["authority_PK"].encode()),
                 generators=[G1().fromstr(value.encode()) for value in raw["generators"]],
-                signed_generators=[G1().fromstr(value.encode()) for value in raw["signed_generators"]],
+                signed_generator_sum=G1().fromstr(raw["signed_generator_sums"][-1].encode()),
                 authorities=raw["authorities"],
                 threshold=raw["threshold"],
                 nbr_mixnodes=raw["nbr_mixnodes"],
@@ -99,9 +99,9 @@ if CREDENTIALS:
     THRESHOLD = config.threshold
     AUTHORITIES = config.authorities
     AUTHORITY_PK = config.authority_pk
-    SIGNED_GENERATORS = config.signed_generators
+    SIGNED_GENERATOR_SUM = config.signed_generator_sum
 else:
     THRESHOLD = None
     AUTHORITIES = None
     AUTHORITY_PK = None
-    SIGNED_GENERATORS = None
+    SIGNED_GENERATOR_SUM = None

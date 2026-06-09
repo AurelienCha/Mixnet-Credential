@@ -22,6 +22,21 @@ AUTH_FCTS = ['sign_mix', 'sign_client', 'setup',   'send_and_aggregate_shares', 
 CLIENT_FCTS = ['get_credential', 'build_packet',   'encode_destination','select_mixnodes','derive_shared_secrets','update_credential','compute_layers',   'initial_layer', 'add_layer', 'compute_gamma']
 MIX_FCTS = ['sign_public_key', 'process_header',   'verify_credential','compute_shared_secret','verify_integrity','decrypt_beta','update_alpha','update_credential','get_next_hop']
 
+FCTS = {
+    'Authority': ['sign_mix', 'sign_client', {
+        'setup': ['send_and_aggregate_shares', 'sign_params', 'verif_sign_params']
+    }],
+    'Client': ['get_credential', {
+        'build_packet': ['encode_destination','select_mixnodes','derive_shared_secrets','update_credential', {
+            'compute_layers': ['initial_layer', 'add_layer', 'compute_gamma']
+        }]
+    }],
+    'Mixnodes': ['sign_public_key', {
+        'process_header': ['verify_credential','compute_shared_secret','verify_integrity','decrypt_beta','update_alpha','update_credential','get_next_hop']
+    }]
+}
+
+
 fct_groups = [
     ("AUTH", AUTH_FCTS),
     ("CLIENT", CLIENT_FCTS),

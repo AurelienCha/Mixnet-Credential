@@ -144,7 +144,7 @@ async def main(ID):
     authority_PK, *signed_generators = await node.setup()
 
     if ID == 1:  # One of the authority make signature public
-        config.update({"signed_generators": [str(sign_G) for sign_G in signed_generators]})
+        config.update({"signed_generator_sums": [str(sum(signed_generators[:i])) for i in range(1, len(signed_generators)+1)]}) # [str(sign_G) for sign_G in signed_generators]})
         config.update({"authority_PK": str(authority_PK)})
         with open(".public.json", "w", encoding="utf-8") as file:
             json.dump(config, file, indent=4)

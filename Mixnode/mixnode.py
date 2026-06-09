@@ -10,7 +10,7 @@ from crypto import Crypto
 from header import Header
 from ECC import *
 
-from config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATORS
+from config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUM
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -28,7 +28,7 @@ class Mixnode:
         self.signature_queue: asyncio.Queue = asyncio.Queue() # TODO... instead of buffer
 
         # Crypto
-        self.signed_generator_sum = sum(SIGNED_GENERATORS) if CREDENTIALS else None
+        self.signed_generator_sum = SIGNED_GENERATOR_SUM if CREDENTIALS else None
 
         self.secret_key = Fr().randomize()
         self.public_key = G1().base_point() * self.secret_key
