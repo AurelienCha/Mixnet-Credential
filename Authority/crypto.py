@@ -6,7 +6,7 @@ from log import timing
 class Crypto:
     def __init__(self, ip, threshold, generators):
         self.threshold = threshold
-        self.generators = [G2().base_point()] + [G1().fromstr(g.encode()) for g in generators]
+        self.generators = [G1().fromstr(g.encode()) for g in generators[::2]]
 
         self.x = Fr(Crypto.hash(ip))
         self.coefficients = [Fr().randomize() for _ in range(threshold)] 
@@ -36,7 +36,7 @@ class Crypto:
         return P * self.secret_share
 
     def sign_params(self):
-        return [self.x, self.sign(self.generators[0])] + [self.sign(G) for G in self.generators[1::2]]
+        return [self.x, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators]
     
     @staticmethod
     def lagrange_interpolation(points):
