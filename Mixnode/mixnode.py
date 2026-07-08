@@ -3,14 +3,16 @@ from typing import Any
 from enum import StrEnum
 from random import sample
 import asyncio
+from hashlib import sha256
+import hmac
 
-from log import timing
-from network import Network
-from crypto import Crypto
-from header import Header
-from ECC import *
+from common.log import timing
+from common.header import Header
+from common.network import Network
+from common.crypto import lagrange_interpolation
+from common.ECC import *
 
-from config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUM
+from Mixnode.config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUM
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -44,16 +46,11 @@ class Mixnode:
     async def handle_message(self, ip: str, message_type: str, message: Any) -> None:
         match message_type:
             case Stage.SIGN_MIX:
-                await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
+                await self.signature_queue.put((hash_to_Fr(ip.encode()), message))
 
             case Stage.HEADER:
                 header: Header = message
-                next_ip, processed_header = header.process_header(
-                    secret_key=self.secret_key,
-                    signed_generator_sum=self.signed_generator_sum,
-                    sign_pk_lookup=self.sign_pk_lookup,
-                    pk_to_ip=self.pk_to_ip,
-                )
+                next_ip, processed_header = self.process(header)
 
                 await self.send(next_ip, Stage.HEADER, processed_header) 
 
@@ -63,4 +60,71 @@ class Mixnode:
             await self.send(authority, Stage.SIGN_MIX, self.public_key)
 
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        return Crypto.lagrange_interpolation(points)
+        return lagrange_interpolation(points)
+
+    
+    # ========================================================
+    # HEADER PROCESSING
+    # ========================================================
+    class IntegrityError(Exception):
+        """Raised when packet integrity verification fails."""
+
+    class CredentialError(Exception):
+        """Raised when credential verification fails."""
+
+
+    @timing
+    def process(self, header: Header) -> tuple[str, Header]:
+        if header.credential:
+            self.verify_credential(header)
+
+        shared_secret = self.compute_shared_secret(header.alpha)
+
+        self.verify_integrity(header, shared_secret)
+        self.decrypt_beta(header, shared_secret)
+        self.update_alpha(header, shared_secret)
+
+        if header.credential:
+            self.update_credential(header, shared_secret)
+
+        return (self.get_next_hop(header), header)
+
+    @timing
+    def verify_credential(self, header: Header) -> None:
+        if (sum(header.beta[::2]) @ AUTHORITY_PK) != (header.credential @ G2().base_point()):
+            raise CredentialError("Credential verification failed")
+
+    @timing
+    def compute_shared_secret(self, alpha: G1) -> Fr:
+        return (alpha * self.secret_key) >> Fr()    
+    
+    @timing
+    def verify_integrity(self, header: Header, shared_secret: Fr) -> None:
+        concatenate_encoding = b"".join(beta.serialize() for beta in header.beta) 
+        expected_gamma = G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
+
+        if header.gamma != expected_gamma:
+            raise IntegrityError("Header integrity verification failed")
+
+    @timing
+    def decrypt_beta(self, header: Header, shared_secret: Fr) -> None:
+        chunks = [*header.beta, G1().clear(), G1().clear()]
+
+        for index, value in enumerate(chunks):
+            chunks[index] = value - GENERATORS[index] * shared_secret
+
+        header.next_hop, header.gamma, *header.beta = chunks
+
+    @timing
+    def update_alpha(self, header: Header, shared_secret: Fr) -> None:
+        header.alpha *= shared_secret
+
+    @timing
+    def update_credential(self, header: Header, shared_secret: Fr) -> None:
+        sign_next_hop = self.sign_pk_lookup.get(str(header.next_hop), G1().randomize()) # If not found, means final destination just randomize credential
+        header.credential -= (self.signed_generator_sum * shared_secret + sign_next_hop)
+
+    @timing
+    def get_next_hop(self, header: Header) -> str:
+        return self.pk_to_ip.get(str(header.next_hop), decode_ip(header.next_hop))
+

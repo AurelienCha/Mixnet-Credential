@@ -2,11 +2,11 @@ import asyncio, argparse, json
 from itertools import islice
 from enum import StrEnum
 
-from log import create_logger, timing
-from network import Network
-from crypto import Crypto
+from common.log import create_logger, timing
+from common.network import Network
+from common.crypto import lagrange_interpolation, Polynomial
 
-from ECC import *
+from common.ECC import *
 
 class Stage(StrEnum):
     SETUP_SHARES = "SHARES"
@@ -45,7 +45,11 @@ class Authority:
         self.network = Network(ip, self.handle_message)
 
         # Crypto
-        self.crypto = Crypto(ip, threshold, generators)
+        self.id = hash_to_Fr(ip.encode())
+        self.threshold = threshold
+        self.generators = [G1().fromstr(g.encode()) for g in generators[::2]]
+        self.secret_share = None
+        self.rnd_polynomial = Polynomial([Fr().randomize() for _ in range(self.threshold)])
 
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
@@ -59,9 +63,27 @@ class Authority:
             case Stage.VERIF_SETUP:
                 await self.buffer[msg_type].add(message)
             case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, self.crypto.sign_mix(message))  # message = PK -> sign PK
+                await self.send(ip, Stage.SIGN_MIX, self.sign_mix(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
-                await self.send(ip, Stage.SIGN_CLIENT, self.crypto.sign_client(message)) 
+                await self.send(ip, Stage.SIGN_CLIENT, self.sign_client(message)) 
+    
+    @timing
+    def sign_mix(self, P):
+        return self.sign(P)
+
+    @timing
+    def sign_client(self, P):
+        return self.sign(P)
+
+    def sign(self, P):
+        return P * self.secret_share
+
+    def aggregate_secret_key(self, y_shares):
+        self.secret_share = sum(y_shares, Fr(0))
+    
+    def sign_parameters(self):
+        return [self.id, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators]
+    
     
     @timing
     async def setup(self):
@@ -71,51 +93,39 @@ class Authority:
             self.stage = Stage.SETUP_SHARES
 
             # Send shares to each authorities
-            await self.buffer[self.stage].add(self.crypto.polynomial(self.network.ip))
+            await self.buffer[self.stage].add(self.rnd_polynomial(self.id))
             for peer_ip in self.peers:
-                await self.send(peer_ip, self.stage, self.crypto.polynomial(peer_ip))  
+                peer_id = hash_to_Fr(peer_ip.encode())
+                await self.send(peer_ip, self.stage, self.rnd_polynomial(peer_id))  
 
             # Before aggregation needs to wait all shares
             y_shares = await self.buffer[self.stage].wait(len(self.peers)+1)
-            self.crypto.aggregate_secret_key(y_shares)
+            self.aggregate_secret_key(y_shares)
                    
         @timing
         async def sign_params():
             self.stage = Stage.SIGN_PARAM
 
             # Own partial sign
-            sign = self.crypto.sign_params()
+            sign = self.sign_parameters()
             await self.buffer[self.stage].add(sign)
 
             # Send its partial sign to peers (circular send)
-            selected_peers = islice(self.peers, self.crypto.threshold - 1)
+            selected_peers = islice(self.peers, self.threshold - 1)
             for peer_ip in selected_peers:
                 await self.send(peer_ip, self.stage, sign.copy())  
             
             # Wait enough partial signatures (and transform into list of points)
-            partial_signed_params = await self.buffer[self.stage].wait(self.crypto.threshold)
+            partial_signed_params = await self.buffer[self.stage].wait(self.threshold)
             x, *y_values = zip(*partial_signed_params)
             points_list = [list(zip(x, vals)) for vals in y_values]
 
             # Lagrange interpolation
-            return [Crypto.lagrange_interpolation(points) for points in points_list]
-        
-        @timing
-        async def verif_sign_params(signed_params):
-            self.stage = Stage.VERIF_SETUP
-
-            # Send signed params hashed to a peer (next one)
-            msg = Crypto.hash(signed_params)
-            next_peer = next(iter(self.peers))
-            await self.send(next_peer, self.stage, msg) 
-
-            # Verify with received hash
-            answer = await self.buffer[self.stage].wait(1)
-            assert msg == answer[0]
+            return [lagrange_interpolation(points) for points in points_list]
 
         await send_and_aggregate_shares()
         signed_params = await sign_params()
-        await verif_sign_params(signed_params)
+        
         return signed_params
   
     async def start(self):

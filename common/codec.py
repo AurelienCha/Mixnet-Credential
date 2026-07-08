@@ -1,19 +1,19 @@
 from typing import Any
 
-from header import Header
-from ECC import *
+from common.ECC import *
+from common.header import Header
 
 # ============================================================
-# SERIALIZER 
+# SERIALIZER / DESERIALIZER
 # ============================================================
 
 SERIALIZERS = {
-    Header: ("Header", lambda value: value.encode()),
-    G1: ("G1", lambda value: value.serialize()),
-    G2: ("G2", lambda value: value.serialize()),
-    Fr: ("Fr", lambda value: value.serialize()),
-    str: ("str", lambda value: value),
-    int: ("int", lambda value: value),
+    'Header': ("Header", lambda value: value.encode()),
+    'G1': ("G1", lambda value: value.serialize()),
+    'G2': ("G2", lambda value: value.serialize()),
+    'Fr': ("Fr", lambda value: value.serialize()),
+    'str': ("str", lambda value: value),
+    'int': ("int", lambda value: value),
 }
 
 
@@ -30,14 +30,17 @@ DESERIALIZERS = {
 # ENCODE / DECODE OBJECT
 # ============================================================
 
+def get_type(obj: Any) -> type:
+    return type(obj).__name__
+
 def encode_object(obj: Any) -> tuple[str, Any]:
     if isinstance(obj, (list, tuple)):
         return (
-            type(obj)(SERIALIZERS[type(item)][0] for item in obj),
-            type(obj)(SERIALIZERS[type(item)][1](item) for item in obj)
+            type(obj)(SERIALIZERS[get_type(item)][0] for item in obj),
+            type(obj)(SERIALIZERS[get_type(item)][1](item) for item in obj)
         )
 
-    object_type, encoder = SERIALIZERS[type(obj)]
+    object_type, encoder = SERIALIZERS[get_type(obj)]
     return (object_type, encoder(obj))
 
 def decode_object(packet: tuple[str, Any]) -> Any:
@@ -62,4 +65,3 @@ def encode_message(message_type: str, message: Any) -> bytes:
 def decode_message(data: bytes) -> tuple[str, Any]:
     message_type, *message = eval(data.decode())
     return (message_type, decode_object(message))
-

@@ -2,9 +2,8 @@ import logging, os, inspect
 from functools import wraps
 from hashlib import sha256
 
-from config import CREDENTIALS
-
 from os import getenv
+CREDENTIALS = True if getenv("CREDENTIALS") == "1" else False
 VERBOSE = True if getenv("VERBOSE") == "1" else False
 
 COLORS = {

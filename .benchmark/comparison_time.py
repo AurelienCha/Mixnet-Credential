@@ -47,4 +47,6 @@ df = df[df['path_length'] >= 3]
 df = df[df['path_length'] <= 7]
 
 sns.lineplot(data=df, x="path_length", y="time", hue="version", style="function")
+plt.xticks([3,4,5,6,7])
+plt.ylabel("time (ms)")
 plt.savefig(f".benchmark/.results/test.png", dpi=300)

@@ -222,3 +222,17 @@ def decode_ip(point: G1) -> str: # IP-Point to IPv4
     OP_COUNT["UNMAP"] += 1
     value = int(point.tostr().split()[1].decode(), 16) >> 221
     return f"{(value >> 24) & 255}.{(value >> 16) & 255}.{(value >> 8) & 255}.{value & 255}"
+
+##########
+## HASH ##
+##########
+
+# Curve order
+R = int("0x2523648240000001BA344D8000000007FF9F800000000010A10000000000000D", 16)
+def hash_to_Fr(msg: bytes):
+    h = sha256(msg).digest()
+    n = int.from_bytes(h, "big")
+    n = n % R   # IMPORTANT: manual reduction
+    x = Fr()
+    x.setInt(n)
+    return x

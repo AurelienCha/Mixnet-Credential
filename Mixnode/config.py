@@ -16,10 +16,15 @@ from typing import Any
 import json, fcntl
 from time import sleep 
 
-from ECC import *
-from config import CREDENTIALS 
+from common.ECC import *
 
 if CREDENTIALS:
+
+    @dataclass(slots=True)
+    class MixnodeInfo:
+        public_key: G1
+        signed_public_key: G1
+        
     @dataclass(slots=True)
     class PublicConfig:
         path_length: int
@@ -50,11 +55,16 @@ if CREDENTIALS:
 
 else:
     @dataclass(slots=True)
+    class MixnodeInfo:
+        public_key: G1
+        signed_public_key: G1
+
+    @dataclass(slots=True)
     class PublicConfig:
         path_length: int
         generators: list[G1]
-        nbr_mixnodes: int
-        mixnodes: dict[str, Any]
+        nbr_mixnodes: int # TODO
+        mixnodes: dict[str, Any] 
 
     def load_public_config() -> PublicConfig:
         with open(".public.json", encoding="utf-8") as file:

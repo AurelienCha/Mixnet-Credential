@@ -1,9 +1,9 @@
 import argparse, asyncio
 
-from client import Client
-from log import create_logger
-from config import CREDENTIALS
-from ECC import *
+from Client.client import Client
+from common.log import create_logger
+from Client.config import CREDENTIALS
+from common.ECC import *
 
 # ============================================================
 # MAIN
@@ -30,10 +30,8 @@ async def main(node_id: int) -> None:
     for _ in range(1):
         await client.send_packet(own_ip)
 
-    # print(OP_COUNT) 
-
-    await asyncio.Event().wait()  # <- keeps program alive
-
+    while not client.shutdown_event.is_set():
+        await asyncio.sleep(0.1)
 
 # ============================================================
 # CLI

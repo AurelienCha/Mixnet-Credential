@@ -1,9 +1,9 @@
 import asyncio, argparse
 
-from config import CREDENTIALS, NBR_MIXNODES, load_public_config, publish_mixnode
-from mixnode import Mixnode
-from log import create_logger
-from ECC import *
+from Mixnode.config import CREDENTIALS, NBR_MIXNODES, load_public_config, publish_mixnode
+from Mixnode.mixnode import Mixnode
+from common.log import create_logger
+from common.ECC import *
 
 
 # ============================================================

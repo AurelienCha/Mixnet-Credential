@@ -1,16 +1,15 @@
 import asyncio
-import json
 
-from codec import encode_message, decode_message
-import log
+from common.codec import encode_message, decode_message
+import common.log as log
 
-PORT = 5000
+PORT = 5002
 
 class Network(asyncio.DatagramProtocol):
     
     def __init__(self, ip, handle_message):
         self.ip = ip
-        self.on_message = handle_message  # callback  # connect layers (i.e. using authority.py fct)
+        self.handle_message = handle_message  # callback  # connect layers (i.e. using authority.py fct)
 
     # =========================
     # START
@@ -33,8 +32,8 @@ class Network(asyncio.DatagramProtocol):
         msg_type, msg = decode_message(data)
         log.LOGGING(data=msg, sender=ip, comment=msg_type)
         
-        if self.on_message:
-            asyncio.create_task(self.on_message(ip, msg_type, msg))
+        if self.handle_message:
+            asyncio.create_task(self.handle_message(ip, msg_type, msg))
 
     # =========================
     # SEND

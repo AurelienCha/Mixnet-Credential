@@ -13,8 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 import json
 
-from ECC import *
-from config import CREDENTIALS 
+from common.ECC import *
 
 if CREDENTIALS:
 

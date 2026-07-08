@@ -2,14 +2,16 @@ from __future__ import annotations
 from enum import StrEnum
 from random import sample
 import asyncio
+from hashlib import sha256
+import hmac
 
-from log import timing
-from network import Network
-from crypto import Crypto
-from header import Header
-from ECC import *
+from common.log import timing
+from common.header import Header
+from common.network import Network
+from common.crypto import lagrange_interpolation
+from common.ECC import *
 
-from config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from Client.config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 
 class Stage(StrEnum):
@@ -22,8 +24,10 @@ class Client:
     def __init__(self, node_id: int):
         self.network = Network(f"127.0.100.{node_id}", self.handle_message)
 
-        self.signature_queue: asyncio.Queue = asyncio.Queue()
         self.credentials: dict[str, G1] = {}
+        self.signature_queue: asyncio.Queue = asyncio.Queue()
+        self.shutdown_event = asyncio.Event()
+    
     
     # ========================================================
     # NETWORK
@@ -38,9 +42,9 @@ class Client:
     async def handle_message(self, ip: str, message_type: Stage, message) -> None:
         match message_type:
             case Stage.SIGN_CLIENT:
-                await self.signature_queue.put((Fr(Crypto.hash(ip)), message))
+                await self.signature_queue.put((hash_to_Fr(ip.encode()), message))
             case Stage.HEADER:
-                pass 
+                self.shutdown_event.set() # await self.send_packet(self.network.ip) # resend packet
 
     # ========================================================
     # CREDENTIALS
@@ -54,7 +58,7 @@ class Client:
             await self.send(authority, Stage.SIGN_CLIENT, destination)
         
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        return Crypto.lagrange_interpolation(points)
+        return lagrange_interpolation(points)
 
     # ========================================================
     # PATH SELECTION
@@ -123,12 +127,41 @@ class Client:
         # Credential
         credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys) if CREDENTIALS else None
 
-        header = Header.build(
-            destination= delta,
-            mixes=public_keys,
-            shared_secrets=shared_secrets,
-            alpha=alpha,
-            credential=credential,
-        )
+        beta, gamma = self.compute_layers(delta, public_keys, shared_secrets)
+
+        header = Header(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
 
         return (first_hop, header)
+
+    # ============================================================
+    # LAYER COMPUTATION
+    # ============================================================
+
+    @timing
+    def compute_gamma(self, betas: list[G1], shared_secret: Fr) -> G1:
+        concatenate_encoding = b"".join(beta.serialize() for beta in betas) 
+        return G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
+
+    @timing
+    def initial_layer(self, destination: G1, shared_secrets: list[Fr]):
+        beta = [destination + GENERATORS[0] * shared_secrets[-1]] + [-sum([GENERATORS[BETA_SIZE + j - 2*i] * shared_secrets[i] for i in range(j//2, PATH_LENGTH-1)]) for j in range(BETA_SIZE-1)]
+        gamma = self.compute_gamma(beta,  shared_secrets[-1])
+        return beta, gamma
+
+    @timing
+    def add_layer(self, next_hop: G1, beta: list[G1], gamma: G1, shared_secret: Fr):
+
+        next_beta = [next_hop, gamma, *beta[:BETA_SIZE]]
+        next_beta = [next_beta[i] +  GENERATORS[i] * shared_secret for i in range(BETA_SIZE)]
+
+        next_gamma = self.compute_gamma(next_beta, shared_secret)
+        return next_beta, next_gamma
+
+    @timing
+    def compute_layers(self, destination: G1, mixes: list[G1], shared_secrets: list[Fr]):
+        beta, gamma = self.initial_layer(destination, shared_secrets)
+
+        for i in range(-2, -PATH_LENGTH-1, -1): # 1, 0
+            beta, gamma = self.add_layer(mixes[i+1], beta, gamma, shared_secrets[i])
+
+        return beta, gamma

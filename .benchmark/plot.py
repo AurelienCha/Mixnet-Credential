@@ -73,7 +73,7 @@ vmin = min(df.min().min() for df in all_results.values())
 vmax = max(df.max().max() for df in all_results.values())
 
 # Create figure with gridspec for colorbar spanning full height
-fig = plt.figure(figsize=(12, 10))
+fig = plt.figure(figsize=(19, 12))
 gs = gridspec.GridSpec(3, 2, figure=fig, width_ratios=[20, 1], hspace=0.1, wspace=0.1)
 
 last_im = None
@@ -81,23 +81,24 @@ for idx, (group_name, _) in enumerate(fct_groups):
     ax = fig.add_subplot(gs[idx, 0])
 
     pivot = all_results[group_name]
-    im = sns.heatmap(pivot, annot=True, fmt=".1f", cmap="coolwarm", center=1, vmin=vmin, vmax=vmax, ax=ax, cbar=False)
+    im = sns.heatmap(pivot, annot=True, fmt=".1f", cmap="coolwarm", center=1, vmin=vmin, vmax=vmax, ax=ax, cbar=False)#, yticklabels=False)
     last_im = im
 
-    ax.set_ylabel(group_name, fontsize=12, fontweight='bold')
+    ax.yaxis.set_label_position("right")
+    ax.set_ylabel(group_name, fontsize=14, fontweight='bold')
 
     # Only show x-axis labels on bottom plot
     if idx < 2:
         ax.set_xticklabels([])
-        ax.set_xlabel('')
+        ax.set_xlabel('', fontsize=14, fontweight='bold')
     else:
-        ax.set_xlabel("Parameter", fontsize=11)
+        ax.set_xlabel('', fontsize=14, fontweight='bold')
 
 # Create colorbar spanning all three subplots
 cax = fig.add_subplot(gs[:, 1])
 cbar = fig.colorbar(last_im.collections[0], cax=cax)
-cbar.set_label('Degree of scaling', fontsize=11)
-plt.suptitle("Degree of scaling for the CPU time execution for each functions", fontsize=14)
+cbar.set_label('Degree of scaling', fontsize=13)
+plt.suptitle("Degree of scaling for the CPU time execution for each functions", fontsize=16)
 plt.show()
 
 fig.savefig(".benchmark/.results/CPU_scaling.png")

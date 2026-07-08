@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# ==========================================
+# Cleanup PROCESSES
+# ==========================================
+
+cleanup() {
+    pkill -f Authority.node
+    pkill -f Mixnode.main
+    pkill -f Client.main
+}
+
+trap cleanup EXIT INT TERM
+
+# ==========================================
+# Default Parameters
+# ==========================================
+
 PATH_LENGTH=5
 THRESHOLD=10
 AUTHORITIES=20
@@ -28,14 +44,6 @@ export CREDENTIALS
 export VERBOSE
 
 # ==========================================
-# KILL OLD PROCESSES
-# ==========================================
-
-pkill -f Authority/node.py
-pkill -f Mixnode/main.py
-pkill -f Client/main.py
-
-# ==========================================
 # CLEAN LOGS and config
 # ==========================================
 
@@ -52,7 +60,7 @@ rm -f .public.json
 # GENERATE CONFIG
 # ==========================================
 
-python3 config.py --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES || exit 1
+python3 -m configuration --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES || exit 1
 
 # ==========================================
 # START AUTHORITIES
@@ -62,7 +70,7 @@ if [ $CREDENTIALS -eq 1 ]; then
     # echo "AUTHORITIES SETUP ..."
     for ((i=1; i<=AUTHORITIES; i++))
     do
-        python3 Authority/node.py --id $i &
+        python3 -m Authority.node --id $i &
     done
 else
     cp .config.json .public.json
@@ -84,7 +92,7 @@ done
 # echo "MIXNODES SETUP ..."
 for ((i=1; i<=MIXNODES; i++))
 do
-    python3 Mixnode/main.py --id $i &
+    python3 -m Mixnode.main --id $i &
 done
 
 # ==========================================
@@ -109,34 +117,34 @@ done
 # echo "RUNNING CLIENTS ..."
 for ((i=1; i<=CLIENTS; i++))
 do
-    python3 Client/main.py --id $i &
+    python3 -m Client.main --id $i #&
 done
 
 # ==========================================
 # Automatically stop the script if no UDP activity is detected
 # ==========================================
 
-touch /tmp/udp_activity
-tshark -l -i lo -f "udp port 5000" 2>/dev/null |
-sleep 0.1
-while read -r line; do
-    touch /tmp/udp_activity
-done &
+# touch /tmp/udp_activity
+# tshark -l -i lo -f "udp port 5000" 2>/dev/null |
+# sleep 0.1
+# while read -r line; do
+#     touch /tmp/udp_activity
+# done &
 
-while true; do
-    last=$(stat -c %Y /tmp/udp_activity)
-    now=$(date +%s)
+# while true; do
+#     last=$(stat -c %Y /tmp/udp_activity)
+#     now=$(date +%s)
 
-    if (( now - last >= 3 )); then
-        # echo "No activity for 3 seconds - exiting..."
+#     if (( now - last >= 3 )); then
+#         # echo "No activity for 3 seconds - exiting..."
 
-        pkill -f Authority/node.py
-        pkill -f Mixnode/main.py
-        pkill -f Client/main.py
-        rm -f /tmp/udp_activity
+#         pkill -f Authority/node.py
+#         pkill -f Mixnode/main.py
+#         pkill -f Client/main.py
+#         rm -f /tmp/udp_activity
         
-        sleep 0.1
-        exit 0
-    fi
-    sleep 1
-done
+#         sleep 0.1
+#         exit 0
+#     fi
+#     sleep 1
+# done
