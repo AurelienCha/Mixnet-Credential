@@ -11,33 +11,14 @@ from common.ECC import *
 class Stage(StrEnum):
     SETUP_SHARES = "SHARES"
     SIGN_PARAM = "SIGN-PARAM"
-    VERIF_SETUP = "VERIF-PARAM"
     SIGN_MIX = "SIGN-MIX"
     SIGN_CLIENT = "SIGN-CLIENT"
-
-
-class Buffer:
-    def __init__(self):
-        self.queue = asyncio.Queue()
-
-    async def add(self, item):
-        await self.queue.put(item)
-
-    async def wait(self, n): 
-        items = []
-        for _ in range(n):
-            item = await self.queue.get()
-            items.append(item)
-        return items
 
 class Authority:
     def __init__(self, id, ip, peers, threshold, generators):
         # Other
-        self.buffer = {
-            Stage.SETUP_SHARES: Buffer(), 
-            Stage.SIGN_PARAM: Buffer(), 
-            Stage.VERIF_SETUP: Buffer(), 
-        }
+        self.setup_queue = asyncio.Queue()
+        self.sign_queue = asyncio.Queue()
         self.stage = None
 
         # Network
@@ -57,11 +38,9 @@ class Authority:
     async def handle_message(self, ip, msg_type, message):
         match msg_type:
             case Stage.SETUP_SHARES: 
-                await self.buffer[msg_type].add(message)
+                await self.setup_queue.put(message)
             case Stage.SIGN_PARAM:
-                await self.buffer[msg_type].add(message)
-            case Stage.VERIF_SETUP:
-                await self.buffer[msg_type].add(message)
+                await self.sign_queue.put(message)
             case Stage.SIGN_MIX:
                 await self.send(ip, Stage.SIGN_MIX, self.sign_mix(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
@@ -93,13 +72,13 @@ class Authority:
             self.stage = Stage.SETUP_SHARES
 
             # Send shares to each authorities
-            await self.buffer[self.stage].add(self.rnd_polynomial(self.id))
+            await self.setup_queue.put(self.rnd_polynomial(self.id))
             for peer_ip in self.peers:
                 peer_id = hash_to_Fr(peer_ip.encode())
                 await self.send(peer_ip, self.stage, self.rnd_polynomial(peer_id))  
 
             # Before aggregation needs to wait all shares
-            y_shares = await self.buffer[self.stage].wait(len(self.peers)+1)
+            y_shares = [await self.setup_queue.get() for _ in range(len(self.peers)+1)]  # non-negligeable time ? (to verify)
             self.aggregate_secret_key(y_shares)
                    
         @timing
@@ -108,7 +87,7 @@ class Authority:
 
             # Own partial sign
             sign = self.sign_parameters()
-            await self.buffer[self.stage].add(sign)
+            await self.sign_queue.put(sign)
 
             # Send its partial sign to peers (circular send)
             selected_peers = islice(self.peers, self.threshold - 1)
@@ -116,7 +95,7 @@ class Authority:
                 await self.send(peer_ip, self.stage, sign.copy())  
             
             # Wait enough partial signatures (and transform into list of points)
-            partial_signed_params = await self.buffer[self.stage].wait(self.threshold)
+            partial_signed_params = [await self.sign_queue.get() for _ in range(self.threshold)]  # non-negligeable time ? (to verify)
             x, *y_values = zip(*partial_signed_params)
             points_list = [list(zip(x, vals)) for vals in y_values]
 
