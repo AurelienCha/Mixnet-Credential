@@ -34,4 +34,9 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--id", type=int, required=True, help="Mixnode identifier")
     arguments = parser.parse_args()
 
-    asyncio.run(main(arguments.id))
+    try:
+        asyncio.run(main(arguments.id))
+
+    except Exception as e:
+        print(f"ERROR: {type(e).__name__}: {e}")
+        sys.exit(1)

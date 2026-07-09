@@ -58,8 +58,7 @@ rm -f .config.json
 
 NETWORK_LOG=".logs/network_capture.log"
 touch $NETWORK_LOG
-tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG >/dev/null 2>&1 &
-TSHARK_PID=$!
+tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG & >/dev/null 2>&1 &
 
 # ==========================================
 # GENERATE CONFIG
@@ -134,6 +133,7 @@ while true; do
     # Exit if no UDP activity for 1 seconds
     if (( now - last >= 1)); then
         mv .config.json .logs/config.json
+        killall tshark
         exit 0
     fi
 

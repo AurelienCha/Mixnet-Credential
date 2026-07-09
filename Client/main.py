@@ -44,4 +44,9 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=100)
     arguments = parser.parse_args()
 
-    asyncio.run(main(arguments.id, arguments.packets))
+    try:
+        asyncio.run(main(arguments.id, arguments.packets))
+
+    except Exception as e:
+        print(f"ERROR: {type(e).__name__}: {e}")
+        sys.exit(1)
