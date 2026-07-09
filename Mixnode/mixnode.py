@@ -12,7 +12,7 @@ from common.network import Network
 from common.crypto import lagrange_interpolation
 from common.ECC import *
 
-from Mixnode.config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUM
+from common.config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -30,7 +30,7 @@ class Mixnode:
         self.signature_queue: asyncio.Queue = asyncio.Queue() # TODO... instead of buffer
 
         # Crypto
-        self.signed_generator_sum = SIGNED_GENERATOR_SUM if CREDENTIALS else None
+        self.signed_generator_sum = SIGNED_GENERATOR_SUMS[-1] if CREDENTIALS else None
 
         self.secret_key = Fr().randomize()
         self.public_key = G1().base_point() * self.secret_key
@@ -121,10 +121,10 @@ class Mixnode:
 
     @timing
     def update_credential(self, header: Header, shared_secret: Fr) -> None:
-        sign_next_hop = self.sign_pk_lookup.get(str(header.next_hop), G1().randomize()) # If not found, means final destination just randomize credential
+        sign_next_hop = self.sign_pk_lookup.get(header.next_hop, G1().randomize()) # If not found, means final destination just randomize credential
         header.credential -= (self.signed_generator_sum * shared_secret + sign_next_hop)
 
     @timing
     def get_next_hop(self, header: Header) -> str:
-        return self.pk_to_ip.get(str(header.next_hop), decode_ip(header.next_hop))
+        return self.pk_to_ip.get(header.next_hop, decode_ip(header.next_hop))
 

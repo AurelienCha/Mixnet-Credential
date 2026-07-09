@@ -236,3 +236,10 @@ def hash_to_Fr(msg: bytes):
     x = Fr()
     x.setInt(n)
     return x
+
+##############
+## Hashable ## (for python dict)
+##############
+def hash_G1(self):
+    return int(sha256(self.serialize()).hexdigest(), 16)
+G1.__hash__ = hash_G1

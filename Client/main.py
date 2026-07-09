@@ -2,7 +2,7 @@ import argparse, asyncio
 
 from Client.client import Client
 from common.log import create_logger, LOGGING
-from Client.config import CREDENTIALS
+from common.config import CREDENTIALS
 from common.ECC import *
 
 # ============================================================

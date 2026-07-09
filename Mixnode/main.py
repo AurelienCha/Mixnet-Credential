@@ -1,6 +1,6 @@
 import asyncio, argparse
 
-from Mixnode.config import CREDENTIALS, NBR_MIXNODES, load_public_config, publish_mixnode
+from common.config import CREDENTIALS, NBR_MIXNODES, load_config, publish_mixnode
 from Mixnode.mixnode import Mixnode
 from common.log import create_logger
 from common.ECC import *
@@ -26,15 +26,15 @@ async def main(node_id: int) -> None:
     
     # == WAIT ALL MIXNODES HAVE PUBLISHED THEIR PUBLIC KEYS ==
     while True:
-        node.mixnodes = load_public_config().mixnodes
+        node.mixnodes = load_config().mixnodes
         if NBR_MIXNODES ==  len(node.mixnodes): 
             node.pk_to_ip = {
-                node["PK"]: ip
+                node.public_key: ip
                 for ip, node in node.mixnodes.items()
             }
 
             node.sign_pk_lookup = {
-                node["PK"]: G1().fromstr(node["sign_PK"].encode())
+                node.public_key: node.signed_public_key
                 for node in node.mixnodes.values()
             } if CREDENTIALS else None
             break
