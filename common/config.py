@@ -15,7 +15,7 @@ from common.ECC import G1, G2
 # ============================================================
 
 CREDENTIALS = getenv("CREDENTIALS") == "1"
-CONFIG_PATH = Path(".public.json")
+CONFIG_PATH = Path(".config.json")
 
 
 # ============================================================
@@ -87,10 +87,13 @@ def load_config(path: Path = CONFIG_PATH) -> PublicConfig:
     )
 
     if CREDENTIALS:
-        config.authority_pk = G2().fromstr(raw["authority_PK"].encode())
-        config.signed_generator_sums = [G1().fromstr(value.encode()) for value in raw["signed_generator_sums"]]
         config.authorities = raw["authorities"]
         config.threshold = raw["threshold"]
+        try:
+            config.authority_pk = G2().fromstr(raw["authority_PK"].encode())
+            config.signed_generator_sums = [G1().fromstr(value.encode()) for value in raw["signed_generator_sums"]]
+        except:
+            pass
 
     return config
 

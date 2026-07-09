@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from common.ECC import *
-PATH_LENGTH=5 # TODO to put in common
+from common.config import PATH_LENGTH
 
 @dataclass(slots=True)
 class Header:

@@ -16,29 +16,14 @@ trap cleanup EXIT INT TERM
 # Default Parameters
 # ==========================================
 
-PATH_LENGTH=5
-THRESHOLD=10
-AUTHORITIES=20
-MIXNODES=20
-CLIENTS=3
-
+PATH_LENGTH=3
+THRESHOLD=3
+AUTHORITIES=3
+MIXNODES=3
+CLIENTS=2
 
 CREDENTIALS=1
 VERBOSE=1
-
-# Override defaults if provided
-while getopts "p:t:a:m:c:z:v:" opt; do
-  case $opt in
-    p) PATH_LENGTH="$OPTARG" ;;
-    t) THRESHOLD="$OPTARG" ;;
-    a) AUTHORITIES="$OPTARG" ;;
-    m) MIXNODES="$OPTARG" ;;
-    c) CLIENTS="$OPTARG" ;;
-    z) CREDENTIALS="$OPTARG" ;;
-    v) VERBOSE="$OPTARG" ;;
-    *) echo "Invalid option"; exit 1 ;;
-  esac
-done
 
 export CREDENTIALS
 export VERBOSE
@@ -54,7 +39,6 @@ mkdir -p .logs/mix
 mkdir -p .logs/client
 
 rm -f .config.json
-rm -f .public.json
 
 # NETWORK LOGS
 NETWORK_LOG=".logs/network_capture.log"
@@ -66,7 +50,7 @@ TSHARK_PID=$!
 # GENERATE CONFIG
 # ==========================================
 
-python3 -m configuration --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES --clients $CLIENTS || exit 1
+python3 -m scripts.configuration --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES --clients $CLIENTS || exit 1
 
 # ==========================================
 # START AUTHORITIES
@@ -78,18 +62,17 @@ if [ $CREDENTIALS -eq 1 ]; then
     do
         python3 -m Authority.node --id $i &
     done
-else
-    cp .config.json .public.json
+
+    # ==========================================
+    # WAIT FOR SETUP COMPLETION
+    # ==========================================
+
+    while ! jq -e '.authority_PK' .config.json >/dev/null; do
+        sleep 0.1
+    done
 fi
 
-# ==========================================
-# WAIT FOR SETUP COMPLETION
-# ==========================================
 
-while [ ! -f .public.json ]
-do
-    sleep 0.1
-done
 
 # ==========================================
 # START MIXNODES
@@ -107,7 +90,7 @@ done
 
 while true
 do
-    COUNT=$(jq '.mixnodes | length' .public.json)
+    COUNT=$(jq '.mixnodes | length' .config.json)
 
     if [ "$COUNT" -ge "$MIXNODES" ]; then
         break
@@ -138,6 +121,7 @@ while true; do
     # Exit if no UDP activity for 1 seconds
     if (( now - last >= 1)); then
         kill $TSHARK_PID
+        mv .config.json .logs/config.json
         exit 0
     fi
 
