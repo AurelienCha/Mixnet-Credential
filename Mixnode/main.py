@@ -18,27 +18,8 @@ async def main(node_id: int) -> None:
     # == START ==
     await node.start()
 
-    # == SIGN and PUBLISH PK ==
-    if CREDENTIALS:
-        await publish_mixnode(node, await node.sign_public_key())  # UPDATE config file with mutex to prevent concurrent overwrite
-    else:
-        await publish_mixnode(node, None)
-    
-    # == WAIT ALL MIXNODES HAVE PUBLISHED THEIR PUBLIC KEYS ==
-    while True:
-        node.mixnodes = load_config().mixnodes
-        if NBR_MIXNODES ==  len(node.mixnodes): 
-            node.pk_to_ip = {
-                node.public_key: ip
-                for ip, node in node.mixnodes.items()
-            }
-
-            node.sign_pk_lookup = {
-                node.public_key: node.signed_public_key
-                for node in node.mixnodes.values()
-            } if CREDENTIALS else None
-            break
-        await asyncio.sleep(0.1)
+    # == Publish Mixnode PK (and PK signed if CREDENTIALS) ==
+    await publish_mixnode(node, await node.sign_public_key() if CREDENTIALS else None)
     
     # == WAIT TO PROCESS PACKET ==
     await asyncio.Event().wait()  # <- keeps alive

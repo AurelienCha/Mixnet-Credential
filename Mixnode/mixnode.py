@@ -12,7 +12,7 @@ from common.network import Network
 from common.crypto import lagrange_interpolation
 from common.ECC import *
 
-from common.config import CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from common.config import load_config, CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -22,7 +22,7 @@ class Stage(StrEnum):
 class Mixnode:
     def __init__(self, node_id: int):
         # Other
-        self.mixnodes, self.pk_to_ip, self.sign_pk_lookup  = None, None, None
+        self.mixnodes = None
 
         # Network
         self.ip = f"127.0.10.{node_id}"
@@ -39,7 +39,6 @@ class Mixnode:
     async def start(self) -> None:
         await self.network.start()
 
-
     async def send(self, ip: str, message_type: str, message: Any) -> None:
         await self.network.send(ip, message_type, message)
 
@@ -49,11 +48,17 @@ class Mixnode:
                 await self.signature_queue.put((hash_to_Fr(ip.encode()), message))
 
             case Stage.HEADER:
+                if not self.mixnodes:
+                    self.mixnodes = load_config().mixnodes
                 header: Header = message
                 next_ip, processed_header = self.process(header)
 
                 await self.send(next_ip, Stage.HEADER, processed_header) 
 
+    # ========================================================
+    # SETUP & PROCESS
+    # ========================================================
+    
     @timing
     async def sign_public_key(self) -> G1:
         for authority in sample(AUTHORITIES, k=THRESHOLD):
@@ -61,16 +66,6 @@ class Mixnode:
 
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
         return lagrange_interpolation(points)
-
-    
-    # ========================================================
-    # HEADER PROCESSING
-    # ========================================================
-    class IntegrityError(Exception):
-        """Raised when packet integrity verification fails."""
-
-    class CredentialError(Exception):
-        """Raised when credential verification fails."""
 
 
     @timing
@@ -88,11 +83,15 @@ class Mixnode:
             self.update_credential(header, shared_secret)
 
         return (self.get_next_hop(header), header)
+    
+    # ========================================================
+    # HEADER PROCESSING FUNCTIONS
+    # ========================================================
 
     @timing
     def verify_credential(self, header: Header) -> None:
         if (sum(header.beta[::2]) @ AUTHORITY_PK) != (header.credential @ G2().base_point()):
-            raise CredentialError("Credential verification failed")
+            raise Exception("Credential verification failed")
 
     @timing
     def compute_shared_secret(self, alpha: G1) -> Fr:
@@ -104,7 +103,7 @@ class Mixnode:
         expected_gamma = G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
         if header.gamma != expected_gamma:
-            raise IntegrityError("Header integrity verification failed")
+            raise Exception("Header integrity verification failed")
 
     @timing
     def decrypt_beta(self, header: Header, shared_secret: Fr) -> None:
@@ -121,10 +120,12 @@ class Mixnode:
 
     @timing
     def update_credential(self, header: Header, shared_secret: Fr) -> None:
-        sign_next_hop = self.sign_pk_lookup.get(header.next_hop, G1().randomize()) # If not found, means final destination just randomize credential
-        header.credential -= (self.signed_generator_sum * shared_secret + sign_next_hop)
+        next_hop = self.mixnodes.get(header.next_hop)
+        next_hop_signed_PK = next_hop.signed_public_key if next_hop else G1().randomize() # If not found, means final destination just randomize credential
+        header.credential -= (self.signed_generator_sum * shared_secret + next_hop_signed_PK)
 
     @timing
     def get_next_hop(self, header: Header) -> str:
-        return self.pk_to_ip.get(header.next_hop, decode_ip(header.next_hop))
+        next_hop = self.mixnodes.get(header.next_hop)
+        return next_hop.ip if next_hop else decode_ip(header.next_hop)
 

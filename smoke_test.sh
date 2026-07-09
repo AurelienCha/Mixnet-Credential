@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")"
 
 # ==========================================
 # Cleanup PROCESSES
@@ -38,12 +39,10 @@ mkdir -p .logs/auth
 mkdir -p .logs/mix
 mkdir -p .logs/client
 
-rm -f .config.json
-
 # NETWORK LOGS
 NETWORK_LOG=".logs/network_capture.log"
 touch $NETWORK_LOG
-tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG &
+tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG >/dev/null 2>&1 &
 TSHARK_PID=$!
 
 # ==========================================

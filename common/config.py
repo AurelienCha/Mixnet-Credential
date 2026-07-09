@@ -24,13 +24,13 @@ CONFIG_PATH = Path(".config.json")
 
 @dataclass(slots=True)
 class MixnodeInfo:
-    public_key: G1
+    ip: str
     signed_public_key: G1 | None = None  # Optional credential fields
 
     @classmethod
     def from_json(cls, data: dict[str, str]) -> MixnodeInfo:
         return cls(
-            public_key=G1().fromstr(data["PK"].encode()),
+            ip=data["IP"],
             signed_public_key=(G1().fromstr(data["sign_PK"].encode()) if CREDENTIALS else None),
         )
 
@@ -75,15 +75,15 @@ class LockedFile:
 # CONFIG MANAGEMENT
 # ============================================================
 
-def load_config(path: Path = CONFIG_PATH) -> PublicConfig:
-    with LockedFile(path, "r") as file:
+def load_config() -> PublicConfig:
+    with LockedFile(CONFIG_PATH, "r") as file:
         raw = json.load(file)
 
     config = PublicConfig(
         path_length=raw["path_length"],
         generators=[G1().fromstr(value.encode()) for value in raw["generators"]],
         nbr_mixnodes=raw["nbr_mixnodes"],
-        mixnodes={ip: MixnodeInfo.from_json(node) for ip, node in raw["mixnodes"].items()},
+        mixnodes={G1().fromstr(PK.encode()): MixnodeInfo.from_json(node) for PK, node in raw["mixnodes"].items()},
     )
 
     if CREDENTIALS:
@@ -98,17 +98,17 @@ def load_config(path: Path = CONFIG_PATH) -> PublicConfig:
     return config
 
 
-async def publish_mixnode(node: Mixnode, signed_public_key: G1 | None = None, path: Path = CONFIG_PATH) -> None:
+async def publish_mixnode(node: Mixnode, signed_public_key: G1 | None = None) -> None:
 
-    with LockedFile(path, "r+") as file:
+    with LockedFile(CONFIG_PATH, "r+") as file:
         config = json.load(file)
 
-        entry = {"PK": str(node.public_key)}
+        entry = {"IP": str(node.ip)}
 
         if CREDENTIALS:
             entry["sign_PK"] = str(signed_public_key)
 
-        config["mixnodes"][node.ip] = entry
+        config["mixnodes"][str(node.public_key)] = entry
 
         file.seek(0)
         json.dump(config, file, indent=4)
@@ -123,7 +123,7 @@ CONFIG = load_config()
 
 GENERATORS = CONFIG.generators
 NBR_MIXNODES = CONFIG.nbr_mixnodes
-MIXNODES = CONFIG.mixnodes
+MIXNODES = CONFIG.mixnodes  # {PK: {IP, PK_sign}}
 
 PATH_LENGTH = CONFIG.path_length
 BETA_SIZE = 2 * PATH_LENGTH - 1

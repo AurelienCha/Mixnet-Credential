@@ -66,11 +66,10 @@ class Client:
 
     @timing
     def select_mixnodes(self):
-        path = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
-        mixnodes = [MIXNODES[ip] for ip in path]
-        public_keys = [node.public_key for node in mixnodes]
-        signed_public_keys = [node.signed_public_key for node in mixnodes]
-        return (path[0], public_keys, signed_public_keys)
+        public_keys = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
+        signed_public_keys = [MIXNODES[idx].signed_public_key for idx in public_keys]
+        first_hop = MIXNODES[public_keys[0]].ip
+        return (first_hop, public_keys, signed_public_keys)
 
     # ========================================================
     # SHARED SECRETS
