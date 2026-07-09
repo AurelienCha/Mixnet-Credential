@@ -19,7 +19,6 @@ class Authority:
         # Other
         self.setup_queue = asyncio.Queue()
         self.sign_queue = asyncio.Queue()
-        self.stage = None
 
         # Network
         self.peers = peers
@@ -35,25 +34,18 @@ class Authority:
     async def send(self, ip, msg_type, message):
         await self.network.send(ip, msg_type, message)
 
-    async def handle_message(self, ip, msg_type, message):
-        match msg_type:
+    async def handle_message(self, ip, msg_stage, message):
+        match msg_stage:
             case Stage.SETUP_SHARES: 
                 await self.setup_queue.put(message)
             case Stage.SIGN_PARAM:
                 await self.sign_queue.put(message)
             case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, self.sign_mix(message))  # message = PK -> sign PK
+                await self.send(ip, Stage.SIGN_MIX, self.sign(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
-                await self.send(ip, Stage.SIGN_CLIENT, self.sign_client(message)) 
-    
-    @timing
-    def sign_mix(self, P):
-        return self.sign(P)
+                await self.send(ip, Stage.SIGN_CLIENT, self.sign(message)) 
 
     @timing
-    def sign_client(self, P):
-        return self.sign(P)
-
     def sign(self, P):
         return P * self.secret_share
 
@@ -62,28 +54,30 @@ class Authority:
     
     def sign_parameters(self):
         return [self.id, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators]
-    
+
+    async def collect(self, queue, n): # non-negligeable time ? (to verify)
+        return [await queue.get() for _ in range(n)]
     
     @timing
     async def setup(self):
         
         @timing
         async def send_and_aggregate_shares():
-            self.stage = Stage.SETUP_SHARES
 
             # Send shares to each authorities
             await self.setup_queue.put(self.rnd_polynomial(self.id))
-            for peer_ip in self.peers:
-                peer_id = hash_to_Fr(peer_ip.encode())
-                await self.send(peer_ip, self.stage, self.rnd_polynomial(peer_id))  
+
+            await asyncio.gather(*(
+                self.send(peer_ip, Stage.SETUP_SHARES, self.rnd_polynomial(hash_to_Fr(peer_ip.encode())))
+                for peer_ip in self.peers
+            ))
 
             # Before aggregation needs to wait all shares
-            y_shares = [await self.setup_queue.get() for _ in range(len(self.peers)+1)]  # non-negligeable time ? (to verify)
+            y_shares = await self.collect(self.setup_queue, len(self.peers) + 1)
             self.aggregate_secret_key(y_shares)
                    
         @timing
         async def sign_params():
-            self.stage = Stage.SIGN_PARAM
 
             # Own partial sign
             sign = self.sign_parameters()
@@ -91,11 +85,13 @@ class Authority:
 
             # Send its partial sign to peers (circular send)
             selected_peers = islice(self.peers, self.threshold - 1)
-            for peer_ip in selected_peers:
-                await self.send(peer_ip, self.stage, sign.copy())  
+            await asyncio.gather(*(    
+                self.send(peer_ip, Stage.SIGN_PARAM, sign.copy())
+                for peer_ip in selected_peers
+            ))  
             
             # Wait enough partial signatures (and transform into list of points)
-            partial_signed_params = [await self.sign_queue.get() for _ in range(self.threshold)]  # non-negligeable time ? (to verify)
+            partial_signed_params = await self.collect(self.sign_queue, self.threshold)
             x, *y_values = zip(*partial_signed_params)
             points_list = [list(zip(x, vals)) for vals in y_values]
 

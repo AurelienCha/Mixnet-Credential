@@ -38,7 +38,7 @@ async def main(node_id: int) -> None:
                 for node in node.mixnodes.values()
             } if CREDENTIALS else None
             break
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
     
     # == WAIT TO PROCESS PACKET ==
     await asyncio.Event().wait()  # <- keeps alive

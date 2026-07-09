@@ -1,7 +1,7 @@
 import argparse, asyncio
 
 from Client.client import Client
-from common.log import create_logger
+from common.log import create_logger, LOGGING
 from Client.config import CREDENTIALS
 from common.ECC import *
 
@@ -9,7 +9,7 @@ from common.ECC import *
 # MAIN
 # ============================================================
 
-async def main(node_id: int) -> None:
+async def main(node_id: int, nbr_packets: int) -> None:
 
     create_logger("CLIENT", node_id)
     client = Client(node_id=node_id)
@@ -25,12 +25,12 @@ async def main(node_id: int) -> None:
         client.credentials[own_ip] = (await client.get_credential(own_ip))
 
     # == SEND packet == 
-    # while True:
-    #     await client.send_packet(own_ip) # TODO: send to self just for testing, change to real destination later
-    for _ in range(1):
-        await client.send_packet(own_ip)
+    await asyncio.gather(*(
+        client.send_packet(own_ip)
+        for _ in range(nbr_packets)
+    ))
 
-    while not client.shutdown_event.is_set():
+    while True:
         await asyncio.sleep(0.1)
 
 # ============================================================
@@ -41,6 +41,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--id", type=int, required=True, help="Client identifier")
+    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=100)
     arguments = parser.parse_args()
 
-    asyncio.run(main(arguments.id))
+    asyncio.run(main(arguments.id, arguments.packets))

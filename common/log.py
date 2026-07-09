@@ -126,7 +126,6 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
                     "%(color2)s %(role2)-6s %(id2)2s "
                     f"{COLORS['COMMENT']} %(type)6s "
                     f"{COLORS['RESET']} %(hash)s "
-                    f"{COLORS['COMMENT']} %(comment)s "
                     f"{COLORS['RESET']}"
                 )
             )

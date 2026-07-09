@@ -3,7 +3,7 @@ import asyncio
 from common.codec import encode_message, decode_message
 import common.log as log
 
-PORT = 5002
+PORT = 5000
 
 class Network(asyncio.DatagramProtocol):
     

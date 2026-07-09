@@ -26,7 +26,7 @@ class Client:
 
         self.credentials: dict[str, G1] = {}
         self.signature_queue: asyncio.Queue = asyncio.Queue()
-        self.shutdown_event = asyncio.Event()
+        self.received_packets = 0
     
     
     # ========================================================
@@ -44,7 +44,7 @@ class Client:
             case Stage.SIGN_CLIENT:
                 await self.signature_queue.put((hash_to_Fr(ip.encode()), message))
             case Stage.HEADER:
-                self.shutdown_event.set() # await self.send_packet(self.network.ip) # resend packet
+                self.received_packets += 1  
 
     # ========================================================
     # CREDENTIALS
