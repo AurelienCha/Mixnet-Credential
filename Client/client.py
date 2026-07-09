@@ -47,20 +47,6 @@ class Client:
                 self.received_packets += 1  
 
     # ========================================================
-    # CREDENTIALS
-    # ========================================================
-
-    @timing
-    async def get_credential(self, destination: str) -> G1:  # TODO hide value with salt
-        destination = encode_ip(destination)
-
-        for authority in sample(AUTHORITIES, k=THRESHOLD):
-            await self.send(authority, Stage.SIGN_CLIENT, destination)
-        
-        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        return lagrange_interpolation(points)
-
-    # ========================================================
     # PATH SELECTION
     # ========================================================
 
@@ -86,11 +72,22 @@ class Client:
             shared_secrets.append(s)
             nonce *= s
 
-        return alpha, shared_secrets
-    
+        return alpha, shared_secrets    
+        
     # ========================================================
-    # CREDENTIAL UPDATE
+    # CREDENTIALS
     # ========================================================
+
+    @timing
+    async def get_credential(self, destination: str) -> G1:
+        salt = Fr().randomize()
+        destination = encode_ip(destination) * salt # Blind signature
+
+        for authority in sample(AUTHORITIES, k=THRESHOLD):
+            await self.send(authority, Stage.SIGN_CLIENT, destination)
+        
+        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
+        return lagrange_interpolation(points) * ~salt # Unblind signature
 
     @timing
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
@@ -126,11 +123,10 @@ class Client:
         # Credential
         credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys) if CREDENTIALS else None
 
+        # Compute Encryption Layer
         beta, gamma = self.compute_layers(delta, public_keys, shared_secrets)
 
-        header = Header(alpha=alpha, beta=beta, gamma=gamma, credential=credential)
-
-        return (first_hop, header)
+        return (first_hop, Header(alpha=alpha, beta=beta, gamma=gamma, credential=credential))
 
     # ============================================================
     # LAYER COMPUTATION
