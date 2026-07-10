@@ -7,7 +7,7 @@ from pathlib import Path
 from os import getenv
 from typing import Any
 
-from common.ECC import G1, G2
+from crypto.ecc import G1, G2
 
 
 # ============================================================
@@ -96,6 +96,18 @@ def load_config() -> PublicConfig:
             pass
 
     return config
+
+
+def publish_authority_setup(authority_pk: G2, signed_generators: list[G1]) -> None:
+    with LockedFile(CONFIG_PATH, "r+") as file:
+        config = json.load(file)
+
+        config["signed_generator_sums"] = [str(sum(signed_generators[:i])) for i in range(1, len(signed_generators) + 1)]
+        config["authority_PK"] = str(authority_pk)
+
+        file.seek(0)
+        json.dump(config, file, indent=4)
+        file.truncate()
 
 
 async def publish_mixnode(node: Mixnode, signed_public_key: G1 | None = None) -> None:

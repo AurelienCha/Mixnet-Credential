@@ -1,7 +1,7 @@
 from typing import Any
 
-from common.ECC import *
-from common.header import Header
+from crypto.ecc import *
+from protocol.header import Header
 
 # ============================================================
 # SERIALIZER / DESERIALIZER

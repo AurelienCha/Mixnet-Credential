@@ -1,12 +1,13 @@
-import asyncio
+import asyncio, argparse, json, sys
 from itertools import islice
 from enum import StrEnum
 
-from common.log import timing
-from common.network import Network
-from common.crypto import lagrange_interpolation, Polynomial
-
-from common.ECC import *
+from utils.logging import timing, create_logger
+from protocol.network import Network
+from crypto.lagrange import lagrange_interpolation
+from crypto.polynomial import Polynomial
+from crypto.ecc import *
+from config.config import publish_authority_setup, AUTHORITIES, THRESHOLD, GENERATORS
 
 class Stage(StrEnum):
     SETUP_SHARES = "SHARES"
@@ -15,19 +16,20 @@ class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT"
 
 class Authority:
-    def __init__(self, id, ip, peers, threshold, generators):
+    def __init__(self, ID):
         # Other
         self.setup_queue = asyncio.Queue()
         self.sign_queue = asyncio.Queue()
 
         # Network
-        self.peers = peers
-        self.network = Network(ip, self.handle_message)
+        self.ip = AUTHORITIES[ID-1]
+        self.peers = AUTHORITIES[ID:] + AUTHORITIES[:ID-1]
+        self.network = Network(self.ip, self.handle_message)
 
         # Crypto
-        self.id = hash_to_Fr(ip.encode())
-        self.threshold = threshold
-        self.generators = [G1().fromstr(g.encode()) for g in generators[::2]]
+        self.id = hash_to_Fr(self.ip.encode())
+        self.threshold = THRESHOLD
+        self.generators = GENERATORS
         self.secret_share = None
         self.rnd_polynomial = Polynomial([Fr().randomize() for _ in range(self.threshold)])
 
@@ -53,7 +55,7 @@ class Authority:
         self.secret_share = sum(y_shares, Fr(0))
     
     def sign_parameters(self):
-        return [self.id, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators]
+        return [self.id, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators[::2]]
 
     async def collect(self, queue, n): # non-negligeable time ? (to verify)
         return [await queue.get() for _ in range(n)]
@@ -105,3 +107,44 @@ class Authority:
   
     async def start(self):
         await self.network.start()
+
+
+
+# ============================================================
+# MAIN
+# ============================================================ 
+
+async def main(ID):
+    create_logger("AUTH", ID)
+    node = Authority(ID = ID)
+
+    # == START ==
+    await node.start()
+    await asyncio.sleep(1)
+
+    # == SETUP Authority ==
+    authority_PK, *signed_generators = await node.setup()
+
+    if ID == 1:  # One of the authority make signature public
+        publish_authority_setup(authority_pk=authority_PK, signed_generators=signed_generators)
+
+    await asyncio.Event().wait()  # <- keeps program alive
+
+# ============================================================
+# CLI
+# ============================================================
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--id", type=int, required=True)
+    args = parser.parse_args()
+
+    asyncio.run(main(args.id))
+    # try:
+    #     asyncio.run(main(args.id))
+
+    # except Exception as e:
+    #     print(f"ERROR: {type(e).__name__}: {e}")
+    #     sys.exit(1)
+

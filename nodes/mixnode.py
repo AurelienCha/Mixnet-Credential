@@ -1,18 +1,17 @@
 from __future__ import annotations
+import asyncio, argparse, sys, hmac
 from typing import Any
 from enum import StrEnum
 from random import sample
-import asyncio
 from hashlib import sha256
-import hmac
 
-from common.log import timing
-from common.header import Header
-from common.network import Network
-from common.crypto import lagrange_interpolation
-from common.ECC import *
+from utils.logging import timing, create_logger
+from protocol.header import Header
+from protocol.network import Network
+from crypto.lagrange import lagrange_interpolation
+from crypto.ecc import *
 
-from common.config import load_config, CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from config.config import load_config, publish_mixnode, CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 class Stage(StrEnum):
     SIGN_MIX = "SIGN-MIX"
@@ -129,3 +128,41 @@ class Mixnode:
         next_hop = self.mixnodes.get(header.next_hop)
         return next_hop.ip if next_hop else decode_ip(header.next_hop)
 
+
+
+# ============================================================
+# MAIN
+# ============================================================ 
+
+async def main(node_id: int) -> None:
+
+    create_logger("MIX", node_id)
+    node = Mixnode(node_id=node_id)
+
+    # == START ==
+    await node.start()
+
+    # == Publish Mixnode PK (and PK signed if CREDENTIALS) ==
+    await publish_mixnode(node, await node.sign_public_key() if CREDENTIALS else None)
+    
+    # == WAIT TO PROCESS PACKET ==
+    await asyncio.Event().wait()  # <- keeps alive
+
+# ============================================================
+# CLI
+# ============================================================
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--id", type=int, required=True, help="Mixnode identifier")
+    arguments = parser.parse_args()
+
+    asyncio.run(main(arguments.id))
+    # try:
+    #     asyncio.run(main(arguments.id))
+
+    # except Exception as e:
+    #     print(f"ERROR: {type(e).__name__}: {e}")
+    #     sys.exit(1)
+   

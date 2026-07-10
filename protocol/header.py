@@ -2,8 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from common.ECC import *
-from common.config import PATH_LENGTH
+from crypto.ecc import *
+from config.config import PATH_LENGTH
 
 @dataclass(slots=True)
 class Header:

@@ -1,17 +1,16 @@
 from __future__ import annotations
+import argparse, asyncio, sys, hmac
 from enum import StrEnum
 from random import sample
-import asyncio
 from hashlib import sha256
-import hmac
 
-from common.log import timing
-from common.header import Header
-from common.network import Network
-from common.crypto import lagrange_interpolation
-from common.ECC import *
+from utils.logging import timing, create_logger, LOGGING
+from protocol.header import Header
+from protocol.network import Network
+from crypto.lagrange import lagrange_interpolation
+from crypto.ecc import *
 
-from common.config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from config.config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 
 
 class Stage(StrEnum):
@@ -160,3 +159,52 @@ class Client:
             beta, gamma = self.add_layer(mixes[i+1], beta, gamma, shared_secrets[i])
 
         return beta, gamma
+
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+async def main(node_id: int, nbr_packets: int) -> None:
+
+    create_logger("CLIENT", node_id)
+    client = Client(node_id=node_id)
+
+    # == START Network ==
+    await client.start()
+    await asyncio.sleep(1)
+
+
+    # == SIGN Credentials ==
+    own_ip = client.network.ip
+    if CREDENTIALS:
+        client.credentials[own_ip] = (await client.get_credential(own_ip))
+
+    # == SEND packet == 
+    await asyncio.gather(*(
+        client.send_packet(own_ip)
+        for _ in range(nbr_packets)
+    ))
+
+    while True:
+        await asyncio.sleep(0.1)
+
+# ============================================================
+# CLI
+# ============================================================
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--id", type=int, required=True, help="Client identifier")
+    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=100)
+    arguments = parser.parse_args()
+
+    asyncio.run(main(arguments.id, arguments.packets))
+    # try:
+    #     asyncio.run(main(arguments.id, arguments.packets))
+
+    # except Exception as e:
+    #     print(f"ERROR: {type(e).__name__}: {e}")
+    #     sys.exit(1)

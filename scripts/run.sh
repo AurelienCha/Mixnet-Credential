@@ -6,9 +6,9 @@ cd "$(dirname "$0")/.."
 # ==========================================
 
 cleanup() {
-    pkill -f Authority.main
-    pkill -f Mixnode.main
-    pkill -f Client.main
+    pkill -f nodes.authority
+    pkill -f nodes.mixnode
+    pkill -f nodes.client
 }
 
 trap cleanup EXIT INT TERM
@@ -74,7 +74,7 @@ if [ $CREDENTIALS -eq 1 ]; then
 
     for ((i=1; i<=AUTHORITIES; i++))
     do
-        python3 -m Authority.main --id $i &
+        python3 -m nodes.authority --id $i &
     done
 
     # ==========================================
@@ -94,7 +94,7 @@ fi
 
 for ((i=1; i<=MIXNODES; i++))
 do
-    python3 -m Mixnode.main --id $i &
+    python3 -m nodes.mixnode --id $i &
 done
 
 # ==========================================
@@ -117,7 +117,7 @@ done
 
 for ((i=1; i<=CLIENTS; i++))
 do
-    python3 -m Client.main --id $i &
+    python3 -m nodes.client --id $i &
 done
 
 # ==========================================

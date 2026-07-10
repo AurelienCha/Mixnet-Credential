@@ -1,7 +1,7 @@
 import asyncio
 
-from common.codec import encode_message, decode_message
-import common.log as log
+from protocol.codec import encode_message, decode_message
+import utils.logging as log
 
 PORT = 5000
 
