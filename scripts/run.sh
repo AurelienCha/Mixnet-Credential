@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 # ==========================================
 
 cleanup() {
-    pkill -f Authority.node
+    pkill -f Authority.main
     pkill -f Mixnode.main
     pkill -f Client.main
 }
@@ -74,7 +74,7 @@ if [ $CREDENTIALS -eq 1 ]; then
 
     for ((i=1; i<=AUTHORITIES; i++))
     do
-        python3 -m Authority.node --id $i &
+        python3 -m Authority.main --id $i &
     done
 
     # ==========================================
