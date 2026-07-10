@@ -9,7 +9,7 @@ from utils.logging import timing, create_logger
 from protocol.header import Header
 from protocol.network import Network
 from crypto.lagrange import lagrange_interpolation
-from crypto.ecc import *
+from crypto.ecc import Fr, G1, G2, hash_to_Fr, decode_ip
 
 from config.config import load_config, publish_mixnode, CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 

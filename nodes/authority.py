@@ -6,7 +6,7 @@ from utils.logging import timing, create_logger
 from protocol.network import Network
 from crypto.lagrange import lagrange_interpolation
 from crypto.polynomial import Polynomial
-from crypto.ecc import *
+from crypto.ecc import Fr, G1, G2, hash_to_Fr
 from config.config import publish_authority_setup, AUTHORITIES, THRESHOLD, GENERATORS
 
 class Stage(StrEnum):

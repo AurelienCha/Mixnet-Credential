@@ -1,6 +1,6 @@
 from typing import Any
 
-from crypto.ecc import *
+from crypto.ecc import Fr, G1, G2
 from protocol.header import Header
 
 # ============================================================
