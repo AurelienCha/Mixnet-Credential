@@ -26,9 +26,14 @@ run_test() {
     fi
 }
 
+start=$(date +%s)
+
 run_test "Testing without credential" \
     ./scripts/run.sh -p 3 -m 3 -c 2 -t 3 -a 3 -z 0 -v 0
 
 run_test "Testing with credential" \
     ./scripts/run.sh -p 3 -m 3 -c 2 -t 3 -a 3 -z 1 -v 0
+
+end=$(date +%s)
+echo "Checks finished in $((end - start)) sec"
 

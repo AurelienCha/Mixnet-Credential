@@ -124,18 +124,17 @@ done
 # Automatically stop the script if no UDP activity is detected
 # ==========================================
 
-
 sleep 2
 while true; do
     last=$(stat -c %Y $NETWORK_LOG)
     now=$(date +%s)
 
-    # Exit if no UDP activity for 1 seconds
-    if (( now - last >= 1)); then
+    # Exit if no UDP activity for 5 seconds
+    if (( now - last >= 3)); then
         mv .config.json .logs/config.json
         killall tshark
         exit 0
     fi
 
-    sleep 0.1
+    sleep 1
 done
