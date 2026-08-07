@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from crypto.ecc import G1
+from cryptography.ecc import G1
 from config.config import PATH_LENGTH
 
 @dataclass(slots=True)

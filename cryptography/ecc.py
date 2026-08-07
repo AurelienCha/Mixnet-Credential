@@ -214,7 +214,7 @@ def encode_ip(ip: str) -> G1:
     OP_COUNT["MAP"] += 1
     a, b, c, d = map(int, ip.split('.'))
     ip = (a << 24) | (b << 16) | (c << 8) | d
-    return G1().mapfrom(Fr((ip << (221))))# + secrets.randbits(221))) # padding: 221 = (256 - 3) - 32 # TODO
+    return G1().mapfrom(Fr((ip << (221))))# + secrets.randbits(221))) # padding: 221 = (256 - 3) - 32 # TODO -> Nop, not possible
 
 def decode_ip(point: G1) -> str: # IP-Point to IPv4
     """Decode an IP address embedded inside a G1 point."""

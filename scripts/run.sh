@@ -1,5 +1,8 @@
 #!/bin/bash
-cd "$(dirname "$0")/.."
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="$ROOT:$PYTHONPATH"
 
 # ==========================================
 # Cleanup PROCESSES

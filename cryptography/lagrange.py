@@ -1,4 +1,4 @@
-from crypto.ecc import Fr
+from cryptography.ecc import Fr, G1
 
 ################################
 ## ECC Lagrange Interpolation ##
