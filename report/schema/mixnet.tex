@@ -1,0 +1,162 @@
+
+\newcommand{\figonetextcol}[0]{\color{black}}
+
+\tikzset{  
+    innerLink/.style={-, densely dotted, shorten <= 1pt, shorten >= 2pt},  
+    outerLink/.style={->, shorten <= 2pt, shorten >= 4pt, >=Latex},
+    packet/.style={circle, inner sep=0.2pt, fill=#1},
+    A/.style={packet=\colorA!40, font={#1}},
+    B/.style={packet=\colorB!50, font={#1}},
+    A1/.style={A=1}, A2/.style={A=2}, A3/.style={A=3}, A4/.style={A=4}, A5/.style={A=5}, A6/.style={A=6}, A7/.style={A=7}, A8/.style={A=8}, A9/.style={A=9},
+    B1/.style={B=1}, B2/.style={B=2}, B3/.style={B=3}, B4/.style={B=4}, B5/.style={B=5}, B6/.style={B=6}, B7/.style={B=7}, B8/.style={B=8}, B9/.style={B=9},
+}
+
+\newcommand{\countitems}[1]{%
+  \def\size{0}%
+  \foreach \x in {#1} {%
+    \pgfmathparse{\size+1}%
+    \global\let\size=\pgfmathresult%
+  }%
+}
+
+\newcommand{\outerLink}[3]{
+  % size (nbr of packets)
+  \countitems{#3} 
+  % If odd nbr of packet, slight shift to not have a packet on an intersection
+  \pgfmathparse{mod(\size,2)==1 ? \size-0.5 : \size}%
+  \xdef\size{\pgfmathresult}%
+
+  % define line
+  \coordinate (start) at (#1.east);
+  \coordinate (stop) at (#2.west);
+  \draw[outerLink] (start) -- (stop);
+  % put packet on the line
+  \foreach \packet [count=\i from 1] in {#3} {
+    \pgfmathsetmacro{\t}{1 - \i/(\size+1)}%
+    \path let
+      \p1 = (start),
+      \p2 = (stop),
+      \p3 = ($(\p1)!\t!(\p2)$)
+    in
+      node[\packet] at (\p3) {};
+  }
+}
+
+
+\newcommand{\mixnode}[2]{%
+  \countitems{#1}%
+
+  \begin{tikzpicture}
+    \def\d{0.8}
+    \draw[thick] (0,0) circle (\d);
+
+    % Connect according to mapping
+    \pgfmathsetmacro{\xoffset}{(1.14*\d - \size/10)*\d}
+    \foreach \r [count=\l from 1] in {#1} {
+      \pgfmathsetmacro{\yposL}{\d - \l/(\size+1)*2*\d}
+      \coordinate (left\l) at (-\xoffset, \yposL);
+      \pgfmathsetmacro{\yposR}{\d - \r/(\size+1)*2*\d}
+      \coordinate (right\l) at (\xoffset, \yposR);
+    }
+    % Draw dots
+    \foreach \packet [count=\i from 1] in {#2} {
+      \draw[innerLink] (left\i) -- (right\i);
+      \node[\packet] at (left\i) {};
+      \node[\packet] at (right\i) {};
+    }
+  \end{tikzpicture}
+}
+
+\newcommand{\client}[1]{
+  \begin{tikzpicture}[scale=0.4]
+    % Monitor screen
+    \draw[fill=#1!20, draw=black, rounded corners=4pt] (0,0) rectangle (4,2.5);
+    % Inner bezel
+    \draw[fill=white, draw=none, rounded corners=3pt] (0.2,0.2) rectangle (3.8,2.3);
+    % Stand
+    \draw[fill=#1!40, draw=black] (1.75,-0.7) rectangle (2.25,0);
+    % Base
+    \draw[fill=#1!40, draw=black, rounded corners=2pt] (0.8,-1) rectangle (3.2,-0.7);
+  \end{tikzpicture}
+}
+
+\newcommand{\server}[1]{
+  \begin{tikzpicture}[scale=0.7]
+    \foreach \y in {0, -0.6, -1.2} {
+        \draw[fill=#1!20] (0,\y) rectangle (2,\y-0.5); % rectangle
+        \draw (0.2,\y-0.25) circle (0.05); % power/status LED
+    }
+  \end{tikzpicture}
+}
+
+\newcommand{\colorA}{blue}
+\newcommand{\colorB}{orange}
+
+\newcommand{\clientA}{\client{\colorA}}
+\newcommand{\clientB}{\client{\colorB}}
+\newcommand{\serverA}{\server{\colorA}}
+\newcommand{\serverB}{\server{\colorB}}
+
+
+\begin{tikzpicture}
+  \def\dx{4}
+  \def\dy{-1}
+
+  % GENERAL ARCHITECTURE (define nodes)
+  \node (clientA) at (0,-\dy) {\clientA};
+  \node (clientB) at (0,\dy) {\clientB};
+
+  \node (serverA) at (4*\dx,-\dy) {\serverA};
+  \node (serverB) at (4*\dx,\dy) {\serverB};
+
+  % PACKETS - links and shuffles (python generated)
+\node (mix11) at (1*\dx,-\dy) {\mixnode{3,1,2}{A2,A1,B3}};
+\node (mix12) at (1*\dx, \dy) {\mixnode{3,2,1}{B2,B1,A3}};
+\node (mix21) at (2*\dx,-\dy) {\mixnode{3,1,2}{A3,A2,B3}};
+\node (mix22) at (2*\dx, \dy) {\mixnode{2,3,1}{B2,B1,A1}};
+\node (mix31) at (3*\dx,-\dy) {\mixnode{3,1,4,2}{B2,A2,A1,B3}};
+\node (mix32) at (3*\dx, \dy) {\mixnode{2,1}{A3,B1}};
+
+\outerLink{clientA}{mix11}{A1,A2};
+\outerLink{clientA}{mix12}{A3};
+\outerLink{clientB}{mix11}{B3};
+\outerLink{clientB}{mix12}{B1,B2};
+
+\outerLink{mix11}{mix21}{A2,B3};
+\outerLink{mix11}{mix22}{A1};
+\outerLink{mix12}{mix21}{A3};
+\outerLink{mix12}{mix22}{B2,B1};
+
+\outerLink{mix21}{mix31}{A2,B3};
+\outerLink{mix21}{mix32}{A3};
+\outerLink{mix22}{mix31}{B2,A1};
+\outerLink{mix22}{mix32}{B1};
+
+\outerLink{mix31}{serverA}{A2,A1};
+\outerLink{mix31}{serverB}{B2,B3};
+\outerLink{mix32}{serverA}{A3};
+\outerLink{mix32}{serverB}{B1};
+
+  % ANNOTATIONS
+  \node at (0*\dx, -2.2*\dy) {\figonetextcol Clients};
+  \draw[loosely dotted, fill=gray!30] (0.23*\dx, -2.2*\dy) -- (0.23*\dx, +2*\dy) {};
+  \node at (0.5*\dx, -2.2*\dy) {\figonetextcol $t_0$};
+  \draw[loosely dotted, fill=gray!30] (0.77*\dx, -2.2*\dy) -- (0.77*\dx, +2*\dy) {};
+  
+  \node at (1*\dx, -2.2*\dy) {\figonetextcol $t_1$};
+  \draw[loosely dotted, fill=gray!30] (1.23*\dx, -2.2*\dy) -- (1.23*\dx, +2*\dy) {};
+  \node at (1.5*\dx, -2.2*\dy) {\figonetextcol $t_2$};
+  \draw[loosely dotted, fill=gray!30] (1.77*\dx, -2.2*\dy) -- (1.77*\dx, +2*\dy) {};
+  
+  \node at (2*\dx, -2.2*\dy) {\figonetextcol $t_3$};
+  \draw[loosely dotted, fill=gray!30] (2.23*\dx, -2.2*\dy) -- (2.23*\dx, +2*\dy) {};
+  \node at (2.5*\dx, -2.2*\dy) {\figonetextcol $t_4$};
+  \draw[loosely dotted, fill=gray!30] (2.77*\dx, -2.2*\dy) -- (2.77*\dx, +2*\dy) {};
+  
+  \node at (3*\dx, -2.2*\dy) {\figonetextcol $t_5$};
+  \draw[loosely dotted, fill=gray!30] (3.23*\dx, -2.2*\dy) -- (3.23*\dx, +2*\dy) {};
+  \node at (3.5*\dx, -2.2*\dy) {\figonetextcol $t_6$};
+  \draw[loosely dotted, fill=gray!30] (3.77*\dx, -2.2*\dy) -- (3.77*\dx, +2*\dy) {};
+  \node at (4*\dx, -2.2*\dy) {\figonetextcol Services};
+
+\end{tikzpicture}

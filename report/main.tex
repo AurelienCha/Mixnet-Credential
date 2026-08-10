@@ -1,0 +1,124 @@
+\documentclass[runningheads]{llncs}
+
+\usepackage[american]{babel}
+\usepackage[english=american]{csquotes}
+
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{bmpsize}
+\usepackage{lipsum}
+\usepackage[colorlinks=true,urlcolor=black]{hyperref}
+
+\usepackage{balance}
+\usepackage{float}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tabularx}
+\usepackage[textsize=footnotesize, textwidth=35mm]{todonotes} % \todo and \todo[inline]
+\presetkeys{todonotes}{fancyline}{}
+\setlength{\marginparwidth}{15mm}
+\usepackage{paralist}
+\usepackage{enumitem}
+\usepackage{comment}
+\usepackage{wasysym} % Add this in your preamble for the circle symbols
+% \usepackage{stfloats} %[!b] for bottom-page figure
+\usepackage{subcaption}
+
+\input{schema/tikz-math_preamble}
+
+\usepackage{booktabs} % \toprule, \midrule, \bottomrule
+\usepackage{tablefootnote}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+% Conditional Text
+\def\isabridged{1}   % Uncomment if typesetting abridged version
+
+% Define and set conditionals for alternate versions
+\newif\ifabridged
+\newif\ifnotabridged
+
+\ifdefined\isabridged
+\abridgedtrue
+\fi
+
+\ifabridged\notabridgedfalse
+\else\notabridgedtrue
+\fi
+
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+
+
+\title{Destination-based policy enforcement in Mixnets}
+\subtitle{Extending Sphinx Packets with Anonymous Credential}
+
+\author{Aurélien Chassagne\inst{1}\orcidID{0009-0008-7207-868X} \and
+Iness Ben Guirat\inst{1}\orcidID{0000-0002-8766-594X} \and
+Jan Tobias Mühlberg\inst{1}\orcidID{0000-0001-5035-0576} \and
+Jean-Michel Dricot\inst{1}\orcidID{0000-0002-8539-9940}}
+%
+% \authorrunning{}
+\authorrunning{A. Chassagne et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Université Libre de Bruxelles (ULB), Brussels, Belgium
+% \institute{
+% \email{lncs@springer.com}\\
+% \url{http://www.springer.com/gp/computer-science/lncs} 
+}
+%
+
+\maketitle
+
+\begin{abstract}
+Mixnets provide strong communication anonymity by hiding the relationship between senders and receivers. 
+However, large-scale deployment introduces new operational challenges, as network operators may need to enforce policies on reachable destinations, for example to support service authorization, resource management, or operational agreements. 
+Existing approaches perform destination verification at the exit gateway, where the final destination is available, but this occurs only after the traffic has already consumed the resources of the mixnet.
+%
+This paper introduces an extension of the Sphinx packet format enabling privacy-preserving destination policy enforcement. 
+Our approach integrates destination-bound credentials into the packet format, allowing a verifier to check the validity of 
+an authority-issued credential and its binding to the encrypted final destination, without revealing the destination itself. 
+This enables early rejection of unauthorized traffic while preserving destination privacy.
+%
+Our work provides a mechanism to combine destination-based policy enforcement with the anonymity properties of mixnets, avoiding the need to reveal destinations for authorization purposes.
+
+\keywords{Sphinx \and Anonymous Credentials \and Mixnet \and Decentralized networks.}
+\end{abstract}
+
+% TODO change artifact
+\newcommand{\artifact}[0]{\url{https://github.com/AurelienCha/Mixnet-Credential}}
+
+\input{Texts/1.Introduction}
+% \input{Texts/2.Related_Work}
+% \input{Texts/3.System_Model}
+\input{Texts/4.Our_Solution}
+% \input{Texts/5.Security}
+% \input{Texts/6.Implementation}
+% \input{Texts/7.discussion}
+% \input{Texts/8.Conclusion}
+
+\begin{credits}
+% \subsubsection{\ackname} This research is funded by Belgium Walloon region CyberExcellence program (grant \#2110186).
+\subsubsection{\discintname}
+The authors have no competing interests to declare that are relevant to the content of this article. 
+\end{credits}
+
+% \balance
+\bibliographystyle{splncs04}
+\bibliography{bib}
+\vfill
+
+\end{document}
+
+
+% 

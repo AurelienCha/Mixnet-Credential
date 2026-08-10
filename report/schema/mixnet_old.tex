@@ -1,0 +1,44 @@
+\centering
+\begin{tikzpicture}
+
+\node (entry) [draw, minimum height=1.5cm, minimum width=0.35cm] at (0,0) {};
+\node[align=center, font=\scriptsize, rotate=90] at (entry.center) {\scriptsize Entry gateway};
+\node (11) [draw, circle, minimum width=0.4cm] at ($(entry.north east) + (\width/1.25, -\height/3)$) {};
+\node (12) [draw, circle, minimum width=0.4cm] at ($(entry.east) + (\width/1.25, 0)$) {};
+\node (13) [draw, circle, minimum width=0.4cm] at ($(entry.south east) + (\width/1.25, \height/3)$) {};
+\node (21) [draw, circle, minimum width=0.4cm] at ($(11.east) + (\width/1.25, 0)$) {};
+\node (22) [draw, circle, minimum width=0.4cm] at ($(12.east) + (\width/1.25, 0)$) {};
+\node (23) [draw, circle, minimum width=0.4cm] at ($(13.east) + (\width/1.25, 0)$) {};
+\node (31) [draw, circle, minimum width=0.4cm] at ($(21.east) + (\width/1.25, 0)$) {};
+\node (32) [draw, circle, minimum width=0.4cm] at ($(22.east) + (\width/1.25, 0)$) {};
+\node (33) [draw, circle, minimum width=0.4cm] at ($(23.east) + (\width/1.25, 0)$) {};
+\node (exit) [draw, minimum height=1.5cm, minimum width=0.35cm] at ($(32.east) + (\width/1.25, 0)$) {};
+\node[align=center, font=\scriptsize, rotate=90] at (exit.center) {\scriptsize Exit gateway};
+% \node (mixnet) [draw, densely dashed, color=gray, fit={(entry) (exit)}, rounded corners=5pt, inner sep=10pt, label=above:\text{\color{gray}Mixnet}] {};
+
+\draw (entry.east) -- (11.west);
+\draw (entry.east) -- (12.west);
+\draw (entry.east) -- (13.west);
+\draw (11.east) -- (21.west);
+\draw (11.east) -- (22.west);
+\draw (11.east) -- (23.west);
+\draw (12.east) -- (21.west);
+\draw (12.east) -- (22.west);
+\draw (12.east) -- (23.west);
+\draw (13.east) -- (21.west);
+\draw (13.east) -- (22.west);
+\draw (13.east) -- (23.west);
+\draw (21.east) -- (31.west);
+\draw (21.east) -- (32.west);
+\draw (21.east) -- (33.west);
+\draw (22.east) -- (31.west);
+\draw (22.east) -- (32.west);
+\draw (22.east) -- (33.west);
+\draw (23.east) -- (31.west);
+\draw (23.east) -- (32.west);
+\draw (23.east) -- (33.west);
+\draw (31.east) -- (exit.west);
+\draw (32.east) -- (exit.west);
+\draw (33.east) -- (exit.west);
+
+\end{tikzpicture}

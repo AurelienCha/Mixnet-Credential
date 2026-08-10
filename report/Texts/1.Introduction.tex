@@ -1,0 +1,37 @@
+\section{Introduction}
+
+Mixnets are a fundamental technology for privacy-preserving communication. 
+By forwarding messages through a sequence of cryptographic relays, they make it difficult for adversaries to link senders and receivers while providing strong anonymity guarantees.
+The Sphinx packet format provides an efficient and secure foundation for such systems, offering compact packet processing, integrity protection, and unlinkability properties.
+
+However, deploying mixnets at large scale raises challenges beyond cryptographic anonymity. 
+A practical communication infrastructure may need to enforce policies related to service authorization, resource usage, or operational agreements.
+For example, a mixnet provider may offer subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. 
+Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
+
+Current mixnet architectures provide limited support for such requirements. 
+Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies.
+A possible solution is to perform verification at the exit gateway, once the final destination information is available. 
+However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
+The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate mixnodes to learn the destination they are forwarding toward.
+
+This work explores a different approach: enabling privacy-preserving policy enforcement through destination-bound credentials.
+We propose an extension of the Sphinx packet format that enables a verifier to validate an authority-issued credential and verify its binding to the encrypted final destination, without revealing the destination itself.
+
+Our goal is not to introduce destination surveillance into mixnets, but to enable privacy-preserving guarantees that communications are directed toward authorized endpoints. 
+Such a mechanism provides a middle ground between unrestricted anonymous transport and destination disclosure for policy enforcement.
+
+% \medskip
+% \noindent In summary, our main contributions are as follows:
+% \begin{itemize}[topsep=1pt, itemsep=1pt]
+% 	%
+% 	\item Anonymous Credential design for \emph{DSphinx} (an adaptation of the Sphinx packet format)
+% 	%
+% 	\item We release a Python benchmark\footnote{\artifact} for measuring latency and computational overhead.
+% 	%
+% 	\item Security ?
+% 	%
+% 	\item Extra features ?
+% \end{itemize}
+
+%This paper is organized as follows... 

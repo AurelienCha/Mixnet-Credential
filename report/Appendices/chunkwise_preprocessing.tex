@@ -1,0 +1,43 @@
+\centering
+\begin{tikzpicture}
+    % \tiny
+    \setlength{\y}{0cm}
+
+    \node (s3_) [block=6] at (0, \y) {};
+    \foreach \j in {2,...,7} {
+        \node [block=1] at (\j*\width - 2*\width, \y) {\sG{3}{\j}}; 
+    }
+    \vgap
+    \node (s2_) [block=6] at (0, \y) {};
+    \foreach \j in {4,...,7} {
+        \node [block=1] at (\j*\width - 4*\width, \y) {\sG{2}{\j}}; 
+    }
+    \node [zero_pad=1] at (4*\width, \y) {0}; 
+    \node [zero_pad=1] at (5*\width, \y) {0}; 
+    \vgap 
+    \node (s1_) [block=6] at (0, \y) {};
+    \foreach \j in {6,...,7} {
+        \node [block=1] at (\j*\width - 6*\width, \y) {\sG{1}{\j}}; 
+    }
+    \node [zero_pad=1] at (2*\width, \y) {0}; 
+    \node [zero_pad=1] at (3*\width, \y) {0}; 
+    \node [zero_pad=1] at (4*\width, \y) {0}; 
+    \node [zero_pad=1] at (5*\width, \y) {0}; 
+    \vgap
+    \node (preprocess) [eq] at (7*\width, \y) {\ref{eq:preprocessing}}; 
+    \node (phi) [block=6] at (0, \y) {$\phi$};
+    \foreach \j in {1,...,5} {
+        \draw[dotline] ($(phi.north west) + (\j*\width, 0)$) -- ($(phi.south west) + (\j*\width, 0)$) {}; 
+    }
+
+    %% XOR ARROWS %%
+    % 3
+    \draw[arrow] (s3_.east) -- ++(\width, 0) -- (preprocess.north);
+    \draw[arrow] (s2_.east) -- ++(\width, 0) -- (preprocess.north);
+    \draw[arrow] (s1_.east) -- ++(\width, 0) -- (preprocess.north);
+    \draw[arrow] (preprocess.west) -- (phi.east);
+
+    %% LAYERS %%
+    \node[between=s3_ and phi] (l4){};
+    \node[rotate=90, yshift=3.2cm] at (l4) {\color{black!40} Preprocessing}; 
+\end{tikzpicture}

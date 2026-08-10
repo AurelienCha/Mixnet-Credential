@@ -1,0 +1,68 @@
+\centering
+\begin{tikzpicture}
+
+% Nodes
+\node (client) [bob, minimum size=1.4cm, label=above:\text{\color{gray}Client}] at (0,0) {};
+
+\node (ttp1) [draw, circle, minimum width=0.6cm] at ($(client.west) + (-3*\width, 1.5*\height)$)  {};
+\node (ttp2) [draw, circle, minimum width=0.6cm] at ($(client.west) + (-3*\width, 0)$) {};
+\node (ttp3) [draw, circle, minimum width=0.6cm] at ($(client.west) + (-3*\width, -1.5*\height)$)  {};
+\node (ttpbox) [draw, densely dashed, color=gray, fit={(ttp1) (ttp3) ($(ttp3) + (-\width, 0)$)}, rounded corners=5pt, inner sep=6pt, xshift=1mm, label=above:\text{\color{gray}STTPs}] {};
+
+\node (entry) [draw, minimum height=2cm, minimum width=0.4cm] at ($(client.east) + (2*\width, 0)$) {};
+\node[align=center, font=\scriptsize, rotate=90] at (entry.center) {Entry gateway};
+\node (11) [draw, circle, minimum width=0.4cm] at ($(entry.north east) + (\width/1.5, -\height/2)$) {};
+\node (12) [draw, circle, minimum width=0.4cm] at ($(entry.east) + (\width/1.5, 0)$) {};
+\node (13) [draw, circle, minimum width=0.4cm] at ($(entry.south east) + (\width/1.5, \height/2)$) {};
+\node (21) [draw, circle, minimum width=0.4cm] at ($(11.east) + (\width/1.5, 0)$) {};
+\node (22) [draw, circle, minimum width=0.4cm] at ($(12.east) + (\width/1.5, 0)$) {};
+\node (23) [draw, circle, minimum width=0.4cm] at ($(13.east) + (\width/1.5, 0)$) {};
+\node (31) [draw, circle, minimum width=0.4cm] at ($(21.east) + (\width/1.5, 0)$) {};
+\node (32) [draw, circle, minimum width=0.4cm] at ($(22.east) + (\width/1.5, 0)$) {};
+\node (33) [draw, circle, minimum width=0.4cm] at ($(23.east) + (\width/1.5, 0)$) {};
+\node (exit) [draw, minimum height=2cm, minimum width=0.4cm] at ($(32.east) + (\width/1.5, 0)$) {};
+\node[align=center, font=\scriptsize, rotate=90] at (exit.center) {Exit gateway};
+\node (mixnet) [draw, densely dashed, color=gray, fit={(entry) (exit)}, rounded corners=5pt, inner sep=10pt, label=above:\text{\color{gray}Decentralized Network}] {};
+
+
+\draw[-Latex, color=gray] (mixnet.south) -- ($(mixnet.south) - (0,\height/2)$) -- node[font=\small, midway, fill=white, inner sep=1pt]{(0)} ($(ttpbox.south) - (0,\height/2)$) -- (ttpbox.south);
+
+\draw[fleche, bend left=-20] ($(client.west) + (0,\height)$) to node[font=\small, midway, fill=white, inner sep=1pt] {(1)} ($(ttpbox.east) + (0,\height)$);
+\draw[fleche, bend right=20] ($(ttpbox.east) + (0,\height)$) to node[font=\small, midway, fill=white, inner sep=1pt] {(3)} ($(client.west) + (0,\height)$);
+
+\draw[-Latex, shorten <= 2pt, shorten >= 1pt, loop above] (ttp1) to[out=150,in=-150,looseness=5] node[yshift=-1.8mm, font=\small, midway, fill=white, inner sep=1pt, xshift=-0.7mm] {(2)} (ttp1);
+\draw[-Latex, shorten <= 2pt, shorten >= 1pt, loop above] (ttp2) to[out=150,in=-150,looseness=5] (ttp2);
+\draw[-Latex, shorten <= 2pt, shorten >= 1pt, loop above] (ttp3) to[out=150,in=-150,looseness=5] node[yshift=-1.8mm, font=\small, midway, fill=white, inner sep=1pt, xshift=-0.7mm] {(5)} (ttp3);
+
+\draw[fleche, bend left=-20] ($(client.west) - (0,\height)$) to node[font=\small, midway, fill=white, inner sep=1pt] {(4)} ($(ttpbox.east) - (0,\height)$);
+\draw[fleche, bend right=20] ($(ttpbox.east) - (0,\height)$) to node[font=\small, midway, fill=white, inner sep=1pt] {(6)} ($(client.west) - (0,\height)$);
+
+
+\draw[-Latex] (client.east) to node[font=\small, midway, fill=white, inner sep=1pt] {(7)} (mixnet.west);
+
+\draw (entry.east) -- (11.west);
+\draw (entry.east) -- (12.west);
+\draw (entry.east) -- (13.west);
+\draw (11.east) -- (21.west);
+\draw (11.east) -- (22.west);
+\draw (11.east) -- (23.west);
+\draw (12.east) -- (21.west);
+\draw (12.east) -- (22.west);
+\draw (12.east) -- (23.west);
+\draw (13.east) -- (21.west);
+\draw (13.east) -- (22.west);
+\draw (13.east) -- (23.west);
+\draw (21.east) -- (31.west);
+\draw (21.east) -- (32.west);
+\draw (21.east) -- (33.west);
+\draw (22.east) -- (31.west);
+\draw (22.east) -- (32.west);
+\draw (22.east) -- (33.west);
+\draw (23.east) -- (31.west);
+\draw (23.east) -- (32.west);
+\draw (23.east) -- (33.west);
+\draw (31.east) -- (exit.west);
+\draw (32.east) -- (exit.west);
+\draw (33.east) -- (exit.west);
+
+\end{tikzpicture}

@@ -1,0 +1,40 @@
+\caption{Encryption}% (Fig.~\ref{fig:chunk-encryption})}
+\begin{algorithmic}[1]
+  
+\vspace{1pt}
+\Statex \hspace{-6mm}\textbf{Input:}
+\Statex \hspace{-7mm}{%
+    \begin{tabular}[t]{clr}
+      %$\phi$ & preprocessing filler chunks & \\ %\color{gray} (Alg.~\ref{algo:preprocessing}) \\
+      $\Delta$ & \hspace{2mm} Destination  & \\ %\color{gray} (EC point) \\
+      %${[G_j]}_{i=1..n}$ & chunk generators & \\ %\color{gray} (EC points) \\
+      ${[N_i]}_{i=1..m}$ & \hspace{2mm} Route & \\ %\color{gray} (EC points)\\
+      %${[s_i]}_{i=1..m}$ & shares of shared secrets & \\ %\color{gray} (scalars) \\
+    \end{tabular}
+  } \vspace{5pt}
+\Statex \hspace{-6mm}\textbf{Output:}
+\Statex \hspace{-1mm}{%
+    \begin{tabular}[t]{clr}
+      $H$ & \hspace{6.4mm} header chunks \hspace{5.3mm} & \\ %\color{gray} (EC points) \\
+    \end{tabular}
+  }
+\Statex
+
+% \State $m \gets pathLength$               %{\color{unHighlight}\Comment{path length}}
+% \State $n \gets 2m + 1$                   %{\color{unHighlight}\Comment{header size}}
+\State $H \gets [\,\D{} \,\|\, \phi\,]$   %{\color{unHighlight}\Comment{$\phi$ from Alg.~\ref{algo:preprocessing}}}
+
+\For{$i = m$ \textbf{down to} $1$}             %{\color{unHighlight}\Comment{layer ecnryption}}
+    \For{$j = 1$ \textbf{to} $n$}
+        \State $H[j] \gets H[j] + \sG{i}{j}$
+    \EndFor
+
+    \State $H \gets H[1 : n-2]$  %{\color{unHighlight}\Comment{truncate identity elements}}
+    \State $\C{i} \gets \text{HMAC}(H, \s{i})$   %{\color{unHighlight}\Comment{equation (\ref{eq:integrity})}}
+
+    \State $H \gets [\,\N{i} \,\|\, \C{i} \,\|\, H\,]$  %{\color{unHighlight}\Comment{prepend next hop}}
+\EndFor
+
+\State \Return $H$
+
+\end{algorithmic}

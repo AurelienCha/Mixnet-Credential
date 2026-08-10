@@ -1,0 +1,32 @@
+\caption{Preprocessing}% (Fig.~\ref{fig:chunk-preprocessing})}
+\begin{algorithmic}[1]
+
+\vspace{1pt}
+\Statex \hspace{-6mm}\textbf{Input:}
+\Statex \hspace{-5mm}{%
+    \begin{tabular}[t]{clr}
+      ${[s_i]}_{i=1..m}$            & \hspace{10pt} shared secrets \hspace{0pt}   & \vspace{1pt}\\ %\color{gray} (scalars) \\
+      ${[G_j]}_{j=1..n}$            & \hspace{10pt} chunk generators \hspace{0pt}           & \\ %\color{gray} (EC points) \\
+    \end{tabular}
+  }\vspace{6pt}
+\Statex \hspace{-6mm}\textbf{Output:}
+\Statex \hspace{-5mm}{%
+    \begin{tabular}[t]{clr}
+      $\hspace{4pt}\phi$                      & \hspace{40.5pt} filler chunks  \hspace{46.5pt}        & \\ %\color{gray} (EC points) \\
+    \end{tabular}
+  }
+\Statex\vspace{1pt}
+
+\State $m \gets pathLength$               %{\color{unHighlight}\Comment{path length}}
+\State $n \gets 2m + 1$                   %{\color{unHighlight}\Comment{header size}}
+
+\State $\phi \gets$ list of ($n-1$) identity points  %{\color{unHighlight}\Comment{initialization}}
+\For{$i = m$ \textbf{down to} $1$} 
+    \For{$j = 2(m-i+1)$ \textbf{to} $n$} 
+        \State $l \gets 2i+j-n$
+        \State $\phi[l] \gets \phi[l]  - \sG{i}{j}$
+    \EndFor
+\EndFor
+\State \Return $\phi$
+
+\end{algorithmic}

@@ -1,0 +1,113 @@
+\centering
+\begin{tikzpicture}
+    %% INPUT
+    \node (L0) at (0,0) {};
+    \node (Cred) [block=1] at (L0) {\Cred{i}};
+    \node (A) [block=1] at ($(Cred.east) + (0.5*\width, 0)$) {\A{i}};
+    \node (B) [block=5] at ($(A.east) + (\width, 0)$)  {\B{i}{}};
+    \node (C) [block=1] at ($(B.east) + (2*\width, 0)$) {\C{i}};
+    \foreach \j in {1,...,4} {
+        \draw[dotline] ($(B.north west) + (\j*\width, 0)$) -- ($(B.south west) + (\j*\width, 0)$) {}; 
+    }
+
+    %% LINE 0.5 (credential verification)
+    \node (L05) at ($(L0) - (0, 1.75*\height)$) {};
+    \node (credEq) [eq] at (Cred.-60 |- L05) {\ref{eq:credential_verification}};
+
+
+    %% LINE 1 (shared secret, check integrity & decrypt)
+    \node (L1) at ($(L05) - (0, 1.75*\height)$) {};
+    \node (sk) [block=1] at ($(L1) - (1.75*\width, 0)$) {\sk{i}};
+    \node (ss) [eq] at (A.-120 |- L1) {\ref{eq:derive_secret}};
+    \node (S) [block=1] at (A.east |- L1)  {\s{i}};
+    \node (check) [eq] at ($(C |- L1) + (0, 2pt)$)  {\ref{eq:integrity_check}};
+ 
+    %% LINE 2 (decryption & blind)
+    \node (L2) at ($(L1) - (0, 2.1*\height)$) {};
+    \node (BB) [block=5] at (B.west |- L2) {};
+    \foreach \j in {1,...,5} {
+        \node (B\j) at ($(BB.west) + (\j*\width-0.5*\width, 0)$) {\B{i}{\j}};
+        \ifnum \j<5
+        \draw[dotline] ($(BB.north west) + (\j*\width, 0)$) -- ($(BB.south west) + (\j*\width, 0)$) {}; 
+        \fi
+    }
+    \node (pad) [zero_pad=2] at (BB.east) {0}; 
+    \node (sG) [block=7] at ($(BB.west) - (0, 1.2*\height)$) {};
+    \foreach \j in {1,...,7} {
+        \node (sG\j) at ($(sG.west) + (\j*\width-0.5*\width, 0)$) {\sG{i}{\j}};
+        \ifnum \j<7
+        \draw[dotline] ($(sG.north west) + (\j*\width, 0)$) -- ($(sG.south west) + (\j*\width, 0)$) {}; 
+        \fi
+    } 
+    \node (N'_) [block=1] at ($(sG.west) - (0, 2*\height)$) {\BB{i}{1}};
+    \node (C'_) [block=1] at (N'_.east) {\BB{i}{2}};
+    \node (B'_) [block=5] at (C'_.east) {};
+    % \node [block=7] at (N'_.west) {};%{\color{black!70} $H_{i+1}$};
+    % \foreach \j in {1,...,6} {
+    %     \draw[dotline] ($(N'_.north west) + (\j*\width, 0)$) -- ($(N'_.south west) + (\j*\width, 0)$) {}; 
+    % }
+    \foreach \j in {3,...,7} {
+        \node (B'_\j) at ($(B'_.west) + (\j*\width-2.5*\width, 0)$) {\BB{i}{\j}};
+        \ifnum \j<5
+        \draw[dotline] ($(B'_.north west) + (\j*\width-2*\width, 0)$) -- ($(B'_.south west) + (\j*\width-2*\width, 0)$) {}; 
+        \fi
+    }
+    \node (xor) [eq] at ($(check |- sG) - (0, \height)$) {\ref{eq:decrypt}};
+    \node (blind) [eq] at (A.-60 |- xor) {\ref{eq:update_alpha}};
+    \node (updCred) [eq] at (Cred.-120 |- N'_) {\ref{eq:update_credential}};
+    
+    %% BOX
+    \node (mixnode) [yshift=1pt, inner ysep=7pt, thick, draw=red, dashed, fit=(sk) (B'_) (check)] {};
+    \node[xshift=-7pt, rotate=90] at (mixnode.west) {\color{red} \textbf{Mixnode $i$}};
+
+    %% OUTPUT
+    \node (L) at ($(mixnode.south) - (0, 2.0*\height)$) {};
+    \node[] (N') at (sk |- L.north) {Next};
+    \node[yshift=-9pt] at (sk |- L.north) {mixnode};
+    \node (Cred') [block=1] at (Cred.west |- L) {\Cred{i+1}};
+    \node (A') [block=1] at (A.west |- L) {\A{i+1}};
+    \node (B') [block=5] at (B.west |- L)  {\B{i+1}{}};
+    \node (C') [block=1] at (C.west |- L) {\C{i+1}};
+    \foreach \j in {1,...,4} {
+        \draw[dotline] ($(B'.north west) + (\j*\width, 0)$) -- ($(B'.south west) + (\j*\width, 0)$) {}; 
+    }
+
+    %% ARROW
+    % (5) credential verification
+    \draw[arrow] (credEq |- Cred.south) -- (credEq.north);
+    \draw[line] (B.south) |- (blind |- credEq);
+    \draw[line] (blind |- credEq) -- (ss |- credEq);
+    \draw[arrow] (ss |- credEq) -- (credEq);
+    (credEq);
+    % (6) shared secret
+    \draw[arrow] (A.south -| ss) -- (ss);
+    \draw[arrow] (sk) -- (ss);
+    \draw[arrow] (ss) -- (S);
+    % (7) check
+    \draw[arrow] (B.south) |- (check.+153);
+    \draw[arrow] (C) -- (check);
+    \draw[line] (S.east |- check.-153) -- (B.south |- check.-153); \draw[arrow] (B.south |- check.-153) -- (check.-153); 
+    % (8) xor
+    \draw[arrow] (pad) -| (xor);
+    \draw[arrow] (sG.east) -| (xor);
+    \draw[arrow] (xor) |- (B'_);
+    % (9) blind
+    \draw[line] (A.south -| blind) -- ($(ss -| blind) + (0, 1pt)$);
+    \draw[arrow] ($(ss -| blind) - (0, 1pt)$) -- (blind);
+    \draw[arrow] (S) |- (blind);
+    \draw[arrow] (blind) -- (blind |- A'.north);
+    % (10) update credential
+    \draw[arrow] (Cred.-120) -- (updCred);
+    \draw[arrow] (updCred) -- (Cred'.120);
+    \draw[line] (S) |- (blind |- updCred.30); \draw[arrow] (blind |- updCred.30) |- (updCred.30);
+    \draw[line] (N'_.west |- updCred.-30) -- (blind |- updCred.-30); \draw[arrow] (blind |- updCred.-30) -- (updCred.-30);
+    % xor block
+    \draw[arrow] (B) -- (B.south |- B1.north);
+    \draw[arrow] (S) |- (sG.west);
+    % output
+    \node (tmp) at ($(B'_.south) - (0, 0.7*\height)$) {};
+    \draw[line] (N'_) |- (blind |- tmp); \draw[arrow] (blind |- tmp) -| (N');
+    \draw[line] (C'_) |- (B'_.south |- tmp); \draw[arrow] (B'_.south |- tmp) -| (C');
+    % \draw [decorate, thin, decoration={brace, mirror, amplitude=4pt, raise=1pt}] (B'_.south west) -- (B'_.south east) {};
+    \draw[arrow] (B'_.south) -- ($(tmp) - (0, 9pt)$) -| (B');
+\end{tikzpicture}

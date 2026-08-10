@@ -1,0 +1,277 @@
+\section{Proposed Scheme}\label{sec:scheme}
+%Let $\mathbb{G}$ be a cyclic group of prime order $q$ with generator $G$. 
+
+This section presents the proposed protocol and its integration into the Sphinx packet format.
+Figure~\ref{fig:architecture} provides an overview of the interactions between the client, the authorities, and the mixnet.
+
+Our protocol consists of four steps: 
+(1) the client requests destination-specific credential shares from a set of authorities, 
+(2) the authorities verify the request according to the network policy and issue \textit{partial credentials}, 
+(3) the client aggregates the partial credentials into a \textit{destination-bound credential}, 
+and (4) when constructing a Sphinx packet, the client rerandomizes and binds the credential to the packet header, 
+producing a \textit{header-bound credential} that can be verified by mixnodes without revealing the destination.
+\newline
+
+\begin{figure}%[t]
+    \centering
+    \resizebox{\linewidth}{!}{\input{schema/overview.tex}}
+    \caption{
+        Overview of the credential issuance and header binding.
+        The client obtains \textit{partial credentials} from a set of authorities, aggregates them into a \textit{destination-bound credential}, 
+        and finally rerandomizes and binds the credential to a Sphinx packet header, producing a \textit{header-bound credential}.
+    }
+    \label{fig:architecture}
+\end{figure}
+
+\noindent\textbf{DSphinx header.} 
+% Header structure - Chunks
+The proposed scheme is based on an adaptation of the Sphinx packet format, called DSphinx, first introduced in~\cite{}\todo[]{Cite DSphinx}.
+The key distinction is that each element in the header is independently encoded as an elliptic curve (EC) point. 
+Consequently, the DSphinx header is structured as a sequence of fixed-size chunks, as illustrated in Fig.~\ref{fig:chunkwise-overview}\todo{If places allow, out a figure specific for that}, 
+where each chunk corresponds to a single header element represented by an EC point.
+Each network node along the packet route contributes for two chunks: one encoding its address and another encoding a per-hop integrity tag. 
+Therefore, a route of length $m$ is represented by $n = 2m + 1$ chunks, accounting for two chunks per network node and one additional chunk corresponding to the final destination.
+Some routing information, such as IP addresses, must be reversibly encoded as elliptic curve points. 
+To this end, DSphinx uses the Elligator mapping, which produces points computationally indistinguishable from randomly sampled group elements.
+\todo{To update no more Elligator since incompatible with pairing curves}.
+
+
+\subsection{Threshold Multi-Authority Setup}
+\todo{\href{https://en.wikipedia.org/wiki/Distributed_key_generation}{Update "distributed key generation" using "verifiable secret sharing" (VSS)}}
+
+We consider a distributed authority composed of $A$ independent authorities, where any subset of at least $t$ authorities can jointly issue valid credentials. 
+During system initialization, the authorities execute a standard distributed key generation (DKG) protocol based on verifiable secret sharing (VSS), resulting in a threshold signing key without ever reconstructing the corresponding secret.
+
+More precisely, each authority $A_k$ is associated with a public identifier $x_k \in \mathbb{Z}_q$ and receives a secret signing share $y_k$. 
+Together, these shares define a secret polynomial $f$ of degree $t-1$, whose constant coefficient $ y=f(0) $ is the global signing key. 
+While no individual authority learns $y$, any subset of at least $t$ authorities can jointly sign any elliptic-curve point $P$ as $\widetilde{P}=yP$ 
+by combining their partial signature $(x_k, y_k P)$ using Lagrange interpolation at $x=0$.
+
+The authorities jointly authenticate the public parameters, consisting of the system public key $Y=yG'$, 
+the public points $\widetilde{N}_i=yN_i$ of the $M$ mixnodes in the network, and the chunk generators $\widetilde{G}_j=yG_j$. 
+\begin{equation}
+\mathsf{pp} =
+\left\{
+Y,\;
+\{\widetilde{N}_i\}_{i=1}^{M},\;
+\{\widetilde{G}_j\}_{j=1}^{n}
+\right\}.
+\end{equation}
+
+\subsection{Credential Issuance}
+
+Credential issuance is performed once for each destination and allows a client to obtain a \emph{destination-bound} credential without revealing the destination to the authorities. 
+The issuance process consists of two steps: partial credential issuance and its aggregation.
+
+\subsubsection{Partial Credential Issuance}
+
+The client samples a random blinding factor $r \in \mathbb{Z}_q$ and computes the blinded representation of the destination $\D{}$ as $ R = r\D{} $.
+The client then contacts at least $t$ authorities and submits $R$ together with a proof that the requested destination satisfies the applicable authorization policy.
+
+The policy and the corresponding proof are application-dependent and are therefore outside the scope of this work. 
+In particular, the proof may incorporate arbitrary authorization mechanisms supported by the deployment, such as a zero-knowledge proof of payment, without requiring the authorities to learn the destination itself. 
+Our scheme only requires that the authorities can verify such a proof before issuing a credential.
+
+Upon successful verification, each contacted authority $A_k$ uses its secret signing share $y_k$ to compute a \emph{partial credential} $ C_k = y_k R $, which is bound to the blinded destination $R$.
+
+
+\subsubsection{Credential Aggregation}
+
+After collecting valid partial credentials from at least $t$ authorities, the client combines them using Lagrange interpolation, obtaining an aggregated credential $C_R$ bound to the blinded representation $R$.
+The client then removes the blinding factor and obtains the \emph{destination-bound credential} $ C = r^{-1} C_R = y\D{} $.
+Since the blinding factor $r$ is known only by the client, the authorities learn neither $\D{}$ nor the resulting destination-bound credential during the issuance process.
+
+\subsection{Header Construction \& Credential Binding}
+
+The header construction proceeds in four phases; 
+a route and secrets derivation phase, 
+a preprocessing phase that generates filler chunks, 
+followed by a layer-by-layer encryption phase applied in reverse order, from the last hop to the first.
+Finally, the \emph{destination-bound credential} is rerandomized and bound to the header, producing a \emph{header-bound credential} that can be verified by any node without revealing the destination.
+The preprocessing and layer-by-layer encryption phases are respectively detailed in Alg.~\ref{algo:preprocessing} and Alg.~\ref{algo:sttp}, and illustrated in Fig.~\ref{fig:header-construction} for $m=3$.
+To ensure unlinkability, encryption is performed using a set of independently derived generators $\{G_j\}_{j=1}^{n}$, one per chunk in the header, such that no scalar relationship between any pair of generators is known.
+
+
+% Route and secrets derivation
+\medskip
+\noindent\textbf{Route and Secrets derivation.} 
+To send a message to a chosen destination $\D{}$, for which he has the corresponding destination-bound credential $y \D{}$, the client selects a route $\{N_i\}_{i=1}^{m}$ and generates an initial nonce $x_1$.  
+Using this nonce and the public keys of the nodes along the route, the client derives a sequence of shared secrets $\{s_i\}_{i=1}^{m}$ according to Eq.~\eqref{eq:shared_secret}, yielding a hop-by-hop key derivation.
+\begin{equation}
+\{s_i\}_{i=1}^{m} \quad \left\{ \quad
+\begin{aligned}
+    \A{i}    &= x_i \, G, \\
+    \s{i}    &= \InverseMap{x_i \, \PK{i}}, \\
+    x_{i+1}  &= s_i \, x_i \quad (\text{mod}\ p),
+\end{aligned}
+\right.
+\label{eq:shared_secret}
+\end{equation}
+Here, $\PK{i} = \sk{i} G$ is the public key of the $i^{\text{th}}$ node in the path, $p$ is the order of the prime subgroup, and $\InverseMap{\cdot}$ denotes the inverse mapping from elliptic curve points to scalars.
+The shared secret $s_i$ acts as a per-hop pseudorandom update that derives the next blinding factor $x_{i+1}$, ensuring that the cryptographic elements $\A{i}$ remain unlinkable across layers.
+
+
+% Preprocessing
+\medskip
+\noindent\textbf{Preprocessing Phase.}
+The preprocessing phase prepares a vector of filler chunks $\phi$ according to \eqref{eq:preprocessing}.
+These filler chunks ensure that after each encryption layer the last two chunks evaluate to the identity element and can thus be safely truncated, ensuring a constant header size and reversibility when processed by the network nodes. 
+The detailed procedure is specified in Alg.~\ref{algo:preprocessing}, which takes as input the set of shared secrets $\{s_i\}$ and the set of chunk generators $\{G_j\}$, and outputs $n-1$ filler chunks, where $n = 2m+1$ is the header size for a path of length $m$. 
+\begin{equation}
+    \phi_j = - \sum_{i=1}^{m} s_i\, G_{\,n+j-2i}, \qquad 1 \le j \le n-1 .
+\label{eq:preprocessing}
+\end{equation}
+
+
+% Layers
+\medskip
+\noindent{\textbf{Layered Encryption Phase.}}
+The header is initialized by concatenating the destination chunk $\D{}$ with the filler chunks $\phi$, producing a $n$-chunks header.
+Encryption is then applied iteratively in reverse path order, from $i=m$ down to $i=1$, 
+as illustrated in Fig.~\ref{fig:chunk-encryption} and detailed in Alg.~\ref{algo:sttp}.
+\begin{enumerate}
+    \item \textbf{Chunk encryption:}
+    Each chunk $j$ is encrypted according Eq.~\eqref{eq:layer_i}.
+    The last two chunks evaluate to the identity element due to the preprocessing phase and may therefore be discarded while preserving subsequent processing.
+    \begin{equation}
+        H_{ij} = H_{(i+1,\,j)} + \sG{i}{j}
+        \label{eq:layer_i}
+    \end{equation}
+
+    \item \textbf{Integrity computation:} Remaining chunks are used for the integrity tag: 
+    \begin{equation}
+        \C{i} =  \text{HMAC}(\B{i}{}, s_i)
+        \label{eq:integrity}
+    \end{equation}
+
+    \item \textbf{Prepend Node:}
+    The node address $\N{i}$ and the integrity tag $\C{i}$ are prepended to $H_i$, producing again a $n$-chunks header.
+\end{enumerate}
+
+
+% Header-bound Credential
+\medskip
+\noindent\textbf{Credential Binding.} 
+Before transmitting a packet, the client transforms the destination-bound credential into a \emph{header-bound credential}. 
+This transformation binds the credential to the current Sphinx header and pseudorandomizes its value,
+so that the destination-bound credential is not directly exposed in the packet.
+
+Let $H$ denote the header-dependent group element used to bind the credential to the current Sphinx header. 
+It consists of two components: 
+the public points of the mixnodes along the route, excluding the first hop,
+and a shared-secret-dependent contribution. 
+For a route of length $m$, we define:
+\begin{equation}
+    H =
+    \underbrace{\sum_{i=2}^{m} N_i}_{\text{mixnode contribution}}
+    +
+    \underbrace{\sum_{j=1}^{m} s_j 
+        \left(\sum_{k=1}^{m-j+1} G_{2k-1} \right)}_{\text{shared-secret contribution}}.
+    \label{eq:header_dependent}
+\end{equation}
+
+Then the header-bound credential ($\sigma$) is computed by adding the destination-bound credential ($y\D{}$) to the header-dependent component $H$ multiplied by the global secret key $y$.
+The authenticated header-dependent component $yH$ is computed by the client using the authenticated public parameters $\{\widetilde{N}_i\}_{i=2}^{m}$ and $\{\widetilde{G}_{2*j-1}\}_{j=1}^{m}$, which are derived from the global secret key $y$.
+\begin{equation}
+    \sigma = y(\D{} + H) = y\D{} + yH,
+    \label{eq:header_bound_credential}
+\end{equation}
+
+The resulting credential is both bound to the current Sphinx header and pseudorandomized by the header-dependent components. 
+In particular, two packets carrying credentials for the same destination result in different header-bound credentials since their header-dependent values differ.
+
+% $\{\widetilde{N}_i\}_{i=2}^{m}$
+% $\{\widetilde{G}_{2*j-1}\}_{j=1}^{m}$
+
+% Algorithms
+\begin{figure}
+\centering
+\begin{minipage}{0.47\linewidth}
+\begin{algorithm}[H]
+\small
+\input{schema/code_filler_chunks_small.tex}
+\label{algo:preprocessing}
+\end{algorithm}
+\end{minipage}
+\hfill
+\begin{minipage}{0.47\linewidth}
+\begin{algorithm}[H]
+\small
+\input{schema/code_sttp_small.tex}
+\label{algo:sttp}
+\end{algorithm}
+\end{minipage}
+\end{figure}
+
+% Construction Scheme
+\begin{figure}
+    \centering
+    \resizebox{0.8\linewidth}{!}{\input{schema/chunkwise_encryption.tex}}
+    \caption{DSphinx header construction for a path of length $m=3$ (without credential binding). 
+    Circled numbers \eq[\color{red}x] refers to Equation x in the paper.}
+    \label{fig:header-construction}
+\end{figure}
+
+
+
+\subsection{Packet Processing \& Credential Verification}  % Header-bound Credential
+
+Upon receiving a packet, mixnode $i$ extracts the cryptographic element $\A{i}$, the integrity tag $\C{i}$, and the encrypted routing information $\B{i}{}$. 
+As in the original Sphinx design, the node checks whether $\A{i}$ has been previously observed since its last key rotation and discards duplicates to prevent replay attacks.
+The header is processed as illustrated in Fig.~\ref{fig:header-processing}.
+
+\smallskip
+\noindent{\textbf{Credential Verification.}}
+First the mixnode verifies the header-bound credential $\sigma$ using the system public key $Y = yG'$. 
+The verification considers all header chunks that may contain the encrypted final destination (i.e. all odd-indexed $\B{}{}$ chunks), 
+and therefore does not require the mixnode to determine which chunk actually contains the destination. 
+The credential is accepted if the following pairing equation holds; otherwise, the packet is discarded:
+\begin{equation}
+    e(\sigma,\, G') = e\left(\sum_{i=1}^{m} \B{2i-1}{},\, Y \right),
+    \label{eq:credential_verification}
+\end{equation}
+Since all candidate destination chunks are included in the verification, 
+a successful verification establishes that $\sigma$ is a valid authority-issued credential bound to the encrypted destination carried by the header, 
+without revealing which candidate chunk contains that destination.
+
+\smallskip
+\noindent{\textbf{Integrity Check.}}
+The mixnode derives the shared secret $\s{i}$ by multiplying the cryptographic element $\A{i}$ with its private key $\sk{i}$, and then hashing the resulting point into a scalar as in \eqref{eq:derive_secret}.
+The shared secret $\s{i}$ is then used to verify the integrity tag in \eqref{eq:integrity_check}.
+\begin{align}
+    \s{i} &= \text{HashToScalar}\!\left(\sk{i} \, \A{i}\right) \label{eq:derive_secret} \\
+    \C{i} &\overset{\text{?}}{=} \text{HMAC}\!\left(\B{i}{}, \s{i}\right) \label{eq:integrity_check} \\
+\end{align}
+
+\smallskip
+\noindent{\textbf{Decryption.}}
+If verification succeeds, the node appends two identity chunks and decrypts the header as in \eqref{eq:decrypt}. 
+The first decrypted chunk $\BB{i}{1}$ reveals the next hop $\N{i+1}$. 
+The second chunk $\BB{i}{2}$ contains the integrity tag $\C{i+1}$ for the next hop, while the remaining chunks form the next encrypted routing information $\B{i+1}{}$.
+\begin{equation}
+    \BB{i}{j} = \B{i}{j} - \sG{i}{j} 
+    \label{eq:decrypt} 
+\end{equation}
+
+\smallskip
+\noindent{\textbf{Update.}}
+Finally, the node updates the cryptographic element according to \eqref{eq:update_alpha}.
+It also updates the credential according to \eqref{eq:update_credential} using the authenticated next hop public point $\widetilde{N}_{i+1}$.
+Now the packet has been processed by mixnode $i$, it can be shuffled, delayed and forwarded to the next hop.
+\begin{equation}
+    \A{i+1} = s_i \, \A{i} 
+    \label{eq:update_alpha} 
+\end{equation}
+\begin{equation}
+    \Cred{i+1} = \Cred{i} - s_i \, \left(\sum_{k=1}^{m+1} \widetilde{G}_{2k-1} \right) - \widetilde{N}_{i+1}
+    \label{eq:update_credential} 
+\end{equation}
+
+
+\begin{figure}
+    \centering
+    \resizebox{1.\linewidth}{!}{\input{schema/chunkwise_decryption.tex}}
+    \caption{DSphinx header of path length $m=3$ and its credential processed by mixnode $i$. 
+    Circled numbers \eq[\color{red}x] refers to Equation x in the paper.}
+    \label{fig:header-processing}
+\end{figure}

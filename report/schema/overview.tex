@@ -1,0 +1,80 @@
+\newcommand{\WIDTH}{10 mm}
+\newcommand{\HEIGHT}{18 mm}
+
+\tikzset{
+  mixnode/.style={draw, circle, radius=2mm},
+  authority/.style={draw, inner sep=0pt, minimum width=1cm, minimum height=1cm},
+}
+
+\newcommand{\client}[1]{
+  \begin{tikzpicture}[scale=0.4]
+    % Monitor screen
+    \draw[fill=#1!20, draw=black, rounded corners=4pt] (0,0) rectangle (4,2.5);
+    % Inner bezel
+    \draw[fill=white, draw=none, rounded corners=3pt] (0.2,0.2) rectangle (3.8,2.3);
+    % Stand
+    \draw[fill=#1!40, draw=black] (1.75,-0.7) rectangle (2.25,0);
+    % Base
+    \draw[fill=#1!40, draw=black, rounded corners=2pt] (0.8,-1) rectangle (3.2,-0.7);
+  \end{tikzpicture}
+}
+
+
+\begin{tikzpicture}
+
+% Nodes
+\node (client) [label=below:\text{\color{gray}Client}] at (0, 0) {\scalebox{1}{\client{gray}}};
+
+\node (Authority1) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, 0.8*\HEIGHT)$)  {};
+\node (Authority2) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, 0.2*\HEIGHT)$) {};
+\node (Authority3) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, -0.8*\HEIGHT)$)  {};
+\draw[thick, dashed, outer sep=5mm, shorten <= 2mm, shorten >= 2mm] (Authority2) -- (Authority3);
+\node (AuthorityBox) [draw, densely dashed, color=gray, fit={(Authority1) (Authority3)}, rounded corners=5pt, inner sep=6pt, label=above:\text{\color{gray}Credential Authorities}] {};
+
+\node (entry) [draw, minimum height=2cm, minimum width=0.4cm] at ($(client.east) + (2*\WIDTH, 0)$) {};
+\node[align=center, font=\scriptsize, rotate=90] at (entry.center) {Entry gateway};
+\node (11) [mixnode] at ($(entry.north east) + (\WIDTH/1.5, -\HEIGHT)$) {};
+\node (12) [mixnode] at ($(entry.east) + (\WIDTH/1.5, 0)$) {};
+\node (13) [mixnode] at ($(entry.south east) + (\WIDTH/1.5, \HEIGHT)$) {};
+\node (21) [mixnode] at ($(11.east) + (\WIDTH/1.5, 0)$) {};
+\node (22) [mixnode] at ($(12.east) + (\WIDTH/1.5, 0)$) {};
+\node (23) [mixnode] at ($(13.east) + (\WIDTH/1.5, 0)$) {};
+\node (31) [mixnode] at ($(21.east) + (\WIDTH/1.5, 0)$) {};
+\node (32) [mixnode] at ($(22.east) + (\WIDTH/1.5, 0)$) {};
+\node (33) [mixnode] at ($(23.east) + (\WIDTH/1.5, 0)$) {};
+\node (exit) [draw, minimum height=2cm, minimum width=0.4cm] at ($(32.east) + (\WIDTH/1.5, 0)$) {};
+\node[align=center, font=\scriptsize, rotate=90] at (exit.center) {Exit gateway};
+\node (mixnet) [draw, densely dashed, color=gray, fit={(entry) (exit)}, rounded corners=5pt, inner sep=10pt, label=above:\text{\color{gray}Mix Network}, label=below:\text{\color{gray}Credential verification (at any mixnode)}] {};
+
+
+\draw[-Latex, shorten >= 1mm] ($(client.west) + (0, 4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (1)} ($(AuthorityBox.east) + (0, 4mm)$);
+\draw[-Latex, shorten <= 1mm] ($(AuthorityBox.east) + (0, -4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (2)} ($(client.west) + (0, -4mm)$);
+\draw[-Latex] (client) to[out=120,in=60,looseness=2] node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (3)} (client);
+\draw[-Latex, shorten >= 1mm] (client.east) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (4)} (mixnet.west);
+
+\draw (entry.east) -- (11.west);
+\draw (entry.east) -- (12.west);
+\draw (entry.east) -- (13.west);
+\draw (11.east) -- (21.west);
+\draw (11.east) -- (22.west);
+\draw (11.east) -- (23.west);
+\draw (12.east) -- (21.west);
+\draw (12.east) -- (22.west);
+\draw (12.east) -- (23.west);
+\draw (13.east) -- (21.west);
+\draw (13.east) -- (22.west);
+\draw (13.east) -- (23.west);
+\draw (21.east) -- (31.west);
+\draw (21.east) -- (32.west);
+\draw (21.east) -- (33.west);
+\draw (22.east) -- (31.west);
+\draw (22.east) -- (32.west);
+\draw (22.east) -- (33.west);
+\draw (23.east) -- (31.west);
+\draw (23.east) -- (32.west);
+\draw (23.east) -- (33.west);
+\draw (31.east) -- (exit.west);
+\draw (32.east) -- (exit.west);
+\draw (33.east) -- (exit.west);
+
+\end{tikzpicture}

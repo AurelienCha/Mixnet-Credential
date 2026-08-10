@@ -1,0 +1,100 @@
+\usepackage{relsize} % for \mathlarger
+% Colors tuto: https://www.overleaf.com/learn/latex/Using_colors_in_LaTeX
+% \defincolor: {define new color}
+%   - rgb: {r, g, b}                            [0, 1]
+%   - RGB: {r, g, b}                            [0, 255]
+%   - hsb: {hue, saturation, brightness}        [0, 1]
+%   - HSB: {hue, saturation, brightness}        [360°, 100%, 100%]
+%   - cmy: {cyan, magenta, yellow}              [0, 1]
+%   - cmyk: {cyan, magenta, yellow, blacK}      [0, 1]
+%   - gray: {gray}                              [0, 1] (low is dark)
+%   - Gray: {Gray}                              [0, 15] (low is dark)
+%   - HTML: {RRGGBB}                            6 hexa-digits
+%   - wave: {wavelength}                        [363, 814] (nm)
+% \colorlet: (i.e. mixing colors)
+%   - \colorlet{mixedColor}{blue!10!red}        % 10% blue mixed with 90% red
+
+\definecolor{unHighlight}{gray}{0.60}
+
+\newcommand{\bigO}[1]{$\mathcal{O}(#1)$}
+
+\newcommand{\mathtext}[1]{\text{\scriptsize #1}}
+% \newcommand{\indexsize}{\footnotesize}
+% \renewcommand{\index}[1]{\mathtext{\indexsize {#1}}}
+\renewcommand{\index}[1]{\mathtext{{#1}}}
+\newcommand{\inmath}[1]{\relax\ifmmode #1 \else $#1$\fi}
+
+\newcommand{\G}[1]{\inmath{G_\index{#1}}}
+\newcommand{\N}[1]{\inmath{N_\index{#1}}}
+\newcommand{\sk}[1]{\inmath{k_\index{#1}}}
+\newcommand{\PK}[1]{\inmath{K_\index{#1}}}
+\newcommand{\s}[1]{\inmath{s_\index{#1}}}
+\renewcommand{\S}[1]{\inmath{S_\index{#1}}}
+
+\newcommand{\sG}[2] {\relax
+    \ifmmode \s{#1}\G{#2} 
+    \else $\s{#1}\textcolor{unHighlight}{\G{#2}}$ 
+\fi}
+\newcommand{\B}[2]{\relax
+    \ifmmode \mathlarger{\beta_\index{#1#2}} 
+    \else $\mathlarger{\beta_\index{#1\textcolor{unHighlight}{#2}}}$ 
+\fi}
+\newcommand{\BB}[2]{\relax
+    \ifmmode \mathlarger{\beta^\prime_\index{#1#2}} 
+    \else $\mathlarger{\beta^\prime_\index{#1\textcolor{unHighlight}{#2}}}$ 
+\fi}
+\newcommand{\A}[1]{\inmath{\mathlarger{\mathlarger{\alpha_\index{#1}}}}}
+\newcommand{\C}[1]{\inmath{\mathlarger{\mathlarger{\gamma_{\index{#1}}}}}}
+\newcommand{\Cred}[1]{\inmath{\mathlarger{\mathlarger{\sigma_{\index{#1}}}}}}
+\newcommand{\D}{\inmath{\mathlarger{\mathlarger{\mathrm{\Delta}}}}}
+
+\newcommand{\hash}[1]{\inmath{\mathsf{hash}(#1)}}
+\newcommand{\sHashed}[1]{\inmath{\sigma_\index{#1}}}
+\newcommand{\hashIt}[2]{\inmath{\mathsf{h}^{(#2)}(#1)}}
+\newcommand{\Map}[1]{\inmath{\mathsf{Encode}(#1)}}
+\newcommand{\InverseMap}[1]{\inmath{\mathsf{Decode}(#1)}}
+\newcommand{\InverseMapNoParenthesis}{\inmath{\mathsf{Decode}}}
+
+\newlength{\y}
+\newcommand{\width}{9mm}
+\newcommand{\height}{5.4mm}
+
+\newcommand{\vgap}{
+    \addtolength{\y}{-\height}
+    \addtolength{\y}{-1mm}
+}
+\newcommand{\vGap}{
+    \addtolength{\y}{-\height}
+    \addtolength{\y}{-3mm}
+}
+% \newcommand{\hmac}{Eq. \ref{eq:integrity}}
+% \newcommand{\hmac}{\footnotesize $\sum$}
+
+% Define TikZ styles
+\usepackage{tikz}
+\usepackage{tikzpeople}
+\usetikzlibrary{shapes.geometric, positioning, calc, patterns, patterns.meta, backgrounds, fit, decorations.pathreplacing}
+
+\tikzset{    
+    % shape
+    block/.style={draw, ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    inblock/.style={block = #1, densely dotted}, % dash pattern=on 1pt off 1pt, 
+    zero_pad/.style={block = #1, fill = unHighlight, fill opacity=0.3},
+    HMAC/.style={draw, ellipse, minimum width = \width, minimum height = \height, inner sep = 0pt, anchor = center},
+    eq/.style={draw, circle, inner sep=1pt, fill opacity=0.2, fill=orange, text opacity=1, text=black, font=\normalsize}, %font=\bfseries\large
+    arrow/.style={->, shorten <= 1pt, shorten >= 2pt},
+    fleche/.style={-Latex, shorten <= 2pt, shorten >= 3pt},
+    line/.style={shorten <= 1pt, shorten >= 1pt},
+    dotline/.style={dotted},
+    between/.style args={#1 and #2}{at = ($(#1)!0.5!(#2)$)}
+}
+
+% Put tikz node in caption
+\newcommand\eq[1][black]{ % Do not know why we need [black] to works and \eq instead of {\eq}
+    \hspace{-2mm}
+    \tikz[baseline=(char.base)]{
+        \node [eq] (char) {#1};
+
+    }
+    \hspace{-2mm}
+}
