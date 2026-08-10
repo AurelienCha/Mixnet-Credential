@@ -1,0 +1,33 @@
+\begin{frame}{Motivation}
+    \begin{figure}%[t]
+        \hspace{-10mm}
+        \resizebox{0.75\linewidth}{!}{\input{schema/mixnet.tex}}
+        %\caption{Mixnet}
+    \end{figure}
+
+    \vfill\pause
+    \textbf{\underline{Problem}}: Legitimacy of destination is only verifiable at the {\color{red}exit node}\newline
+    \vfill\pause
+    \textbf{\underline{Objective}}: Legitimacy of destination verifiable at {\color{orange}any hop} without compromising privacy
+\end{frame}
+
+\begin{frame}{Objective}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+             \textbf{Idea:} Add a {\color{Orchid}credential $\sigma$} to the packet's header \newline
+
+             Desired properties:
+             \begin{itemize}
+                \item Linked to the final destination
+                \item Verifiable at any hop
+                \item Preserve unlinkability \newline {\color{gray}I.e. updated at each hop}
+                \item Preserve client anonimity \newline {\color{gray}I.e. cannot be linked to the client}
+                \item Preserve client privacy \newline {\color{gray} I.e. do not leak client information}
+             \end{itemize}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \centering
+            \resizebox{0.85\linewidth}{!}{\input{schema/packet.tex}}
+        \end{column}
+    \end{columns}
+\end{frame}

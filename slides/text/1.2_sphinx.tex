@@ -1,0 +1,105 @@
+\renewcommand{\x}{10mm}
+\renewcommand{\yy}{7mm}
+
+\begin{frame}{Sphinx - Packet format}
+
+\begin{columns}
+    \begin{column}{.7\linewidth}
+        \centering
+        \begin{tikzpicture} 
+\onslide<1>{
+    \only<1>{\node at (0,0)          ()         [block=8, fill=highlight!50]         {};}
+    \node at (0,0)              (header)         [draw, block=8]                           {Header};
+    \draw[draw] (header.south west) rectangle ($(header.south east) - (0, 3*\yy)$) node[midway] {Payload};
+}
+
+\onslide<2>{
+    \node at (0,0)              (A)         [draw, block=1]                           {\A{i}};
+    \node at (A.east)           (N)         [draw, block=1]                           {\N{i}};
+
+    \node at (N.east)           (C)         [draw, block=1]                           {\C{i}}; 
+    \node at (C.east)           (B)         [draw, block=5]                           {\B{i}{}};
+    
+    \draw[draw] (A.south west) rectangle ($(B.south east) - (0, 3*\yy)$) node[midway] {Payload};
+}
+
+\onslide<3->{
+    \node at (0,0)              (A)         [draw, block=1]                           {\A{i}};
+    \node at (A.east)           (N)         [draw, block=1]                           {\N{i}};
+    
+    \only<3>{\node at (N.east)          ()         [block=1, fill=highlight!50]         {};}
+    \node at (N.east)           (C)         [draw, block=1]                           {\C{i}}; 
+    \node at (C.east)           (B1)         [draw, block=1]                           {\N{i+1}};
+    \only<3>{\node at (B1.east)          ()         [block=1, fill=highlight!50]         {};}
+    \node at (B1.east)          (B2)         [draw, block=1]                           {\C{i+1}};
+    \node at (B2.east)          (B3)         [draw, block=1]                           {\N{i+2}};
+    \only<3>{\node at (B3.east)          ()         [block=1, fill=highlight!50]         {};}
+    \node at (B3.east)          (B4)         [draw, block=1]                           {\C{i+2}};
+    \node at (B4.east)          (B5)         [draw, block=1]                           {\D{}};
+
+    \draw[draw] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$) node[midway] {Payload};
+}
+
+\onslide<4->{
+\node[fit={(B1) (B5)}, inner sep=0pt, fill1] {};
+\node[fit={(B1) (B5)}, inner sep=0pt, pattern1] {};
+\draw[draw, fill1] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+\draw[draw, pattern1] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+}
+\onslide<5->{
+    \node[fit={(B3) (B5)}, inner sep=0pt, fill2] {};
+    \node[fit={(B3) (B5)}, inner sep=0pt, pattern2] {};
+    \draw[draw, fill2] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+    \draw[draw, pattern2] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+}
+\onslide<6->{
+    \node[fit={(B5)}, inner sep=0pt, fill3] {};
+    \node[fit={(B5)}, inner sep=0pt, pattern3] {};
+    \draw[draw, fill3] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+    \draw[draw, pattern3] (A.south west) rectangle ($(B5.south east) - (0, 3*\yy)$);
+}
+\onslide<7>{
+    \draw[draw, highlight, very thick] (A.north west) rectangle ($(B5.south east) - (0, 3*\yy)$) {};
+}
+        \end{tikzpicture} 
+    \end{column}
+
+    \hspace{-10mm}
+    \begin{column}{.35\linewidth}
+        \vspace*{3mm}
+        \only<4->{
+            \begin{tikzpicture}
+                \node at (1,0.6) {\textbf{Encryption}};
+                \node at (0,0)  [block=1, fill1] {}; \node at (0,0) [block=1, pattern1] {};  \node at (2,0) {Layer 1};  
+                \node at (0,-0.8) [block=1, fill2] {}; \node at (0,-0.8) [block=1, pattern2] {};  \node at (2,-0.8) {Layer 2};
+                \node at (0,-1.6)  [block=1, fill3] {}; \node at (0,-1.6) [block=1, pattern3] {};  \node at (2,-1.6) {Layer 3};
+            \end{tikzpicture}
+        }
+    \end{column}
+\end{columns}
+
+\vfill
+
+\begin{columns}
+    \begin{column}{.35\linewidth}
+        \only<2->{
+            \begin{itemize}
+                \item[] \A{}: Cryptographic element
+                \item[] \N{}: \only<2>{Next Hop}\only<3->{Hops in the path}
+                \item[] \C{}: Integrity tag
+                \item[] \B{}{}: Routing information
+            \end{itemize}
+        }
+    \end{column}
+    \begin{column}{0.5\linewidth} 
+        \onslide<3->{\textbf{Properties:}}
+        \begin{itemize}
+            \onslide<3->{\item \only<3>{\color{highlight}}Per-hop Integrity}
+            \onslide<4->{\item \only<4-6>{\color{highlight}}Per-hop confidentiality}
+            \onslide<7->{\item \only<7>{\color{highlight}}Strong unlinkability}
+            \onslide<7->{\item \only<7>{\color{highlight}}Fixed-size packet}
+        \end{itemize}
+    \end{column}
+\end{columns}
+\end{frame}
+

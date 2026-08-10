@@ -1,0 +1,64 @@
+\begin{frame}{Multi-authorities System Architecture}
+    \vspace{-5mm}
+    \centering
+    \begin{columns}
+        \begin{column}{0.8\linewidth}
+            \begin{figure}%[t]
+                \resizebox{\linewidth}{!}{\input{schema/overview.tex}}
+                %\caption{Mixnet}
+            \end{figure} 
+        \end{column}
+        \begin{column}{0.2\linewidth}
+            \vspace{10mm}
+            \begin{enumerate}
+                \item[(1)] Request % credentials 
+                \item[(2)] Issue % credentials
+                \item[(3)] Aggregate % credentials
+                \item[(4)] Rerandomize credential
+            \end{enumerate}
+        \end{column}
+    \end{columns}
+
+    \vspace{10mm}
+    \normalsize
+    \textbf{Assumption}: {\color{Cerulean}Multi-authorities \color{black}setup}
+\end{frame}
+
+
+\begin{frame}{Credential Construction \& Update}
+    \textbf{Credential Construction}:\hfill {\footnotesize\color{gray} $s_i$ = shared secret $client$ - $mixnode_i$}
+    \begin{center}
+        $\begin{array}{cl}
+            {\text{\color{Orchid}\LARGE$\sigma_1$}} & = {\color{Cerulean}y} \; \big({\color{Orange}\Delta} + N_3 + N_2 + {\color{gray}(s_1+s_2+s_3)} G_1 + {\color{gray}(s_1+s_2)} G_3 + {\color{gray}(s_1)} G_5\big)\\
+            \pause
+                & =  \underset{\annotMath{p0}{}}{\begingroup\color{Orchid}\underbrace{\color{black}{\color{Cerulean}y}{\color{Orange}\Delta}}\endgroup} + 
+                \underset{\annotMath{p1}{}}{\begingroup\color{gray!50}\underbrace{\color{black}{\color{Cerulean}y}N_3}\endgroup} + 
+                \underset{\annotMath{p2}{}}{\begingroup\color{gray!50}\underbrace{\color{black}{\color{Cerulean}y}N_2}\endgroup} + 
+                {\color{gray}(s_1+s_2+s_3)}\underset{\annotMath{p3}{}}{\begingroup\color{gray!50}\underbrace{\color{black}{\color{Cerulean}y}G_1}\endgroup} + 
+                {\color{gray}(s_1+s_2)}\underset{\annotMath{p4}{}}{\begingroup\color{gray!50}\underbrace{\color{black}{\color{Cerulean}y}G_3}\endgroup} + 
+                {\color{gray}(s_1)}\underset{\annotMath{p5}{}}{\begingroup\color{gray!50}\underbrace{\color{black}{\color{Cerulean}y}G_5}\endgroup}\\
+        \end{array}$
+        \begin{tikzpicture}[remember picture, overlay]
+        \node[below=1mm of p0, xshift=-2mm] (pp) {\color{Orchid}\footnotesize Credential given};
+        \node[below=-2mm of pp] {\color{Orchid}\footnotesize by authority};
+        \draw[->, Orchid] (p0.north) -- (pp.north);
+        \node[below=1mm of p3] (pt) {\color{gray!50}\footnotesize Public Parameters};
+        \draw[->, gray!50] (p1.north) |- (pt.west);
+        \draw[->, gray!50] (p2.north) |- (pt.west);
+        \draw[->, gray!50] (p3.north) -- (pt.north);
+        \draw[->, gray!50] (p4.north) |- (pt.east);
+        \draw[->, gray!50] (p5.north) |- (pt.east);
+        \end{tikzpicture}
+    \end{center}
+
+    \vfill
+    \pause
+
+    \textbf{Credential Update} at each hop:
+    \begin{center}
+        $\begin{array}{cl}
+            \text{\color{Orchid}\LARGE$\sigma_{i+1}$} & = \text{\color{Orchid}\LARGE$\sigma_i$} - s_i ({\color{Cerulean}y}G_1+{\color{Cerulean}y}G_3+{\color{Cerulean}y}G_5+{\color{Cerulean}y}G_7) - {\color{Cerulean}y}N_{i+1}\\
+           \end{array}$
+    \end{center}
+ \end{frame}
+

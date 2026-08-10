@@ -1,0 +1,28 @@
+
+\renewcommand{\width}{9mm}
+\renewcommand{\height}{5.4mm}
+
+
+\tikzset{    
+    block/.style={draw, ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    zero_pad/.style={block = #1, fill = unhighlight, fill opacity=0.3},
+    eq/.style={draw, circle, inner sep=1pt, font=\normalsize}, %font=\bfseries\large
+    arrow/.style={->, shorten <= 1pt, shorten >= 2pt},
+    dotline/.style={dotted},
+    between/.style args={#1 and #2}{at = ($(#1)!0.5!(#2)$)}
+}
+
+\begin{frame}{\hspace{25mm}From Sphinx \hspace{55mm} To DSphinx}
+
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \centering
+        \resizebox{0.8\linewidth}{!}{\input{schema/sphinx_encryption.tex}}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \centering
+        \resizebox{0.8\linewidth}{!}{\input{schema/dsphinx_encryption.tex}}
+    \end{column}
+\end{columns}
+
+\end{frame}

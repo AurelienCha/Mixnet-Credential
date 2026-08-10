@@ -1,0 +1,130 @@
+\documentclass[aspectratio=169]{beamer}
+
+% --------------------
+% Theme & appearance
+% --------------------
+\usetheme{Madrid}          % clean and classic
+\usecolortheme{default}    % minimal colors
+\setbeamertemplate{navigation symbols}{} % remove navigation icons
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+% --------------------
+% Fonts & math
+% --------------------
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, bm}
+
+% --------------------
+% Figures & graphics
+% --------------------
+\usepackage{graphicx}
+\usepackage{booktabs}      % nice tables
+\usepackage{multicol}
+\usepackage{adjustbox}
+
+% --------------------
+% TikZ (schemes & diagrams)
+% --------------------
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz}
+\usepackage{tikzpeople} 
+\usetikzlibrary{
+    arrows.meta,
+    positioning,
+    decorations.pathreplacing,
+    calc,
+    shapes.geometric,
+    shapes.misc,
+    tikzmark, % marks outside of tikz env (e.g. equations)
+    patterns,
+}
+\usetikzlibrary{overlay-beamer-styles, shapes.geometric, positioning, calc, patterns, patterns.meta, backgrounds, fit, decorations.pathreplacing}
+\input{tikz-preamble}
+
+% --------------------
+% Useful shortcuts
+% --------------------
+\tikzset{
+  encrypted/.style={pattern=north east lines, pattern color=gray!50},
+  rect/.style={draw, minimum width=1.5cm, minimum height=1cm},
+  }
+\newcommand{\annot}[1]{%
+\hspace{-1mm}\tikz[remember picture, anchor=base, baseline]{\node (#1) {$#1$};}\hspace{-1mm}%
+}\newcommand{\annotMath}[2]{%
+\hspace{-1mm}\tikz[remember picture, anchor=base, baseline]{\node (#1) {#2};}\hspace{-1mm}%
+}
+
+\newcommand{\bigSigma}{\LARGE$\sigma$}
+
+ % protoMSC (Message Sequence Charts) package  ==> Network protocols
+\usepackage{msc}
+\drawframe{no}% switch of msc frame
+
+% --------------------
+% Title information
+% --------------------
+\title{Anonymous Credential in Sphinx Packets}
+% \title[Follow-up meeting]{Follow-up Meeting}
+% \subtitle{Anonymous Credential in Sphinx Packets}
+\author{Aurelien Chassagne}
+% \institute{Your Lab / University}
+\date{\today}
+
+% ====================
+% Document
+% ====================
+\begin{document}
+
+% --------------------
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% --------------------
+\begin{frame}{Table of Content}
+\begin{itemize}
+  \setlength\itemsep{5mm}
+  \item Background
+  \begin{itemize}
+    \item Mixnet - Anonymous Communication Network
+    \item Sphinx - Packet Format
+  \end{itemize}
+  \item My research
+  \begin{itemize}
+    \item DSphinx - A more flexible packet format
+    \item Credential - Verifiable DSphinx Destination
+  \end{itemize}
+  \item Implementation \& Early Results
+  \item Future work
+\end{itemize}
+\end{frame}
+
+% \section{Background}
+% \include{text/1.1_mixnet}
+% \include{text/1.2_sphinx}
+
+% \section{My Research - DSphinx}
+% \include{text/3.1_dsphinx_encryption}
+% \include{text/3.2_dsphinx_decryption}
+
+\section{My Research - Credentials}
+\include{text/0.Intro}
+\include{text/2.Idea}
+\include{text/Architecture}
+% \include{text/Single_authority_problem}
+
+\section{Implementation \& Early Results}
+\include{text/4.Results}
+\include{text/5.Todo}
+
+
+\end{document}

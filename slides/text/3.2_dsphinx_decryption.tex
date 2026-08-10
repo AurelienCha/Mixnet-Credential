@@ -1,0 +1,250 @@
+
+\renewcommand{\width}{9mm}
+\renewcommand{\height}{5.4mm}
+
+\tikzset{    
+    block/.style={draw, ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    zero_pad/.style={block = #1, fill = unhighlight, fill opacity=0.3},
+    eq/.style={draw, circle, inner sep=1pt, fill = unhighlight!50, font=\normalsize}, %font=\bfseries\large
+    arrow/.style={->, shorten <= 1pt, shorten >= 2pt},
+    dotline/.style={dotted},
+    between/.style args={#1 and #2}{at = ($(#1)!0.5!(#2)$)},
+    mixarrow/.style={->, shorten <= 0.35mm, shorten >= 0.7mm,-{Stealth[length=4pt]}}
+}
+
+\newcommand{\computer}[1]{
+\begin{tikzpicture}[scale=0.22]
+    % Monitor screen
+    \draw[fill=#1, draw=black, rounded corners=4pt] (0,0) rectangle (4,2.5);
+    % Inner bezel
+    \draw[fill=white, draw=none, rounded corners=3pt] (0.2,0.2) rectangle (3.8,2.3);
+    % Stand
+    \draw[fill=#1, draw=black] (1.75,-0.7) rectangle (2.25,0);
+    % Base
+    \draw[fill=#1, draw=black, rounded corners=1pt] (0.8,-1) rectangle (3.2,-0.7);
+\end{tikzpicture}
+}
+
+\newcommand{\fillingBeta}[7]{
+    \at{#1}{(#2-1)*1.05}{0} [block=#3, pattern3] {}; \at{#1}{(#2-1)*1.05}{0} [block=#3, fill3] {};
+    \at{#1}{(#4-1)*1.05}{0} [block=#5, pattern2] {}; \at{#1}{(#4-1)*1.05}{0} [block=#5, fill2] {};
+    \at{#1}{(#6-1)*1.05}{0} [block=#7, pattern1] {}; \at{#1}{(#6-1)*1.05}{0} [block=#7, fill1] {};
+}
+
+
+
+\begin{frame}{Processing a DSphinx Packet}
+
+    \centering
+\begin{tikzpicture}[remember picture,overlay]
+
+  % MIXNET
+  \node[anchor=north west, inner sep=0pt] (MIXNET) at ($(current page.north west) - (0, 1.2cm)$) {
+    % \colorbox{blue!15}{
+    \begin{minipage}{0.5\textwidth}
+      \centering
+      \onslide<2->{
+      \begin{tikzpicture}[scale=0.7]
+
+        % GENERAL ARCHITECTURE (define nodes)
+        \node (source) at (1.2,0.2) {\computer{highlight}};
+
+        \node (mix11) at (3,-0.6) [draw, circle, minimum size=6.5mm] {};
+        \node (mix12) at (3, 0.6) [draw, circle, minimum size=6.5mm, mHightOn=3] {};
+        \node (mix21) at (5,-0.6) [draw, circle, minimum size=6.5mm, mHightOn=10] {};
+        \node (mix22) at (5, 0.6) [draw, circle, minimum size=6.5mm] {};
+        \node (mix31) at (7,-0.6) [draw, circle, minimum size=6.5mm] {};
+        \node (mix32) at (7, 0.6) [draw, circle, minimum size=6.5mm, mHightOn=11] {};
+
+        \node (destination) at (8.2, 0.2) { \only<2-11>{\computer{unhighlight}}\only<12>{\computer{highlight}}};
+
+        % LINKS
+
+        \draw[mixarrow] (source.east) -- (mix11.west);
+        \draw[mixarrow, mHightOn=3] (source.east) -- (mix12.west);
+        \draw[mixarrow] (mix11.east) -- (mix21.west);
+        \draw[mixarrow] (mix11.east) -- (mix22.west);
+        \draw[mixarrow, mHightOn=10] (mix12.east) -- (mix21.west);
+        \draw[mixarrow] (mix12.east) -- (mix22.west);
+        \draw[mixarrow] (mix21.east) -- (mix31.west);
+        \draw[mixarrow, mHightOn=11] (mix21.east) -- (mix32.west);
+        \draw[mixarrow] (mix22.east) -- (mix31.west);
+        \draw[mixarrow] (mix22.east) -- (mix32.west);
+        \draw[mixarrow] (mix31.east) -- (destination.west);
+        \draw[mixarrow, mHightOn=12] (mix32.east) -- (destination.west);
+      \end{tikzpicture}
+      }
+    \end{minipage}
+    % }
+  };
+
+  % PACKET
+  \node[anchor=north east, inner sep=0pt] (PACKET) at ($(current page.north east) - (5mm, 1.1cm)$) {
+    % \colorbox{red!15}{
+    \begin{minipage}{0.5\textwidth}
+      \centering
+      \onslide<2->{
+      \begin{tikzpicture}[scale=0.8]    
+        \only<2-6>{
+        \node at (0,0)              (N)         [draw, block=1, hightOn=3]           {\N{1}};
+        \node at (N.east)           (A)         [draw, block=1]           {\A{1}};
+        \node at (A.east)           (B)         [draw, block=5]           {\B{1}{}};
+        \node at (B.east)           (C)         [draw, block=1]           {\C{1}}; 
+        \draw[draw] (N.south west) rectangle ($(C.south east) - (0, 1.1cm)$) node[midway, yshift=1.5mm, xshift=7mm] {Payload};
+        } 
+        \only<7>{
+        \node at (0,0)              (N)         [draw, block=1, hightOn=7]           {\N{2}};
+        \node at (N.east)           (A)         [draw, block=1]                      {\A{1}};
+        \node at (A.east)           (B)         [draw, block=5, hightOn=7]           {\B{2}{}};
+        \node at (B.east)           (C)         [draw, block=1, hightOn=7]           {\C{2}}; 
+        \draw[draw] (N.south west) rectangle ($(C.south east) - (0, 1.1cm)$) node[midway, yshift=1.5mm, xshift=7mm] {Payload};
+        }
+        \only<8-10>{
+        \node at (0,0)              (N)         [draw, block=1]           {\N{2}};
+        \node at (N.east)           (A)         [draw, block=1, hightOn=8]                      {\A{2}};
+        \node at (A.east)           (B)         [draw, block=5]           {\B{2}{}};
+        \node at (B.east)           (C)         [draw, block=1]           {\C{2}}; 
+        \draw[draw, hightOn=9] (N.south west) rectangle ($(C.south east) - (0, 1.1cm)$) node[midway, yshift=1.5mm, xshift=7mm] {Payload};
+        }
+        \only<11>{
+        \node at (0,0)              (N)         [draw, block=1]           {\N{3}};
+        \node at (N.east)           (A)         [draw, block=1]                      {\A{3}};
+        \node at (A.east)           (B)         [draw, block=5]           {\B{3}{}};
+        \node at (B.east)           (C)         [draw, block=1]           {\C{3}}; 
+        \draw[draw, hightOn=9] (N.south west) rectangle ($(C.south east) - (0, 1.1cm)$) node[midway, yshift=1.5mm, xshift=7mm] {Payload};
+        }
+        \only<12->{
+        \node at (0,0)              (N)         [draw, block=1, hightOn=12]           {\D{}};
+        \node at (N.east)           (A)         [draw, block=1]                      {\A{}};
+        \node at (A.east)           (B)         [draw, block=5]           {\B{}{}};
+        \node at (B.east)           (C)         [draw, block=1]           {\C{}}; 
+        \draw[draw, hightOn=9] (N.south west) rectangle ($(C.south east) - (0, 1.1cm)$) node[midway, yshift=1.5mm, xshift=7mm] {Payload};
+        }
+    \end{tikzpicture}
+    }
+    \end{minipage}
+    % }
+  };
+
+  % STEPS
+  \node[anchor=south west, inner sep=0pt] (STEPS) at ($(current page.south west) + (0.2cm, 0.9cm)$) {
+    % \colorbox{green!15}{
+    \begin{minipage}{0.3\textwidth}
+      \centering
+      \textbf{\underline{Steps}}:\vspace{4mm}
+      \begin{enumerate}\itemsep 4mm
+        \item \only<4>{\color{highlight}} Compute share secret \color{black}
+        \item \only<5>{\color{highlight}} Integrity verification \color{black}
+        \item \only<6-7>{\color{highlight}} Decrypt header \color{black}
+        \item \only<8>{\color{highlight}} Update cryptographics \color{black}
+        \item \only<9>{\color{highlight}} Decrypt payload \color{black}
+      \end{enumerate}
+    \end{minipage}
+    % }
+  };
+
+  % PROCESS
+  \node[anchor=south east, inner sep=0pt] (PROCESS) at ($(current page.south east) + (-0.3cm, 0.5cm)$) {
+    % \colorbox{yellow!15}{
+    \begin{minipage}{0.7\textwidth}
+\centering
+\resizebox{0.97\linewidth}{!}{
+\begin{tikzpicture}
+    %% INPUT
+    \node (L0) at (0,0) {};
+    \node (A) [block=1, hightOn=4, hightOn=8] at (L0) {\A{i}};
+    \node (B) [block=5, hightOn=5, hightOn=6] at ($(A.east) + (\width, 0)$)  {\B{i}{}};
+    \node (C) [block=1, hightOn=5] at ($(B.east) + (2*\width, 0)$) {\C{i}};
+    \foreach \j in {1,...,4} {
+        \draw[dotline] ($(B.north west) + (\j*\width, 0)$) -- ($(B.south west) + (\j*\width, 0)$) {}; 
+    }
+
+    %% LINE 1 (shared secret, check integrity & decrypt)
+    \node (L1) at ($(L0) - (0, 2.5*\height)$) {};
+    \node (sk) [block=1, hightOn=4] at ($(L1) - (1.75*\width, 0)$) {\sk{i}};
+    \node (S) [block=1, hightOn=4, hightOn=5, hightOn=6, hightOn=8, hightOn=9] at (A.east |- L1)  {\s{i}};
+    \node (ss) [eq, hightOn=4] at (A.-110 |- sk.-20) {1};
+    \node (check) [eq, hightOn=5] at (C.-60 |- ss)  {2};
+ 
+    %% LINE 2 (decryption & blind)
+    \node (L2) at ($(L1) - (0, 2.1*\height)$) {};
+    \node (BB) [block=5, hightOn=6] at (B.west |- L2) {};
+    \foreach \j in {1,...,5} {
+        \node (B\j) [inblock=1] at ($(BB.west) + (\j*\width-0.9*\width, 0)$) {\B{i}{\j}};
+        \ifnum \j<5
+        \draw[dotline] ($(BB.north west) + (\j*\width, 0)$) -- ($(BB.south west) + (\j*\width, 0)$) {}; 
+        \fi
+    }
+    \node (pad) [zero_pad=2] at (BB.east) {0}; 
+    \node (sG) [block=7, hightOn=6] at ($(BB.west) - (0, 1.2*\height)$) {};
+    \foreach \j in {1,...,7} {
+        \node (sG\j) [inblock=1] at ($(sG.west) + (\j*\width-.9*\width, 0)$) {\sG{i}{\j}};
+        \ifnum \j<7
+        \draw[dotline] ($(sG.north west) + (\j*\width, 0)$) -- ($(sG.south west) + (\j*\width, 0)$) {}; 
+        \fi
+    } 
+    \node (N'_) [block=1, hightOn=6, hightOn=7] at ($(sG.west) - (0, 2*\height)$) {\BB{i}{1}};
+    \node (C'_) [block=1, hightOn=6, hightOn=7] at (N'_.east) {\BB{i}{2}};
+    \node (B'_) [block=5, hightOn=6, hightOn=7] at (C'_.east) {};
+    % \node [block=7] at (N'_.west) {};%{\color{black!70} $H_{i+1}$};
+    % \foreach \j in {1,...,6} {
+    %     \draw[dotline] ($(N'_.north west) + (\j*\width, 0)$) -- ($(N'_.south west) + (\j*\width, 0)$) {}; 
+    % }
+    \foreach \j in {3,...,7} {
+        \node (B'_\j) [inblock=1] at ($(B'_.west) + (\j*\width-2.9*\width, 0)$) {\BB{i}{\j}};
+        \ifnum \j<7
+        \draw[dotline] ($(B'_.north west) + (\j*\width-2*\width, 0)$) -- ($(B'_.south west) + (\j*\width-2*\width, 0)$) {}; 
+        \fi
+    }
+    \node (xor) [eq, hightOn=6] at ($(check.-40 |- sG) - (0, 1.28*\height)$) {3};
+    \node (blind) [eq, hightOn=8] at (A.-40 |- xor) {4};
+    
+    %% BOX
+    \node (mixnode) [yshift=0pt, inner ysep=6pt, inner xsep=7pt, draw=unhighlight, dashed, fit=(sk) (B'_) (check)] {};
+    \node[xshift=15pt, yshift=11pt] at (sk.north) {\color{unhighlight} \textbf{Node $i$}};
+
+    %% OUTPUT
+    \node (L) at ($(mixnode.south) - (0, 2.*\height)$) {};
+    \node[] (N') at (sk |- L.north) {\only<7>{\color{highlight}}Next};
+    \node[yshift=-9pt] at (sk |- L.north) {\only<7>{\color{highlight}}mixnode};
+    \node (A') [block=1, hightOn=8] at (A.west |- L) {\A{i+1}};
+    \node (B') [block=5, hightOn=7] at (B.west |- L)  {\B{i+1}{}};
+    \node (C') [block=1, hightOn=7] at (C.west |- L) {\C{i+1}};
+    \foreach \j in {1,...,4} {
+        \draw[dotline] ($(B'.north west) + (\j*\width, 0)$) -- ($(B'.south west) + (\j*\width, 0)$) {}; 
+    }
+
+    %% ARROW
+    % (6) shared secret
+    \draw[arrow, on=4] (A.south -| ss) -- (ss);
+    \draw[arrow, on=4] (sk) -- (ss);
+    \draw[arrow, on=4] (ss) -- (S);
+    % (7) check
+    \draw[arrow, on=5] (B.south) |- (check.+153);
+    \draw[arrow, on=5] (C) -- (check);
+    \draw[line, on=5] (S.east |- check.-153) -- (B.south |- check.-153); \draw[arrow, on=5] (B.south |- check.-153) -- (check.-153);
+    % (8) xor
+    \draw[arrow, on=6] (pad) -| (xor);
+    \draw[arrow, on=6] (sG.east) -| (xor);
+    \draw[arrow, on=6] (xor) |- (B'_);
+    % (9) blind
+    \draw[line, on=8] (A.south -| blind) -- ($(ss -| blind) + (0, 1pt)$);
+    \draw[arrow, on=8] ($(ss -| blind) - (0, 1pt)$) -- (blind);
+    \draw[arrow, on=8] (S) |- (blind);
+    \draw[arrow, on=8] (blind) -- (blind |- A'.north);
+    % xor block
+    \draw[arrow, on=6] (B) -- (B.south |- B1.north);
+    \draw[arrow, on=6] (S) |- (sG.west);
+    % output
+    \node (tmp) at ($(B'_.south) - (0, 0.7*\height)$) {};
+    \draw[line, on=7] (N'_) |- (blind |- tmp); \draw[arrow, on=7] (blind |- tmp) -| (N');
+    \draw[line, on=7] (C'_) |- (B'_.south |- tmp); \draw[arrow, on=7] (B'_.south |- tmp) -| (C');
+    % \draw [decorate, thin, decoration={brace, mirror, amplitude=4pt, raise=1pt}] (B'_.south west) -- (B'_.south east) {};
+    \draw[arrow, on=7] (B'_.south) -- ($(tmp) - (0, 9pt)$) -| (B');
+\end{tikzpicture}
+}
+    \end{minipage}
+    % }
+  };
+\end{tikzpicture}
+\end{frame}

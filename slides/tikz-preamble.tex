@@ -1,0 +1,213 @@
+
+\usepackage{relsize} % for \mathlarger
+
+
+\definecolor{background}{HTML}{ffffff}
+\definecolor{lightorange}{HTML}{FFE5CC}
+\definecolor{highlight}{HTML}{ed7014}
+\colorlet{unhighlight}{background!40!gray}
+\colorlet{color1}{blue}
+\colorlet{color2}{red}
+\colorlet{color3}{green}
+
+% Rainbow color palette
+\definecolor{rainbow1}{HTML}{1E6F91}
+\definecolor{rainbow2}{HTML}{3AA9B3}
+\definecolor{rainbow3}{HTML}{56C2AE}
+\definecolor{rainbow4}{HTML}{B5E48C}
+\definecolor{rainbow5}{HTML}{FFD166}
+\definecolor{rainbow6}{HTML}{FF9F68}
+\definecolor{rainbow7}{HTML}{FFB6C1}
+
+
+\newcommand{\x}{7mm}
+\newcommand{\yy}{5mm}
+
+\newlength{\y}
+\newcommand{\width}{9mm}
+\newcommand{\height}{5.4mm}
+
+\newcommand{\vgap}{
+    \addtolength{\y}{-\height}
+    \addtolength{\y}{-1mm}
+}
+\newcommand{\vGap}{
+    \addtolength{\y}{-\height}
+    \addtolength{\y}{-3mm}
+}
+
+
+\newcommand{\size}{\normalsize}
+\newcommand{\subsize}{\tiny}
+
+% Handle text and math mode consistent notation
+\newcommand{\inmath}[1]{\relax\ifmmode \text{\size $#1$} \else {\size $#1$} \fi}
+\renewcommand{\index}[1]{\relax\ifmmode {\mathrm{\text{\subsize #1}}} \else {\text{\subsize #1}} \fi}
+% \renewcommand{\index}[1]{ %
+%   \ifdim \y > 2mm
+%     \mathrm{\text{\normalsize #1}}%
+%   \else
+%     \mathrm{\text{\tiny #1}}%
+%   \fi
+% }
+
+\newcommand{\sk}[1]{\inmath{k_\index{#1}}}
+% \newcommand{\PK}[1]{\inmath{K_\index{#1}}}
+\newcommand{\N}[1]{\inmath{N_\index{#1}}}
+\renewcommand{\S}[2]{\inmath{S_\index{#1#2}}}
+
+% Generators
+\newcommand{\G}[1]{\inmath{G_\index{#1}}}
+\newcommand{\s}[1]{\relax\ifmmode s_{\raisebox{-0.1mm}{\subsize #1}} \else $s_{\raisebox{-0.1mm}{\hspace{0.1mm}\subsize #1}}$ \fi}
+\newcommand{\sG}[2] {\relax
+    \ifmmode \s{#1}\G{#2} 
+    \else $\s{#1}\textcolor{unhighlight}{\G{#2}}$ 
+\fi}
+\newcommand{\sGcolored}[4]{\inmath{{\color{#3}s_\index{#1}}{\color{#4}G_\index{#2}}}}
+
+% Alpha, Beta, Gamma, Delta
+\newcommand{\A}[1]{\relax\ifmmode \alpha_{\raisebox{-0.4mm}{\subsize #1}} \else $\alpha_{\raisebox{-0.4mm}{\subsize #1}}$ \fi}
+% \newcommand{\B}[2]{\inmath{\beta_\index{#1#2}}}
+% \newcommand{\Bprime}[2]{\inmath{\beta^\prime_\index{#1#2}}}
+% \newcommand{\BB}[2]{\relax
+%     \ifmmode \mathlarger{\beta^\prime_\index{#1#2}} 
+%     \else $\mathlarger{\beta^\prime_\index{#1\textcolor{unhighlight}{#2}}}$ 
+% \fi}
+\newcommand{\B}[2]{\relax
+    \ifmmode \mathlarger{\beta_\index{#1#2}} 
+    \else $\mathlarger{\beta_\index{#1\textcolor{unhighlight}{#2}}}$ 
+\fi}
+\newcommand{\BB}[2]{\relax
+    \ifmmode \mathlarger{\beta^\prime_\index{#1#2}} 
+    \else $\mathlarger{\beta^\prime_\index{#1\textcolor{unhighlight}{#2}}}$ 
+\fi}
+\newcommand{\C}[1]{\relax\ifmmode \gamma_{\raisebox{-0.7mm}{\subsize #1}} \else $\gamma_{\raisebox{-0.7mm}{\subsize #1}}$ \fi}
+\newcommand{\D}{\inmath{\mathrm{\Delta}}}
+
+% Hashes and Mappings
+\newcommand{\hash}[1]{\inmath{\mathnormal{h}(#1)}}
+\newcommand{\sHashed}[1]{\inmath{\sigma_\index{#1}}}
+\newcommand{\hashIt}[2]{\inmath{\mathsf{h}^{(#2)}(#1)}}
+\newcommand{\Map}[1]{\inmath{\mathsf{Map}(#1)}}
+\newcommand{\InverseMap}[1]{\inmath{\mathsf{Map}^{-1}(#1)}}
+
+
+\newcommand{\at}[3]{\node at ($(#1.west) + ({#2*\x}, {-#3*\yy})$)}
+\newcommand{\highlightEnter}[1]{
+    \only<\thebeamerpauses>{{\color{highlight}#1}}
+    \only<\thebeamerpausesplusONE->{{\color{black}#1}}
+}
+\newcommand{\highlightExit}[1]{
+    \only<\thebeamerpauses>{{\color{highlight}#1}}
+}
+
+\newcounter{beamerpausesplusONE}\setcounter{beamerpausesplusONE}{1}
+\newcounter{beamerpausesplusTWO}\setcounter{beamerpausesplusTWO}{2}
+\newcounter{beamerpausesplusTHREE}\setcounter{beamerpausesplusTHREE}{3}
+\newcommand{\updatebeamerpauses}[1]{
+    \setcounter{beamerpauses}{#1}
+    \setcounter{beamerpausesplusONE}{\value{beamerpauses}+1}
+    \setcounter{beamerpausesplusTWO}{\value{beamerpauses}+2}
+    \setcounter{beamerpausesplusTHREE}{\value{beamerpauses}+3}
+}
+\newcommand{\incrementAnimation}{
+    \stepcounter{beamerpauses}
+    \setcounter{beamerpausesplusONE}{\value{beamerpauses}+1}
+    \setcounter{beamerpausesplusTWO}{\value{beamerpauses}+2}
+    \setcounter{beamerpausesplusTHREE}{\value{beamerpauses}+3}
+}
+\newcommand{\slide}[2]{%
+  \only<\thebeamerpauses-
+  \ifcase#1 \thebeamerpauses
+  \or \thebeamerpausesplusONE % case 1
+  \or \thebeamerpausesplusTWO % case 2
+  \or \thebeamerpausesplusTHREE % case 3
+  \else\PackageError{slide}{Invalid argument #2}{Use 0--3 only}
+  \fi
+  >{{#2}}
+}
+
+\newcommand{\patternA}[3]{
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [p1=#3] {};
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [c1=#3] {};
+}
+\newcommand{\patternB}[3]{
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [p2=#3] {};
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [c2=#3] {};
+}
+\newcommand{\patternC}[3]{
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [p3=#3] {};
+    \node at ($(#1.west) + ({#2*\x - \x}, 0)$) [c3=#3] {};
+}
+\renewcommand{\patterns}[7]{
+    \patternA{#1}{#2}{#3}
+    \patternB{#1}{#4}{#5}
+    \patternC{#1}{#6}{#7}
+}
+
+\newcommand{\blockTemplate}[4]{
+    \at{#1}{#2}{#3} [c#4=1] {};
+    \at{#1}{#2}{#3} [p#4=1] {};
+    \at{#1}{#2}{#3} [draw, block=1]
+}
+\renewcommand{\block}[3]{\at{#1}{#2}{#3} [draw, block=1]}
+\newcommand{\blockN}[3]{\blockTemplate{#1}{#2}{#3}{0}}
+\newcommand{\blockA}[3]{\blockTemplate{#1}{#2}{#3}{1}}
+\newcommand{\blockB}[3]{\blockTemplate{#1}{#2}{#3}{2}}
+\newcommand{\blockC}[3]{\blockTemplate{#1}{#2}{#3}{3}}
+\newcommand{\blockAB}[3] {\blockTemplate{#1}{#2}{#3}{1} {}; \blockTemplate{#1}{#2}{#3}{2}}
+\newcommand{\blockBC}[3] {\blockTemplate{#1}{#2}{#3}{2} {}; \blockTemplate{#1}{#2}{#3}{3}}
+\newcommand{\blockABC}[3]{\blockTemplate{#1}{#2}{#3}{1} {}; \blockTemplate{#1}{#2}{#3}{2} {}; \blockTemplate{#1}{#2}{#3}{3}}
+
+\tikzset{    
+    % shape
+    block/.style={minimum width = #1*\x, minimum height = 0.85*\yy, inner sep = 0mm, anchor=west},%
+    inblock/.style={minimum width = #1*\x - 0.16mm, minimum height = 0.85*\yy - 0.35mm, xshift=0.08mm, inner sep = 0mm, anchor=west},
+    zero_pad/.style={block = #1, fill = unhighlight, fill opacity=0.3, font=\size},%
+    HMAC/.style={draw, ellipse, fill = unhighlight!50, inner sep = 0.3mm, minimum width = \x, minimum height = \y, anchor = center},%
+    eq/.style={draw, circle, inner sep=0.35mm, fill = unhighlight!50}, %font=\bfseries\large
+    arrow/.style={->, shorten <= 0.35mm, shorten >= 0.7mm, -{Classical TikZ Rightarrow[length=0.7mm]}},%%   -{Stealth[length=4pt]} 
+    line/.style={shorten <= 0.35mm, shorten >= 0.35mm},
+    between/.style args={#1 and #2}{at = ($(#1)!0.5!(#2)$)},
+    % Pattern
+    pattern1/.style={pattern = {Lines[angle=45, distance=6pt, line width=2pt, xshift= 0pt]}, pattern color = color1, opacity = 0.4},
+    pattern2/.style={pattern = {Lines[angle=45, distance=6pt, line width=2pt, xshift= 3pt]}, pattern color = color2, opacity = 0.4},
+    pattern3/.style={pattern = {Lines[angle=45, distance=6pt, line width=2pt, xshift= 6pt]}, pattern color = color3, opacity = 0.4},
+    fill1/.style={fill = color1,        opacity = 0.2},
+    fill2/.style={fill = color2,        opacity = 0.2},
+    fill3/.style={fill = color3,        opacity = 0.2},
+    % Color
+    p1/.style={inblock = #1, pattern = {Lines[angle=45, distance=3pt, line width=1pt, xshift=  0mm]}, pattern color = color1, opacity = 0.4},
+    p2/.style={inblock = #1, pattern = {Lines[angle=45, distance=3pt, line width=1pt, xshift=1.5pt]}, pattern color = color2, opacity = 0.4},
+    p3/.style={inblock = #1, pattern = {Lines[angle=45, distance=3pt, line width=1pt, xshift=  3pt]}, pattern color = color3, opacity = 0.4},
+    p0/.style={},
+    c1/.style={inblock = #1,                                      fill = color1,        opacity = 0.2},
+    c2/.style={inblock = #1,                                      fill = color2,        opacity = 0.2},
+    c3/.style={inblock = #1,                                      fill = color3,        opacity = 0.2},
+    c0/.style={inblock = #1,                                      fill = unhighlight,   opacity = 0.2},
+    unused/.style={inblock = #1, fill=unhighlight!30},
+}
+
+\newcommand\Warning{%
+  \makebox[2em][c]{%
+    \makebox[0mm][c]{\raisebox{.25em}{\bfseries\Large!}}%
+    \makebox[0mm][c]{\color{red}\scalebox{3}{$\bigtriangleup$}}}}
+
+
+\setbeamertemplate{enumerate item}{%
+  \tikz[baseline=(b.base)]
+    \node[eq] (b) {\footnotesize\insertenumlabel};%
+}
+
+\tikzset{
+  on/.style={
+    alt=<#1>{highlight!60, very thick}{}
+  },
+  hightOn/.style={
+    alt=<#1>{fill=highlight!35}{}
+  },
+  mHightOn/.style={
+    alt=<#1->{highlight}{},
+    alt=<#1>{fill=highlight!35}{},
+  }
+}

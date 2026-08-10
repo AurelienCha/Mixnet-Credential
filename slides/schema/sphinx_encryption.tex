@@ -1,0 +1,126 @@
+\begin{tikzpicture}
+    % \tiny
+\setlength{\y}{0cm}
+
+\node (ip) [block=1, hightOn=2] at (0, \y) {\D};
+\node (fillers) [block=6, hightOn=3] at (\width, \y) {$\phi$};
+\foreach \j in {1,...,5} {
+    \draw[dotline] ($(fillers.north west) + (\j*\width, 0)$) -- ($(fillers.south west) + (\j*\width, 0)$) {}; 
+}
+\vGap
+\node (s3) [block=7, hightOn=4] at (0, \y) {hash($s_{_3}$)};
+
+\vgap
+\node (B3) [block=5, hightOn=5, hightOn=6] at (0, \y) {\B{3}{}}; 
+\node (zero3) [zero_pad=2] at (5*\width, \y) {0}; 
+
+\node (xor3) [eq, hightOn=4] at (-\width, \y) {$\oplus$}; 
+\vGap
+\node (hmac3) [HMAC, hightOn=6] at (1.5*\width, \y) {\scriptsize HMAC};
+\vGap
+
+\node [block=7] at (0, \y) {};
+\node (n3) [block=1, hightOn=7, hightOn=8] at (0, \y) {\N{3}}; 
+\node (y3) [block=1, hightOn=6, hightOn=8] at (\width, \y) {\C{3}}; 
+\node (b3) [block=5, hightOn=5, hightOn=8] at (2*\width, \y) {\B{3}{}}; 
+
+\vGap
+\node (s2) [block=7] at (0, \y) {hash($s_{_2}$)};
+
+\vgap
+\node (B2) [block=5] at (0, \y) {\B{2}{}}; 
+\node (zero2) [zero_pad=2] at (5*\width, \y) {0}; 
+
+\node (xor2) [eq] at (-\width, \y) {$\oplus$}; 
+\vGap
+\node (hmac2) [HMAC] at (1.5*\width, \y) {\scriptsize HMAC};
+\vGap
+
+\node [block=7] at (0, \y) {};
+\node (n2) [block=1] at (0, \y) {\N{2}}; 
+\node (y2) [block=1] at (\width, \y) {\C{2}}; 
+\node (b2) [block=5] at (2*\width, \y) {\B{2}{}}; 
+
+\vGap
+\node (s1) [block=7] at (0, \y) {hash($s_{_1}$)};  
+\vgap
+\node (B1) [block=5] at (0, \y) {\B{1}{}}; 
+\node (zero1) [zero_pad=2]  at (5*\width, \y) {0}; 
+
+\node (xor1) [eq]  at (-\width, \y) {$\oplus$}; 
+\vGap
+\node (hmac1) [HMAC]  at (1.5*\width, \y) {\scriptsize HMAC};
+\vGap
+
+\node [block=7] at (0, \y) {};
+\node (n1) [block=1]  at (0, \y) {\N{1}}; 
+\node (y1) [block=1]  at (\width, \y) {\C{1}};
+\node (b1) [block=5] at (2*\width, \y) {\B{1}{}}; 
+
+
+%% XOR ARROWS %%
+% 3
+\only<1-3,5->{
+    \draw[arrow] (ip.west) -- ++(-\width, 0) -- (xor3.north);
+    \draw[arrow] (s3.west) -- ++(-\width, 0) -- (xor3.north);
+    \draw[arrow] (xor3.east) -- (B3.west);
+}
+\only<4>{
+    \draw[arrow, highlight] (ip.west) -- ++(-\width, 0) -- (xor3.north);
+    \draw[arrow, highlight] (s3.west) -- ++(-\width, 0) -- (xor3.north);
+    \draw[arrow, highlight] (xor3.east) -- (B3.west);
+}
+% 2
+\draw[arrow] (n3.west) -- ++(-\width, 0) -- (xor2.north);
+\draw[arrow] (s2.west) -- ++(-\width, 0) -- (xor2.north);
+\draw[arrow] (xor2.east) -- (B2.west);
+% 1
+\draw[arrow] (n2.west) -- ++(-\width, 0) -- (xor1.north);
+\draw[arrow] (s1.west) -- ++(-\width, 0) -- (xor1.north);
+\draw[arrow] (xor1.east) -- (B1.west);
+
+%% HMAC ARROWS %%
+% 3
+\node[left=\width of hmac3, on=6] (input_hmac3) {\s{3}};
+\draw[arrow, on=6] (input_hmac3) -- (hmac3.west);
+\draw[arrow, on=6] (B3.south -| hmac3.north) -- (hmac3.north);
+\draw[arrow, on=6] (hmac3.south) -- (y3.north);
+% 2
+\node[left=\width of hmac2] (input_hmac2) {\s{2}};
+\draw[arrow] (input_hmac2) -- (hmac2.west);
+\draw[arrow] (B2.south -| hmac2.north) -- (hmac2.north);
+\draw[arrow] (hmac2.south) -- (y2.north);
+% 1
+\node[left=\width of hmac1] (input_hmac1) {\s{1}};
+\draw[arrow] (input_hmac1) -- (hmac1.west);
+\draw[arrow] (B1.south -| hmac1.north) -- (hmac1.north);
+\draw[arrow] (hmac1.south) -- (y1.north);
+
+% BETA ARROWS %%
+\begin{pgfonlayer}{background}
+    \draw[->, dashed, very thin, color=unhighlight!80, on=5] (B3.south) -- ([xshift=-1pt, yshift=+1pt] b3.north);
+    \draw[->, dashed, very thin, color=unhighlight!80] (B2.south) -- ([xshift=-1pt, yshift=+1pt] b2.north);
+    \draw[->, dashed, very thin, color=unhighlight!80] (B1.south) -- ([xshift=-1pt, yshift=+1pt] b1.north);
+\end{pgfonlayer}
+
+%% LAYERS %%
+% \node (start) at (s3_.north) {};
+\node[between=ip and s3] (top) {};
+\node[between=n3 and s2] (middleTop) {};
+\node[between=n2 and s1] (middleBot){};
+\node (bot) at (n1.south) {};
+\node (left) at ($(xor2.west) - (\width/1, 0)$) {};
+\node (right) at ($(zero1.east) + (0.1*\width, 0)$) {};
+
+\draw[densely dotted] (top -| left) -- (top -| right) {};
+\draw[densely dotted] (middleTop -| left) -- (middleTop -| right) {};
+\draw[densely dotted] (middleBot -| left) -- (middleBot -| right) {};
+% \node[between=s3_ and phi] (l4){};
+\node[between=top and middleTop] (l3){};
+\node[between=middleTop and middleBot] (l2){};
+\node[between=middleBot and bot] (l1){};
+% \node[rotate=90] at (l4 -| xor3) {\color{black!40} Preprocessing}; 
+\node[rotate=90] at (l3 -| left) {\color{black!40} Last Layer};  
+\node[rotate=90] at (l2 -| left) {\color{black!40} Middle Layer};  
+\node[rotate=90] at (l1 -| left) {\color{black!40} First Layer}; 
+            \end{tikzpicture}        

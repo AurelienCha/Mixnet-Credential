@@ -1,0 +1,308 @@
+
+\newcommand{\clientPC}[1]{
+  \begin{tikzpicture}[scale=0.4]
+    % Monitor screen
+    \draw[fill=#1!20, draw=black, rounded corners=4pt] (0,0) rectangle (4,2.5);
+    % Inner bezel
+    \draw[fill=white, draw=none, rounded corners=3pt] (0.2,0.2) rectangle (3.8,2.3);
+    % Stand
+    \draw[fill=#1!40, draw=black] (1.75,-0.7) rectangle (2.25,0);
+    % Base
+    \draw[fill=#1!40, draw=black, rounded corners=2pt] (0.8,-1) rectangle (3.2,-0.7);
+  \end{tikzpicture}
+}
+
+\newcommand{\server}[1]{
+  \begin{tikzpicture}[scale=0.7]
+    \foreach \y in {0, -0.6, -1.2} {
+        \draw[fill=#1!20] (0,\y) rectangle (2,\y-0.5); % rectangle
+        \draw (0.2,\y-0.25) circle (0.05); % power/status LED
+    }
+  \end{tikzpicture}
+}
+
+\tikzset{  
+    innerLink/.style={-, densely dotted, shorten <= 1pt, shorten >= 2pt},  
+    outerLink/.style={->, shorten <= 10pt, shorten >= 10pt, >=Latex},
+    packet/.style={circle, minimum size=3mm, inner sep=0.2pt, fill=#1!35},
+    mixnode/.style={draw, thick, circle, minimum size=1.6cm},
+}
+
+\begin{frame}{Mixnet - Anonymous Communication Network}
+
+\resizebox{\linewidth}{!}{
+  \begin{tikzpicture}
+      \def\dx{4}
+      \def\high{-1}
+      \def\low{-3}
+
+  %------------------------------------------------
+  % LEFT COLUMN — CLIENTS
+  %------------------------------------------------
+  \node (C1) at (0,\high) {\clientPC{blue}};
+  \node (C2) at (0,\low) {\clientPC{orange}};
+
+  \node at (0,0) {Clients};
+
+  %------------------------------------------------
+  % RIGHT COLUMN — SERVICES
+  %------------------------------------------------
+  \node (S1) at (4*\dx,\high) {\server{blue}};
+  \node (S2) at (4*\dx,\low) {\server{orange}};
+
+  \node at (4*\dx,0) {Services};
+
+  %------------------------------------------------
+  % mix1
+  %------------------------------------------------
+  \node[mixnode] (mix11) at (1*\dx,\high) {};
+  \node[mixnode] (mix12) at (1*\dx,\low) {};
+
+  \onslide<3->{
+  \begin{scope}[alt=<4->{opacity=0.3}{opacity=1}]
+  \node[packet=blue] (l1) at (mix11.135) {1};
+  \node[packet=blue] (l2) at (l1 |- mix11) {2};
+  \node[packet=orange] (l3) at (mix11.225) {3};
+
+  \node[packet=blue] (r2) at (mix11.45) {2};
+  \node[packet=orange] (r3) at (r2 |- mix11) {3};
+  \node[packet=blue] (r1) at (mix11.-45) {1};
+
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+
+
+  \node[packet=orange] (l1) at (mix12.135) {1};
+  \node[packet=orange] (l2) at (l1 |- mix12) {2};
+  \node[packet=blue] (l3) at (mix12.225) {3};
+
+  \node[packet=blue] (r3) at (mix12.45) {3};
+  \node[packet=orange] (r2) at (r3 |- mix12) {2};
+  \node[packet=orange] (r1) at (mix12.-45) {1};
+
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+  \end{scope}
+  }
+
+  %------------------------------------------------
+  % mix2
+  %------------------------------------------------
+  \node[mixnode] (mix21) at (2*\dx,\high) {};
+  \node[mixnode] (mix22) at (2*\dx,\low) {};
+
+  \onslide<5->{
+  \begin{scope}[alt=<6->{opacity=0.3}{opacity=1}]
+  \node[packet=blue] (l1) at (mix21.135) {2};
+  \node[packet=blue] (l2) at (l1 |- mix21) {3};
+  \node[packet=orange] (l3) at (mix21.225) {3};
+  
+  \node[packet=blue] (r2) at (mix21.45) {3};
+  \node[packet=orange] (r3) at (r2 |- mix21) {3};
+  \node[packet=blue] (r1) at (mix21.-45) {2};
+
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+
+
+  \node[packet=orange] (l1) at (mix22.135) {2};
+  \node[packet=orange] (l2) at (l1 |- mix22) {1};
+  \node[packet=blue] (l3) at (mix22.225) {1};
+
+  \node[packet=blue] (r3) at (mix22.45) {1};
+  \node[packet=orange] (r1) at (r3 |- mix22) {2};
+  \node[packet=orange] (r2) at (mix22.-45) {1};
+
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+  \end{scope}
+  }
+
+
+  %------------------------------------------------
+  % mix3
+  %------------------------------------------------
+  \node[mixnode] (mix31) at (3*\dx,\high) {};
+  \node[mixnode] (mix32) at (3*\dx,\low) {};
+
+  \onslide<7->{
+  \begin{scope}[alt=<8->{opacity=0.3}{opacity=1}]
+  \node[packet=orange] (l1) at (mix31.135) {3};
+  \node[packet=orange] (l2) at (l1 |- mix31) {2};
+  \node[packet=blue] (l3) at (mix31.225) {2};
+
+  \node[packet=orange] (r1) at (mix31.45) {3};
+  \node[packet=blue] (r3) at (r1 |- mix31) {2};
+  \node[packet=orange] (r2) at (mix31.-45) {2};
+
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+
+
+  \node[packet=blue] (l1) at (mix32.135) {1};
+  \node[packet=blue] (l2) at (l1 |- mix32) {3};
+  \node[packet=orange] (l3) at (mix32.225) {1};
+
+  \node[packet=blue] (r2) at (mix32.45) {3};
+  \node[packet=orange] (r3) at (r1 |- mix32) {1};
+  \node[packet=blue] (r1) at (mix32.-45) {1};
+  
+  \draw[innerLink] (l1) -- (r1);
+  \draw[innerLink] (l2) -- (r2);
+  \draw[innerLink] (l3) -- (r3);
+  \end{scope}
+  }
+
+  
+  %------------------------------------------------
+  % Path 1
+  %------------------------------------------------
+  \onslide<1>{
+    \draw[outerLink] ($(C1.east) - (0.2,0)$) -- (mix11.west);
+    \draw[outerLink] ($(C1.east) - (0.2,0)$) -- (mix12.west);
+    \draw[outerLink] ($(C2.east) - (0.2,0)$) -- (mix11.west);
+    \draw[outerLink] ($(C2.east) - (0.2,0)$) -- (mix12.west);
+  }
+  \onslide<2->{
+  \begin{scope}[alt=<3->{opacity=0.3}{opacity=1}]
+  \draw[outerLink] 
+  ($(C1.east) - (0.2,0)$) --
+  node[pos=0.35,packet=blue]{2} 
+  node[pos=0.6,packet=blue]{1} 
+  (mix11.west);
+
+  \draw[outerLink] 
+  ($(C1.east) - (0.2,0)$) --
+  node[pos=0.35,packet=blue]{3} 
+  (mix12.west);
+
+  \draw[outerLink] 
+  ($(C2.east) - (0.2,0)$) --
+  node[pos=0.35,packet=orange]{3} 
+  (mix11.west);
+
+  \draw[outerLink] 
+  ($(C2.east) - (0.2,0)$) --
+  node[pos=0.35,packet=orange]{2} 
+  node[pos=0.6,packet=orange]{1} 
+  (mix12.west);
+  \end{scope}
+  }
+
+  %------------------------------------------------
+  % Path 2
+  %------------------------------------------------
+   \onslide<1-3>{
+    \draw[outerLink] (mix11.east) -- (mix21.west);
+    \draw[outerLink] (mix11.east) -- (mix22.west);
+    \draw[outerLink] (mix12.east) -- (mix21.west);
+    \draw[outerLink] (mix12.east) -- (mix22.west);
+  }
+  \onslide<4->{
+  \begin{scope}[alt=<5->{opacity=0.3}{opacity=1}]
+  \draw[outerLink] 
+  (mix11.east) --
+  node[pos=0.35,packet=orange]{3} 
+  node[pos=0.6,packet=blue]{2} 
+  (mix21.west);
+
+  \draw[outerLink] 
+  (mix11.east) --
+  node[pos=0.35,packet=blue]{1} 
+  (mix22.west);
+
+  \draw[outerLink] 
+  (mix12.east) --
+  node[pos=0.35,packet=blue]{3} 
+  (mix21.west);
+
+  \draw[outerLink] 
+  (mix12.east) --
+  node[pos=0.35,packet=orange]{1} 
+  node[pos=0.6,packet=orange]{2} 
+  (mix22.west);
+  \end{scope}
+  }
+
+  %------------------------------------------------
+  % Path 3
+  %------------------------------------------------
+   \onslide<1-5>{
+    \draw[outerLink] (mix21.east) -- (mix31.west);
+    \draw[outerLink] (mix21.east) -- (mix32.west);
+    \draw[outerLink] (mix22.east) -- (mix31.west);
+    \draw[outerLink] (mix22.east) -- (mix32.west);
+  }
+  \onslide<6->{
+  \begin{scope}[alt=<7->{opacity=0.3}{opacity=1}]
+  \draw[outerLink] 
+  (mix21.east) --
+  node[pos=0.35,packet=blue]{2} 
+  node[pos=0.6,packet=orange]{3} 
+  (mix31.west);
+
+  \draw[outerLink] 
+  (mix21.east) --
+  node[pos=0.35,packet=blue]{3} 
+  (mix32.west);
+
+  \draw[outerLink] 
+  (mix22.east) --
+  node[pos=0.35,packet=orange]{2} 
+  (mix31.west);
+
+  \draw[outerLink] 
+  (mix22.east) --
+  node[pos=0.35,packet=orange]{1} 
+  node[pos=0.6,packet=blue]{1} 
+  (mix32.west);
+  \end{scope}
+  }
+
+  %------------------------------------------------
+  % Path 4
+  %------------------------------------------------
+   \onslide<1-7>{
+    \draw[outerLink] (mix31.east) -- ($(S1.west) - (0.1,0)$);
+    \draw[outerLink] (mix31.east) -- ($(S2.west) - (0.1,0)$);
+    \draw[outerLink] (mix32.east) -- ($(S1.west) - (0.1,0)$);
+    \draw[outerLink] (mix32.east) -- ($(S2.west) - (0.1,0)$);
+  }
+  \onslide<8->{
+  \begin{scope}[alt=<9->{opacity=0.3}{opacity=1}]
+  \draw[outerLink] 
+  (mix31.east) --
+  node[pos=0.35,packet=blue]{2} 
+  ($(S1.west) - (0.1,0)$);
+
+  \draw[outerLink] 
+  (mix31.east) --
+  node[pos=0.35,packet=orange]{2} 
+  node[pos=0.65,packet=orange]{3} 
+  ($(S2.west) - (0.1,0)$);
+
+  \draw[outerLink] 
+  (mix32.east) --
+  node[pos=0.35,packet=blue]{1} 
+  node[pos=0.65,packet=blue]{3} 
+  ($(S1.west) - (0.1,0)$);
+
+  \draw[outerLink] 
+  (mix32.east) --
+  node[pos=0.35,packet=orange]{1} 
+  ($(S2.west) - (0.1,0)$);
+  \end{scope}
+  }
+
+
+  \node (box) [draw, densely dashed, color=gray, fit={(mix11) (mix32)}, rounded corners=5pt, inner xsep=30pt, inner ysep=10pt, label=above:\text{\color{gray}\large\textbf{Mixnet}}] {};
+
+  \end{tikzpicture}
+}
+
+\end{frame}

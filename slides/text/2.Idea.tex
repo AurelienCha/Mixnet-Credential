@@ -1,0 +1,138 @@
+% e(H,Y) == e(C,G)
+% Problem chunk moving
+
+\begin{frame}{General Idea}
+    In general, credentials are verified using bilinear pairing such as:
+
+    \vfill
+    % -- Equation --
+
+    \only<1>{
+      \begin{equation*}
+      e({\color{Orchid}\annotMath{C}{{\bigSigma}}}, G) == e({\color{gray}\annotMath{H}{M}}, {\color{Cerulean}\annot{PK}})
+      \end{equation*}  
+      \begin{tikzpicture}[remember picture, overlay]
+      \node[above=2mm of H, xshift=25mm] (header) {\color{gray}\footnotesize Message (EC point)};
+      \draw[->, gray] (H) |- (header.west);
+      \node[below=2mm of PK, xshift=20mm] (pk) {\color{Cerulean}\footnotesize Public Key};
+      \draw[->, Cerulean] (PK) |- (pk.west);
+      \node[below=2mm of C, xshift=-15mm] (cred) {\color{Orchid}\footnotesize Credential};
+      \draw[->, Orchid] (C) |- (cred.east);
+      \end{tikzpicture}
+    }
+    \only<2->{
+      \begin{equation*}
+      e({\color{Orchid}\annotMath{C}{\bigSigma}}, G) == e({\color{orange}\annot{H}}, {\color{Cerulean}\annot{PK}})
+      \end{equation*}  
+      \begin{tikzpicture}[remember picture, overlay]
+      \node[above=2mm of H, xshift=32mm] (header) {\color{orange}\footnotesize Header chunks containing destination $\Delta$};
+      \draw[->, orange] (H) |- (header.west);
+      \node[below=2mm of PK, xshift=20mm] (pk) {\color{Cerulean}\footnotesize Public Key};
+      \draw[->, Cerulean] (PK) |- (pk.west);
+      \node[below=2mm of C, xshift=-15mm] (cred) {\color{Orchid}\footnotesize Credential};
+      \draw[->, Orchid] (C) |- (cred.east);
+      \end{tikzpicture}
+    }
+
+    \vfill
+    % -- Header --
+
+    \only<2->{
+      \color{gray}
+      \textbf{Header}:\center
+      \begin{tikzpicture}%[rect/.style={draw, minimum width=1.5cm, minimum height=1cm}]
+      %\node[rect] (h0) {\LARGE$\sigma$}; 
+      \node[rect] (h1) {\LARGE$\alpha$};
+      \node[rect, right=0pt of h1] (h2) {$N_1$};
+      \node[rect, right=0pt of h2] (h3) {\Large$\gamma_1$};
+      \node[rect, right=0pt of h3, encrypted] (h4) {$N'_2$};
+      \node[rect, right=0pt of h4, encrypted] (h5) {\Large$\gamma'_2$};
+      \node[rect, right=0pt of h5, encrypted] (h6) {$N'_3$};
+      \node[rect, right=0pt of h6, encrypted] (h7) {\Large$\gamma'_3$};
+      \only<2>{\node[rect, right=0pt of h7, fill=orange!30] {};}
+      \node[rect, right=0pt of h7, encrypted] (h8) {$\Delta'$};
+      \end{tikzpicture}
+    }
+\end{frame}
+
+\begin{frame}{General Idea}
+\textbf{\underline{Problem}}: When packet is processed, the final destination chunk {\color{Orange}$\Delta$} is shifted.
+\vspace{6mm}\newline
+% -- Schema --
+Header \textbf{at node 1}:
+\begin{center}
+  \begin{tikzpicture}
+  \node[rect] (h1) {\LARGE$\alpha_1$};
+  \node[rect, right=0pt of h1] (h2) {$N_1$};
+  \node[rect, right=0pt of h2] (h3) {\Large$\gamma_1$};
+  \node[rect, right=0pt of h3, encrypted] (h4) {$N'_2$};
+  \node[rect, right=0pt of h4, encrypted] (h5) {\Large$\gamma'_2$};
+  \node[rect, right=0pt of h5, encrypted] (h6) {$N'_3$};
+  \node[rect, right=0pt of h6, encrypted] (h7) {\Large$\gamma'_3$};
+  \node[rect, right=0pt of h7, fill=orange!30] {};
+  \node[rect, right=0pt of h7, encrypted] (h8) {$\Delta'$};
+  \end{tikzpicture}
+\end{center}
+
+Header \textbf{at node 2}:
+\begin{center}
+  \begin{tikzpicture}
+  \node[rect] (h1) {\LARGE$\alpha_2$};
+  \node[rect, right=0pt of h1] (h2) {$N_2$};
+  \node[rect, right=0pt of h2] (h3) {\Large$\gamma_2$};
+  \node[rect, right=0pt of h3, encrypted] (h4) {$N'_3$};
+  \node[rect, right=0pt of h4, encrypted] (h5) {\Large$\gamma'_3$};
+  \node[rect, right=0pt of h5, fill=orange!30] {};
+  \node[rect, right=0pt of h5, encrypted] (h6) {$\Delta'$};
+  \node[rect, right=0pt of h6, gray, encrypted] (h7) {\color{gray}\ldots};
+  \node[rect, right=0pt of h7, gray, encrypted] (h8) {\color{gray}\ldots};
+  \end{tikzpicture}
+\end{center}
+
+Header \textbf{at node 3}:
+\begin{center}
+  \begin{tikzpicture}
+  \node[rect] (h1) {\LARGE$\alpha_3$};
+  \node[rect, right=0pt of h1] (h2) {$N_3$};
+  \node[rect, right=0pt of h2] (h3) {\Large$\gamma_3$};
+  \node[rect, right=0pt of h3, fill=orange!30] {};
+  \node[rect, right=0pt of h3, encrypted] (h4) {$\Delta'$};
+  \node[rect, right=0pt of h4, gray, encrypted] (h5) {\color{gray}\ldots};
+  \node[rect, right=0pt of h5, gray, encrypted] (h6) {\color{gray}\ldots};
+  \node[rect, right=0pt of h6, gray, encrypted] (h7) {\color{gray}\ldots};
+  \node[rect, right=0pt of h7, gray, encrypted] (h8) {\color{gray}\ldots};
+  \end{tikzpicture}
+\end{center}
+\end{frame}
+
+
+\begin{frame}{General Idea}
+\textbf{\underline{Solution}}: Using all chunks that could contain final destination {\color{orange}$\Delta$}
+\vfill
+% -- Equation --
+
+\begin{equation*}
+  e({\color{Orchid}\annotMath{C}{{\bigSigma}}}, G) == e({\color{Orange} N'_2} + {\color{Orange}N'_3} + {\color{Orange}\Delta'}, {\color{Cerulean}PK})
+\end{equation*}
+\vfill
+
+% -- Schema --
+\color{gray}
+\textbf{Header}:
+\begin{center}
+  \begin{tikzpicture}
+  \node[rect] (h1) {\LARGE$\alpha$};
+  \node[rect, right=0pt of h1] (h2) {$N_1$};
+  \node[rect, right=0pt of h2] (h3) {\Large$\gamma_1$};
+  \node[rect, right=0pt of h3, fill=orange!30] {};
+  \node[rect, right=0pt of h3, encrypted] (h4) {$N'_2$};
+  \node[rect, right=0pt of h4, encrypted] (h5) {\Large$\gamma'_2$};
+  \node[rect, right=0pt of h5, fill=orange!30] {};
+  \node[rect, right=0pt of h5, encrypted] (h6) {$N'_3$};
+  \node[rect, right=0pt of h6, encrypted] (h7) {\Large$\gamma'_3$};
+  \node[rect, right=0pt of h7, fill=orange!30] {};
+  \node[rect, right=0pt of h7, encrypted] (h8) {$\Delta'$};
+  \node[rect, left=0pt of h1, fill=Orchid!50] {\bigSigma};
+\end{tikzpicture}
+\end{center}
+\end{frame}

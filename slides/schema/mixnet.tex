@@ -1,0 +1,83 @@
+\newcommand{\WIDTH}{10 mm}
+\newcommand{\HEIGHT}{20 mm}
+
+\tikzset{mixnode/.style={draw, circle, radius=2mm}}
+\newcommand{\client}[1]{
+  \begin{tikzpicture}[scale=0.4]
+    % Monitor screen
+    \draw[fill=#1!20, draw=black, rounded corners=4pt] (0,0) rectangle (4,2.5);
+    % Inner bezel
+    \draw[fill=white, draw=none, rounded corners=3pt] (0.2,0.2) rectangle (3.8,2.3);
+    % Stand
+    \draw[fill=#1!40, draw=black] (1.75,-0.7) rectangle (2.25,0);
+    % Base
+    \draw[fill=#1!40, draw=black, rounded corners=2pt] (0.8,-1) rectangle (3.2,-0.7);
+  \end{tikzpicture}
+}
+
+
+\begin{tikzpicture}
+
+\node (entry) at (0, 0) {\scalebox{0.4}{\client{gray}}};
+\node (11) [mixnode] at ($(entry.north east) + (\WIDTH/1.5, -\HEIGHT/2)$) {};
+\node (12) [mixnode] at ($(entry.east) + (\WIDTH/1.5, 0)$) {};
+\node (13) [mixnode] at ($(entry.south east) + (\WIDTH/1.5, \HEIGHT/2)$) {};
+\node (21) [mixnode] at ($(11.east) + (\WIDTH/1.5, 0)$) {};
+\node (22) [mixnode] at ($(12.east) + (\WIDTH/1.5, 0)$) {};
+\node (23) [mixnode] at ($(13.east) + (\WIDTH/1.5, 0)$) {};
+\node (31) [mixnode] at ($(21.east) + (\WIDTH/1.5, 0)$) {};
+\node (32) [mixnode] at ($(22.east) + (\WIDTH/1.5, 0)$) {};
+\node (33) [mixnode] at ($(23.east) + (\WIDTH/1.5, 0)$) {};
+\node (exit1) at ($(31.east) + (\WIDTH, 0)$) {\scalebox{0.3}{\client{gray}}};
+\node (exit) at ($(32.east) + (\WIDTH, 0)$) {\scalebox{0.3}{\client{gray}}};
+\node (exit3) at ($(33.east) + (\WIDTH, 0)$) {\scalebox{0.3}{\client{gray}}};
+
+\draw (entry.east) -- (11.west);
+\draw (entry.east) -- (12.west);
+\draw (entry.east) -- (13.west);
+\draw (11.east) -- (21.west);
+\draw (11.east) -- (22.west);
+\draw (11.east) -- (23.west);
+\draw (12.east) -- (21.west);
+\draw (12.east) -- (22.west);
+\draw (12.east) -- (23.west);
+\draw (13.east) -- (21.west);
+\draw (13.east) -- (22.west);
+\draw (13.east) -- (23.west);
+\draw (21.east) -- (31.west);
+\draw (21.east) -- (32.west);
+\draw (21.east) -- (33.west);
+\draw (22.east) -- (31.west);
+\draw (22.east) -- (32.west);
+\draw (22.east) -- (33.west);
+\draw (23.east) -- (31.west);
+\draw (23.east) -- (32.west);
+\draw (23.east) -- (33.west);
+\draw (31.east) -- (exit1.west);
+\draw (32.east) -- (exit1.west);
+\draw (33.east) -- (exit1.west);
+\draw (31.east) -- (exit.west);
+\draw (32.east) -- (exit.west);
+\draw (33.east) -- (exit.west);
+\draw (31.east) -- (exit3.west);
+\draw (32.east) -- (exit3.west);
+\draw (33.east) -- (exit3.west);
+
+
+\onslide<1->{
+  \draw[color=orange, thick] (entry.east) -- (12.west);
+  \node [mixnode, fill=orange!50] at (12) {}; \node at (12) {\tiny 1};
+  \draw[color=orange, thick] (12.east) -- (23.west);
+  \node [mixnode, fill=orange!50] at (23) {}; \node at (23) {\tiny 2};
+  \draw[color=orange, thick] (23.east) -- (31.west);
+  \node [mixnode, fill=orange!50] at (31) {}; \node at (31) {\tiny 3};
+  \draw[color=orange, thick] (31.east) -- (exit.west);
+  \node at (exit) {\scalebox{0.3}{\client{orange}}};
+}
+
+\onslide<2->{
+  \node (ExitGateways) [draw, thick, densely dotted, color=red, fit={(31.south west) (33.north east)}, rounded corners=5pt, inner sep=5pt] {}; %, label=above:\text{\color{red}\tiny Exit Gateways}] {};
+  \node[yshift=-2mm] (l1) at (ExitGateways.south) {\color{red} \tiny Apply exit policy};
+  % \node[yshift=-0mm] (l2) at (l1.south) {\color{gray}\tiny Verify packet legitimacy (e.g. authorized destination)};
+}
+\end{tikzpicture}
