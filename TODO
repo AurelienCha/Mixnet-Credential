@@ -1,0 +1,46 @@
+MOTIVATION & APPLICABILITY (Review 2 & 3):
+[3] - Lack of strong motivation and applicability
+[3] - Why decentralization prevent misbehaving client ?
+[1-4] - Why decentralization prevent exit policies ? => CURRENT WORK
+
+SECURITY:
+[4] - Game-based proove are not formal enough (review 3)
+R3: "Original Sphinx uses formal game-based definition. This paper does describe games for unlinkability and integrity tag unforgeability, but these are very informal arguments and ultimately still heuristic analysis.
+For example, the threat model assumes an adversary cannot break certain computational assumptions, rather than showing a reduction from the proposed game to the underlying hardness assumptions."
+=> Not sure I can make strong improvement (at least not alone) => Potential contacts: O. Markowitch or C. Petit ?
+
+
+BENCHMARK (review 1, 2 & 3):
+[2]- How does this latency affect low latency networks ? => Performance simulation
+[2]- What are the network usage overhead ? (might impose constraints in some scenarios such as Nym)
+[1] - NIST benchmark test: => Not really pertinent anymore... 
+	- Not clear why better than original (i.e. due to decentralization or new sphinx format) => New sphinx format
+	- Not clear why used for and what they show ? These tests only reveal the apparent randomness of the constructed datasets. => Only bitwise randomness
+	- It does not capture the statistical relationships between dataset of input packets and output packets at a certain node, or collected at different points in the network. => True: Good idea :-) 
+	PS: Instead of concatenate headers, I will make headers for longer path the reach require bit length for NIST
+	- Randomness does not ensure better security, nor privacy => I know
+
+
+DECENTRALIZED PATH SELECTION (Review 1, 2, 3) => Patched
+[1] - Security analysis
+[1] - Performance overhead
+[4] - Better integration ? => No Idea (seems hard)
+
+
+OTHERS:
+[4] - Assumption of treshold of STTPs do not collude: Finding and recruiting such number of STTPs might prove difficult, limiting the adoption.
+
+
+
+
+
+
+###############
+Collusion in Appendix
+- Friday Iness available (not ULB)
+
+
+
+
+
+
