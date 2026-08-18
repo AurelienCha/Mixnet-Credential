@@ -87,16 +87,16 @@ class Mixnode:
     # HEADER PROCESSING FUNCTIONS
     # ========================================================
 
-    @timing
+    # @timing
     def verify_credential(self, header: Header) -> None:
         if (sum(header.beta[::2]) @ AUTHORITY_PK) != (header.credential @ G2().base_point()):
             raise Exception("Credential verification failed")
 
-    @timing
+    # @timing
     def compute_shared_secret(self, alpha: G1) -> Fr:
         return (alpha * self.secret_key) >> Fr()    
     
-    @timing
+    # @timing
     def verify_integrity(self, header: Header, shared_secret: Fr) -> None:
         concatenate_encoding = b"".join(beta.serialize() for beta in header.beta) 
         expected_gamma = G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
@@ -104,7 +104,7 @@ class Mixnode:
         if header.gamma != expected_gamma:
             raise Exception("Header integrity verification failed")
 
-    @timing
+    # @timing
     def decrypt_beta(self, header: Header, shared_secret: Fr) -> None:
         chunks = [*header.beta, G1().clear(), G1().clear()]
 
@@ -113,17 +113,17 @@ class Mixnode:
 
         header.next_hop, header.gamma, *header.beta = chunks
 
-    @timing
+    # @timing
     def update_alpha(self, header: Header, shared_secret: Fr) -> None:
         header.alpha *= shared_secret
 
-    @timing
+    # @timing
     def update_credential(self, header: Header, shared_secret: Fr) -> None:
         next_hop = self.mixnodes.get(header.next_hop)
         next_hop_signed_PK = next_hop.signed_public_key if next_hop else G1().randomize() # If not found, means final destination just randomize credential
         header.credential -= (self.signed_generator_sum * shared_secret + next_hop_signed_PK)
 
-    @timing
+    # @timing
     def get_next_hop(self, header: Header) -> str:
         next_hop = self.mixnodes.get(header.next_hop)
         return next_hop.ip if next_hop else decode_ip(header.next_hop)

@@ -43,11 +43,14 @@ class Authority:
             case Stage.SIGN_PARAM:
                 await self.sign_queue.put(message)
             case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, self.sign(message))  # message = PK -> sign PK
+                await self.send(ip, Stage.SIGN_MIX, self.sign_PK(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
                 await self.send(ip, Stage.SIGN_CLIENT, self.sign(message)) 
 
     @timing
+    def sign_PK(self, P):
+        return self.sign(P)
+        
     def sign(self, P):
         return P * self.secret_share
 

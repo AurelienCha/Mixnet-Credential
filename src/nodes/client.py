@@ -49,7 +49,7 @@ class Client:
     # PATH SELECTION
     # ========================================================
 
-    @timing
+    # @timing
     def select_mixnodes(self):
         public_keys = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
         signed_public_keys = [MIXNODES[idx].signed_public_key for idx in public_keys]
@@ -60,7 +60,7 @@ class Client:
     # SHARED SECRETS
     # ========================================================
 
-    @timing
+    # @timing
     def derive_shared_secrets(self, public_keys: list[G1]) -> list[Fr]:
         nonce = Fr().randomize()
         alpha = G1().base_point() * nonce
@@ -88,7 +88,7 @@ class Client:
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
         return lagrange_interpolation(points) * ~salt  # Unblind signature
 
-    @timing
+    # @timing
     def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
         return ( # TODO make it look more like article notation
             credential
@@ -104,7 +104,7 @@ class Client:
         first_hop, header = self.build_packet(destination_ip)
         await self.send(first_hop, Stage.HEADER, header)
     
-    @timing 
+    # @timing 
     def encode_destination(self, ip: str) -> G1:  # TODO:  make a list of destination en their encoding
         return encode_ip(ip)
 
@@ -131,18 +131,18 @@ class Client:
     # LAYER COMPUTATION
     # ============================================================
 
-    @timing
+    # @timing
     def compute_gamma(self, betas: list[G1], shared_secret: Fr) -> G1:
         concatenate_encoding = b"".join(beta.serialize() for beta in betas) 
         return G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
-    @timing
+    # @timing
     def initial_layer(self, destination: G1, shared_secrets: list[Fr]):
         beta = [destination + GENERATORS[0] * shared_secrets[-1]] + [-sum([GENERATORS[BETA_SIZE + j - 2*i] * shared_secrets[i] for i in range(j//2, PATH_LENGTH-1)]) for j in range(BETA_SIZE-1)]
         gamma = self.compute_gamma(beta,  shared_secrets[-1])
         return beta, gamma
 
-    @timing
+    # @timing
     def add_layer(self, next_hop: G1, beta: list[G1], gamma: G1, shared_secret: Fr):
 
         next_beta = [next_hop, gamma, *beta[:BETA_SIZE]]
@@ -151,7 +151,7 @@ class Client:
         next_gamma = self.compute_gamma(next_beta, shared_secret)
         return next_beta, next_gamma
 
-    @timing
+    # @timing
     def compute_layers(self, destination: G1, mixes: list[G1], shared_secrets: list[Fr]):
         beta, gamma = self.initial_layer(destination, shared_secrets)
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--id", type=int, required=True, help="Client identifier")
-    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=100)
+    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=5)
     arguments = parser.parse_args()
 
     asyncio.run(main(arguments.id, arguments.packets))
