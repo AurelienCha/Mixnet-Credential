@@ -20,7 +20,7 @@ PARAMS = [
     "NBR_AUTHORITIES",
 ]
 
-CSV_FILE = ".benchmark/.data/timing.csv"
+CSV_FILE = ".benchmark/.data/setup_runtime.csv"
 
 
 # ============================================================

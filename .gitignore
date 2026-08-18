@@ -17,4 +17,6 @@ __pycache__/
 venv/
 .env/
 
-src/.benchmark/.data/
+report/main.fdb_latexmk
+report/main.log
+report/main.pdf 

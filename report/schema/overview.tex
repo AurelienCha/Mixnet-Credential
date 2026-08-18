@@ -25,9 +25,9 @@
 % Nodes
 \node (client) [label=below:\text{\color{gray}Client}] at (0, 0) {\scalebox{1}{\client{gray}}};
 
-\node (Authority1) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, 0.8*\HEIGHT)$)  {};
-\node (Authority2) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, 0.2*\HEIGHT)$) {};
-\node (Authority3) [authority, color=Cerulean] at ($(client.west) + (-2.5*\WIDTH, -0.8*\HEIGHT)$)  {};
+\node (Authority1) [authority, color=black] at ($(client.west) + (-2.5*\WIDTH, 0.8*\HEIGHT)$)  {};
+\node (Authority2) [authority, color=black] at ($(client.west) + (-2.5*\WIDTH, 0.2*\HEIGHT)$) {};
+\node (Authority3) [authority, color=black] at ($(client.west) + (-2.5*\WIDTH, -0.8*\HEIGHT)$)  {};
 \draw[thick, dashed, outer sep=5mm, shorten <= 2mm, shorten >= 2mm] (Authority2) -- (Authority3);
 \node (AuthorityBox) [draw, densely dashed, color=gray, fit={(Authority1) (Authority3)}, rounded corners=5pt, inner sep=6pt, label=above:\text{\color{gray}Credential Authorities}] {};
 
@@ -47,10 +47,10 @@
 \node (mixnet) [draw, densely dashed, color=gray, fit={(entry) (exit)}, rounded corners=5pt, inner sep=10pt, label=above:\text{\color{gray}Mix Network}, label=below:\text{\color{gray}Credential verification (at any mixnode)}] {};
 
 
-\draw[-Latex, shorten >= 1mm] ($(client.west) + (0, 4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (1)} ($(AuthorityBox.east) + (0, 4mm)$);
-\draw[-Latex, shorten <= 1mm] ($(AuthorityBox.east) + (0, -4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (2)} ($(client.west) + (0, -4mm)$);
-\draw[-Latex] (client) to[out=120,in=60,looseness=2] node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (3)} (client);
-\draw[-Latex, shorten >= 1mm] (client.east) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{blue} (4)} (mixnet.west);
+\draw[-Latex, shorten >= 1mm] ($(client.west) + (0, 4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{black} (1)} ($(AuthorityBox.east) + (0, 4mm)$);
+\draw[-Latex, shorten <= 1mm] ($(AuthorityBox.east) + (0, -4mm)$) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{black} (2)} ($(client.west) + (0, -4mm)$);
+\draw[-Latex] (client) to[out=120,in=60,looseness=2] node[font=\small, midway, fill=white, inner sep=1pt] {\color{black} (3)} (client);
+\draw[-Latex, shorten >= 1mm] (client.east) to node[font=\small, midway, fill=white, inner sep=1pt] {\color{black} (4)} (mixnet.west);
 
 \draw (entry.east) -- (11.west);
 \draw (entry.east) -- (12.west);
