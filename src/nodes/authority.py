@@ -4,9 +4,9 @@ from enum import StrEnum
 
 from utils.logging import timing, create_logger
 from protocol.network import Network
-from cryptography.lagrange import lagrange_interpolation
-from cryptography.polynomial import Polynomial
-from cryptography.ecc import Fr, G1, G2, hash_to_Fr
+from cryptomath.lagrange import lagrange_interpolation
+from cryptomath.polynomial import Polynomial
+from cryptomath.ecc import Fr, G1, G2, hash_to_Fr
 from config.config import publish_authority_setup, AUTHORITIES, THRESHOLD, GENERATORS
 
 class Stage(StrEnum):

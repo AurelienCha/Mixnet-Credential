@@ -7,8 +7,8 @@ from hashlib import sha256
 from utils.logging import timing, create_logger, LOGGING
 from protocol.header import Header
 from protocol.network import Network
-from cryptography.lagrange import lagrange_interpolation
-from cryptography.ecc import Fr, G1, hash_to_Fr, encode_ip
+from cryptomath.lagrange import lagrange_interpolation
+from cryptomath.ecc import Fr, G1, hash_to_Fr, encode_ip
 
 from config.config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from os import getenv
 from typing import Any
 
-from cryptography.ecc import G1, G2
+from cryptomath.ecc import G1, G2
 
 
 # ============================================================

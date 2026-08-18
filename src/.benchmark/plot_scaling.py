@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+
+from scipy.stats import linregress
+
 
 OUTPUT = ".benchmark/.results/scaling.png"
 
@@ -13,40 +15,159 @@ PARAMS = [
     "NBR_AUTHORITIES",
 ]
 
-metric = "CPU_time_ms"
 CSV_FILE = ".benchmark/.data/timing.csv"
+
+
+# ============================================================
+# LOAD DATA
+# ============================================================
+
 df = pd.read_csv(CSV_FILE)
-df = df.loc[df['CREDENTIAL']==1]
-df['function'] = df['function'].str.strip()
+
+df = df.loc[df["CREDENTIAL"] == 1].copy()
+
+df["function"] = df["function"].str.strip()
+
+
+# ============================================================
+# SELECT FUNCTIONS
+# ============================================================
 
 df = df[df["function"].isin([
-    'setup', 'send_and_aggregate_shares', 'sign_params', 'sign_mix', 'sign_client',  # authority
-    'get_credential', 'build_packet',                                                # client
-    'sign_public_key', 'process'                                              # mixnode 
+    # Authority
+    "setup",
+    "sign_PK",
+
+    # Client
+    "get_credential",
+    "build_packet",
+
+    # Mixnode
+    "sign_public_key",
+    "process",
 ])].copy()
 
-
 df["time"] = df["CPU_time_ms"]
-df = df[['entity', 'time', 'function', 'PATH_LENGTH', 'NBR_MIXNODES', 'NBR_CLIENT', 'THRESHOLD', 'NBR_AUTHORITIES']]
 
-# df = df.groupby(['function','entity']+PARAMS).sum()
+df["function"] = df["function"].replace({
+    "get_credential": "Credential Issuance",
+    "build_packet": "Header Construction",
+    "process": "Packet Processing",
+})
 
-###################################################
+df = df[
+    [
+        "time",
+        "function",
+        "PATH_LENGTH",
+        "NBR_MIXNODES",
+        "THRESHOLD",
+        "NBR_AUTHORITIES",
+    ]
+]
 
-from scipy.stats import linregress
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+# ============================================================
+# AGGREGATE SETUP PHASE
+# ============================================================
+#
+# SETUP PHASE =
+#
+#   (sum(setup) + sum(sign_PK)) / NBR_AUTHORITIES
+#   +
+#   sum(sign_public_key) / NBR_MIXNODES
+#
+# ============================================================
+
+# ------------------------------------------------------------
+# Authority-side setup
+# ------------------------------------------------------------
+
+authority_setup = (
+    df[
+        df["function"].isin([
+            "setup",
+            "sign_PK",
+        ])
+    ]
+    .groupby(PARAMS, as_index=False)["time"]
+    .sum()
+)
+
+authority_setup["time"] /= authority_setup["NBR_AUTHORITIES"]
 
 
 # ------------------------------------------------------------
-# Estimate empirical scaling exponent
+# Mixnode-side setup
+# ------------------------------------------------------------
+
+mixnode_setup = (
+    df[
+        df["function"] == "sign_public_key"
+    ]
+    .groupby(PARAMS, as_index=False)["time"]
+    .sum()
+)
+
+mixnode_setup["time"] /= mixnode_setup["NBR_MIXNODES"]
+
+
+# ------------------------------------------------------------
+# Combine authority + mixnode setup
+# ------------------------------------------------------------
+
+setup_df = authority_setup.merge(
+    mixnode_setup,
+    on=PARAMS,
+    how="outer",
+    suffixes=("_authority", "_mixnode"),
+)
+
+setup_df["time"] = (
+    setup_df["time_authority"].fillna(0)
+    + setup_df["time_mixnode"].fillna(0)
+)
+
+setup_df["function"] = "Setup"
+
+
+# Keep only the columns needed by df
+setup_df = setup_df[
+    PARAMS + ["time", "function"]
+]
+
+
+# ------------------------------------------------------------
+# Remove raw setup functions
+# ------------------------------------------------------------
+
+other_df = df[
+    ~df["function"].isin([
+        "setup",
+        "sign_PK",
+        "sign_public_key",
+    ])
+].copy()
+
+
+# ------------------------------------------------------------
+# Add aggregated SETUP PHASE
+# ------------------------------------------------------------
+
+df = pd.concat(
+    [
+        other_df,
+        setup_df,
+    ],
+    ignore_index=True,
+)
+
+# ============================================================
+# ESTIMATE EMPIRICAL SCALING EXPONENT
 #
 # time ~ parameter^k
 #
 # log(time) = log(C) + k * log(parameter)
-# ------------------------------------------------------------
+# ============================================================
 
 def estimate_exponent(group, param):
 
@@ -73,9 +194,9 @@ def estimate_exponent(group, param):
     return exponent, r2
 
 
-# ------------------------------------------------------------
-# Compute exponent for every function × parameter
-# ------------------------------------------------------------
+# ============================================================
+# COMPUTE EXPONENT FOR EVERY FUNCTION × PARAMETER
+# ============================================================
 
 results = []
 
@@ -87,7 +208,7 @@ for function in sorted(df["function"].unique()):
 
         exponent, r2 = estimate_exponent(
             function_df,
-            param
+            param,
         )
 
         results.append({
@@ -99,17 +220,28 @@ for function in sorted(df["function"].unique()):
 
 
 results_df = pd.DataFrame(results)
+row_order = [
+    "Setup",
+    "Credential Issuance",
+    "Header Construction",
+    "Packet Processing",
+]
 
-
-# ------------------------------------------------------------
-# Exponent table
-# ------------------------------------------------------------
+# ============================================================
+# EXPONENT TABLE
+# ============================================================
 
 exponent_table = results_df.pivot(
     index="function",
     columns="parameter",
-    values="exponent"
+    values="exponent",
 )
+exponent_table = exponent_table.reindex(row_order)
+
+
+# ============================================================
+# COMPLEXITY LABEL
+# ============================================================
 
 def complexity_label(k):
 
@@ -136,13 +268,20 @@ def complexity_label(k):
 
 complexity_table = exponent_table.map(complexity_label)
 
-print("\nEmpirical complexity:")
-print(complexity_table.to_string())
+# ============================================================
+# R² TABLE
+# ============================================================
 
-# print("\nEmpirical scaling exponents:")
-# print(exponent_table.round(2).to_string())
+r2_table = results_df.pivot(
+    index="function",
+    columns="parameter",
+    values="R2",
+)
+r2_table = r2_table.reindex(row_order)
 
-### GRAPH
+# ============================================================
+# EXPONENT HEATMAP
+# ============================================================
 
 plt.figure(figsize=(12, 7))
 
@@ -153,24 +292,31 @@ sns.heatmap(
     cmap="coolwarm",
     center=0,
     linewidths=0.5,
-    cbar_kws={"label": "Scaling exponent k"}
+    cbar_kws={
+        "label": "Scaling exponent k"
+    },
 )
 
 plt.title("Empirical Scaling Exponents")
 plt.xlabel("Parameter")
-plt.ylabel("Function")
+plt.ylabel("Phase")
 
 plt.xticks(rotation=30, ha="right")
+
 plt.tight_layout()
 
-plt.savefig(OUTPUT, dpi=300, bbox_inches="tight")
+plt.savefig(
+    OUTPUT,
+    dpi=300,
+    bbox_inches="tight",
+)
+
 plt.close()
 
-r2_table = results_df.pivot(
-    index="function",
-    columns="parameter",
-    values="R2"
-)
+
+# ============================================================
+# R² HEATMAP
+# ============================================================
 
 plt.figure(figsize=(12, 7))
 
@@ -178,18 +324,27 @@ sns.heatmap(
     r2_table,
     annot=True,
     fmt=".2f",
-    cmap="coolwarm",
-    center=0,
+    cmap="viridis",
+    vmin=0,
+    vmax=1,
     linewidths=0.5,
-    cbar_kws={"label": "Scaling exponent k"}
+    cbar_kws={
+        "label": "R²"
+    },
 )
 
-plt.title("Empirical Scaling Exponents")
+plt.title("Log-Log Regression Goodness of Fit")
 plt.xlabel("Parameter")
-plt.ylabel("Function")
+plt.ylabel("Phase")
 
 plt.xticks(rotation=30, ha="right")
+
 plt.tight_layout()
 
-plt.savefig(OUTPUT[:-4]+"_r.png", dpi=300, bbox_inches="tight")
+plt.savefig(
+    OUTPUT[:-4] + "_r.png",
+    dpi=300,
+    bbox_inches="tight",
+)
+
 plt.close()
