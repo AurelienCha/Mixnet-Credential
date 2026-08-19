@@ -1,6 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")/.."
-FILE=".logs/network_capture.log"
+FILE="logs/network_capture.log"
 
 # Pattern for Sending Packets == Client -> Mixnode == 127.0.100.x -> 127.0.10.y
 SEND=$(grep -Eo '127\.0\.100\..* → 127\.0\.10\..*' "$FILE" | wc -l)

@@ -2,9 +2,8 @@
 *.json
 
 # Ignore TEST folder
-TEST/
-.logs/
-.tmp/
+logs/
+.backup/
 
 # Ignore TODO file
 todo.md

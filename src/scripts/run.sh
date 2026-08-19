@@ -53,13 +53,13 @@ export VERBOSE
 
 rm -rf .logs
 
-mkdir -p .logs/auth
-mkdir -p .logs/mix
-mkdir -p .logs/client
+mkdir -p logs/auth
+mkdir -p logs/mix
+mkdir -p logs/client
 
 rm -f .config.json
 
-NETWORK_LOG=".logs/network_capture.log"
+NETWORK_LOG="logs/network_capture.log"
 touch $NETWORK_LOG
 tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG & >/dev/null 2>&1 &
 
@@ -134,7 +134,7 @@ while true; do
 
     # Exit if no UDP activity for 5 seconds
     if (( now - last >= 3)); then
-        mv .config.json .logs/config.json
+        mv .config.json logs/config.json
         killall tshark
         exit 0
     fi

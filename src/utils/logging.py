@@ -95,7 +95,7 @@ def create_logger(role: str, node_id: int) -> LoggerWrapper:
     # FILE LOGGER
     # =========================
     file_handler = logging.FileHandler(
-        f".logs/{role.lower()}/{role.lower()}_{node_id}.csv"
+        f"logs/{role.lower()}/{role.lower()}_{node_id}.csv"
     )
 
     file_handler.setFormatter(
