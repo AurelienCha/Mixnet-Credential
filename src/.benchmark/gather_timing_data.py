@@ -1,6 +1,10 @@
+import sys
 import pandas as pd
 from pathlib import Path
 
+
+file = sys.argv[1] if len(sys.argv)==2 else "timing.csv"
+OUTPUT = ".benchmark/.data/" + file
 SHORT_NAME ={'p': 'PATH_LENGTH', 'm': 'NBR_MIXNODES', 'c': 'NBR_CLIENT', 't':'THRESHOLD', 'a':'NBR_AUTHORITIES', 'z':'CREDENTIAL'}
 
 # Get all CSV files
@@ -32,4 +36,4 @@ for file in csv_files:
 table = pd.concat(dfs, ignore_index=True)
 table["timestamp"] = table["timestamp"].str.strip("[]")
 
-table.to_csv(".benchmark/.data/timing.csv", index=False)
+table.to_csv(OUTPUT, index=False)
