@@ -23,7 +23,7 @@ if __name__ == "__main__":
     times_processes = []
 
     # Run test_c25519 for path lengths 1 to 7 and collect timings of Original Sphinx implementation of G. Danezis
-    for r in range(1, 11):
+    for r in range(1, 8):
         try:
             T_package, T_process = test_c25519(r)
 
@@ -31,7 +31,8 @@ if __name__ == "__main__":
             times_processes.append((r, 1000*T_process))
 
         except Exception as e:
-            print(f"Error occurred for path_length {r}: {e}")
+            pass
+            # print(f"Error occurred for path_length {r}: {e}")
 
     # Save CSV
     with open(f"benchmark/data/original_sphinx_time.csv", "w", newline="") as f:
@@ -68,6 +69,3 @@ if __name__ == "__main__":
 
     # Save figure
     plt.savefig(f"benchmark/results/original_sphinx_time.png", dpi=300)
-
-    # Optional: display the plot interactively
-    plt.show() 

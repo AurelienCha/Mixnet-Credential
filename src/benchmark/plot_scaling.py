@@ -279,70 +279,84 @@ r2_table = results_df.pivot(
 )
 r2_table = r2_table.reindex(row_order)
 
+
 # ============================================================
 # EXPONENT HEATMAP
 # ============================================================
 
-plt.figure(figsize=(12, 7))
 
-sns.heatmap(
+fig, ax = plt.subplots(figsize=(12, 7))
+
+heatmap = sns.heatmap(
     exponent_table,
-    annot=True,
-    fmt=".2f",
+    annot=False,
     cmap="coolwarm",
     center=0,
     linewidths=0.5,
-    cbar_kws={
-        "label": "Scaling exponent k"
-    },
+    cbar_kws={"label": "Scaling exponent"},
+    ax=ax,
 )
 
-plt.title("Empirical Scaling Exponents")
-plt.xlabel("Parameter")
-plt.ylabel("Phase")
+plt.title("")  # "Empirical Parameter Sensitivity"
+plt.xlabel("") # "Parameter"
+plt.ylabel("") # "Phase"
 
-plt.xticks(rotation=30, ha="right")
+# ------------------------------------------------------------
+# Rename x-axis parameters
+# ------------------------------------------------------------
 
-plt.tight_layout()
+parameter_labels = {
+    "PATH_LENGTH": r"Path length $m$",
+    "NBR_MIXNODES": "# Mixnodes",
+    "THRESHOLD": r"Threshold $k$",
+    "NBR_AUTHORITIES": "# Authorities",
+}
+ax.set_xticklabels([parameter_labels.get(col, col) for col in exponent_table.columns], fontsize=14)
+ax.set_yticklabels(ax.get_yticklabels(), fontsize=12)
 
-plt.savefig(
-    OUTPUT,
-    dpi=300,
-    bbox_inches="tight",
-)
+# ------------------------------------------------------------
+# Colorbar label
+# ------------------------------------------------------------
 
-plt.close()
-
+cbar = heatmap.collections[0].colorbar
+cbar.set_label("Scaling exponent", rotation=90, fontsize=14)
+cbar.ax.yaxis.set_label_position("left")
 
 # ============================================================
-# R² HEATMAP
+# ANNOTATION
 # ============================================================
 
-plt.figure(figsize=(12, 7))
+for i, row in enumerate(exponent_table.index):
+    for j, col in enumerate(exponent_table.columns):
 
-sns.heatmap(
-    r2_table,
-    annot=True,
-    fmt=".2f",
-    cmap="viridis",
-    vmin=0,
-    vmax=1,
-    linewidths=0.5,
-    cbar_kws={
-        "label": "R²"
-    },
-)
+        k = exponent_table.loc[row, col]
+        r2 = r2_table.loc[row, col]
 
-plt.title("Log-Log Regression Goodness of Fit")
-plt.xlabel("Parameter")
-plt.ylabel("Phase")
+        # First line: normal opacity
+        ax.text(
+            j + 0.5, i + 0.43,
+            f"{k:.2f}",
+            ha="center", va="center",
+            fontsize=16,
+            alpha=1.0
+        )
 
-plt.xticks(rotation=30, ha="right")
+        # Second line: semi-transparent
+        ax.text(
+            j + 0.5, i + 0.60,
+            rf"$R^2$={r2:.2f}",
+            ha="center", va="center",
+            fontsize=12,
+            alpha=0.5
+        )
+
+# ============================================================
+# SAVE
+# ============================================================
 
 plt.tight_layout()
-
 plt.savefig(
-    OUTPUT[:-4] + "_r.png",
+    OUTPUT[:-4] + ".png",
     dpi=300,
     bbox_inches="tight",
 )

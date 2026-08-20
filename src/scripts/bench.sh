@@ -4,12 +4,12 @@ src="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$src"
 export PYTHONPATH="$src:$PYTHONPATH"
 start=$(date +%s)
+clear
 
 ################ SMALL BENCHMARK #################
 ## Varying Threshold on DSphinx with Credential ##
 ##################################################
 
-clear
 rm -rf benchmark/data/logs/
 
 THRESHOLD=(5 10 15 20 25 30 35 40 45 50) 
@@ -36,7 +36,7 @@ python benchmark/gather_timing_data.py setup_runtime.csv
 # - DSphinx with basic Credentials                       #
 ##########################################################
 
-clear
+cd "$src"
 rm -rf benchmark/data/logs/
 python benchmark/run_original_sphinx.py
 
@@ -51,7 +51,7 @@ ENTITIES=(25 50) # for NBR_MIXNODES & NBR_AUTHORITIES
 PATH_SIZE=${#PATH_LENGTH[@]}
 THRESHOLD_SIZE=${#THRESHOLD[@]}
 SIZE_ENTITIES=${#ENTITIES[@]}
-total_runs=$((PATH_SIZE * SIZE_ENTITIES**2 * ( 1 + THRESHOLD * SIZE_ENTITIES ) ))
+total_runs=$((PATH_SIZE * SIZE_ENTITIES**2 * ( 1 + THRESHOLD_SIZE * SIZE_ENTITIES ) ))
 
 i=0
 # Run all tests
