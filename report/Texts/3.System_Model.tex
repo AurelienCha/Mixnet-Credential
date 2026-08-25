@@ -2,34 +2,34 @@
 \section{Threat Model and Security Properties}\label{sec:sys_model}
 
 In this section, we present our threat model and define the privacy and the desired security properties of our system.
-As illustrated in Fig.~\ref{fig:overall_schema}, the system involves three types of entities: clients, a set of semi-trusted third parties (STTPs), and network nodes. 
-Clients delegate route sampling to the STTPs, which jointly derive the routing path and secret shares associated with the selected nodes. 
-The client subsequently reconstructs the route and the corresponding per-hop shared secrets from a threshold number of STTP responses.
-Clients are assumed to be malicious, meaning that they may deviate from the protocol to bias path selection or perform manipulation-based routing attacks. 
-STTPs and network nodes are assumed to be \emph{honest-but-curious}: they correctly execute the protocol but are not trusted for privacy guarantees. 
-Security is ensured as long as fewer than a threshold $d$ of STTPs collude.
+As illustrated in Fig.~\ref{fig:architecture}, the system involves three types of entities: clients, a set of signing authorities, and network nodes. 
+Our construction relies on a threshold multi-authority model, where authorities hold shares of a distributed signing key, and a client combines partial credentials from a sufficient subset of authorities. 
+Then, this credential is re-randomized and bound to the encrypted destination for each packet. 
+Any mixnode along the route can verify the credential without learning the source or the destination.
+
+Signing authorities and mixnodes are assumed to be \emph{honest-but-curious}: they correctly execute the protocol but are not trusted for privacy guarantees. 
+Security is ensured as long as fewer than a threshold $t$ of signing authorities collude.
 
 \subsection{Threat Model}
 
-We consider malicious client, corrupted network nodes and STTPs, as well as global passive and active network adversaries. 
+We consider cheating client, corrupted mixnodes and authorities, as well as global passive and active network adversaries. 
 We assume the hardness of the Elliptic Curve Discrete Logarithm Problem (ECDLP) in the underlying group.
 Hash functions are modeled as random oracles, and HMAC is assumed to be existentially unforgeable under chosen-message attacks.
-We further assume that network nodes anonymously submit their secret shares to the STTPs during the setup phase, and less than a threshold number $d$ of STTPs may be corrupted or colluding.
 
 \smallskip
-\noindent{\textbf{Malicious Client.}}
-A malicious client may attempt to bias or manipulate decentralized route sampling to favor specific nodes or paths.
+\noindent{\textbf{Cheating Client.}}
+A malicious client may attempt to reach a destination for which it does not have credential.
 
 \smallskip
-\noindent{\textbf{Corrupted Network Node.}}
-A corrupted node may reveal its entire internal state, including private keys and shared secrets.
+\noindent{\textbf{Corrupted Mixode.}}
+A corrupted mixnode may reveal its entire internal state, including private keys and shared secrets.
 Compromising a node must not compromise the privacy or integrity of the remaining path, and unlinkability is preserved as long as at least one node on the path is honest.
 
 \smallskip
-\noindent{\textbf{Corrupted STTP.}}
-Corrupted STTPs may attempt to infer additional information from their computation.
-We allow collusion among STTPs, provided that fewer than $d$ STTPs are corrupted.
-Under this assumption, colluding STTPs cannot reconstruct complete routes or derive shared secrets.
+\noindent{\textbf{Corrupted Authorities.}}
+Corrupted authorities may attempt to infer additional information from their computation.
+We allow collusion among authorities, provided that fewer than $t$ authorities are colluding together.
+Under this assumption, colluding authorities cannot reconstruct the distirbuted signing key.
 
 \smallskip
 \noindent{\textbf{Passive Network Adversary.}}
