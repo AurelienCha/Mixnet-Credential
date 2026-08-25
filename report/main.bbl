@@ -1,6 +1,75 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{10}
 \providecommand{\url}[1]{\texttt{#1}}
 \providecommand{\urlprefix}{URL }
 \providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{alexopoulos2017MCMIX}
+Alexopoulos, N., Kiayias, A., Talviste, R., Zacharias, T.: Mcmix: Anonymous messaging via secure multiparty computation. In: 26th USENIX Security Symposium (USENIX Security 17) (2017)
+
+\bibitem{backes2014backref}
+Backes, M., Clark, J., Kate, A., Simeonovski, M., Druschel, P.: Backref: Accountability in anonymous communication networks. In: International Conference on Applied Cryptography and Network Security. pp. 380--400. Springer (2014)
+
+\bibitem{chaum-mix}
+Chaum, D.: Untraceable electronic mail, return addresses, and digital pseudonyms. Commun. {ACM}  \textbf{24}(2),  84--88 (1981)
+
+\bibitem{chaum2016cmix}
+Chaum, D., Javani, F., Kate, A., Krasnova, A., Ruiter, J., Sherman, A.T., Das, D.: cmix: Anonymization by high-performance scalable mixing. Tech. rep. (2016)
+
+\bibitem{cottrell1995mixmaster}
+Cottrell, L.: Mixmaster and remailer attacks (1995)
+
+\bibitem{danezis2003mixminion}
+Danezis, G., Dingledine, R., Mathewson, N.: {Mixminion: Design of a Type III Anonymous Remailer Protocol}. In: Proceedings of the 2003 IEEE Symposium on Security and Privacy. IEEE (2003)
+
+\bibitem{sphinx}
+Danezis, G., Goldberg, I.: Sphinx: A compact and provably secure mix format. In: 2009 30th IEEE Symposium on Security and Privacy (2009)
+
+\bibitem{nym}
+Diaz, C., Halpin, H., Kiayias, A.: The nym network (2021)
+
+\bibitem{diaz2007accountable}
+Diaz, C., Preneel, B.: Accountable anonymous communication. In: Security, Privacy, and Trust in Modern Data Management, pp. 239--253. Springer (2007)
+
+\bibitem{Fisher_PET}
+Fischer-Hbner, S., Berthold, S.: Chapter 43 - privacy-enhancing technologies. In: Vacca, J.R. (ed.) Computer and Information Security Handbook (Second Edition), chap.~43, pp. 755--772. Morgan Kaufmann, Boston, second edition edn. (2013). \doi{https://doi.org/10.1016/B978-0-12-394397-2.00043-X}
+
+\bibitem{van2015vuvuzela}
+Hooff, J.V.D., Lazar, D., Zaharia, M., Zeldovich, N.: Vuvuzela: Scalable private messaging resistant to traffic analysis. In: Proceedings of the 25th Symposium on Operating Systems Principles (2015)
+
+\bibitem{infeld2025echomix}
+Infeld, E.J., Stainton, D., Ryge, L., Hacker, T.: Echomix: a strong anonymity system with messaging  (2025)
+
+\bibitem{DKG}
+Kate, A., Huang, Y., Goldberg, I.: Distributed {{Key Generation}} in the {{Wild}} (2012)
+
+\bibitem{kwon2020xrd}
+Kwon, A., Lu, D., Devadas, S.: {XRD}: {S}calable messaging system with cryptographic privacy. In: 17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20) (2020)
+
+\bibitem{lazar2018karaoke}
+Lazar, D., Gilad, Y., Zeldovich, N.: Karaoke: {D}istributed private messaging immune to passive traffic analysis. In: 13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18) (2018)
+
+\bibitem{mirkovic2008building}
+Mirkovic, J., Reiher, P.: Building accountability into the future internet. In: 2008 4th Workshop on Secure Network Protocols. pp. 45--51. IEEE (2008)
+
+\bibitem{naylor2014balancing}
+Naylor, D., Mukerjee, M.K., Steenkiste, P.: Balancing accountability and privacy in the network. ACM SIGCOMM Computer Communication Review  \textbf{44}(4),  75--86 (2014)
+
+\bibitem{oram2001peer}
+Oram, A.: Peer-to-Peer: Harnessing the power of disruptive technologies (2001)
+
+\bibitem{PedersenDKG}
+Pedersen, T.P.: Non-{{Interactive}} and {{Information-Theoretic Secure Verifiable Secret Sharing}}. In: Feigenbaum, J. (ed.) Advances in {{Cryptology}} --- {{CRYPTO}} '91. pp. 129--140. Springer, Berlin, Heidelberg (1992). \doi{10.1007/3-540-46766-1_9}
+
+\bibitem{piotrowska2017loopix}
+Piotrowska, A.M., Hayes, J., Elahi, T., Meiser, S., Danezis, G.: The loopix anonymity system. In: 26th USENIX Security Symposium (USENIX Security 17) (2017)
+
+\bibitem{ShamirSS}
+Shamir, A.: How to share a secret. Communications of the ACM  \textbf{22}(11),  612--613 (Nov 1979). \doi{10.1145/359168.359176}
+
+\bibitem{coconut}
+Sonnino, A., {Al-Bassam}, M., Bano, S., Meiklejohn, S., Danezis, G.: Coconut: {{Threshold Issuance Selective Disclosure Credentials}} with {{Applications}} to {{Distributed Ledgers}} (Mar 2020). \doi{10.48550/arXiv.1802.07344}
+
+\bibitem{xu2012accountable}
+Xu, G., Aguilera, L., Guan, Y.: Accountable anonymity: A proxy re-encryption based anonymous communication system. In: 2012 IEEE 18th International Conference on Parallel and Distributed Systems. pp. 109--116. IEEE (2012)
 
 \end{thebibliography}

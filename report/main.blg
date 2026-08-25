@@ -4,45 +4,48 @@ The top-level auxiliary file: main.aux
 The style file: splncs04.bst
 Database file #1: bib.bib
 Warning--I didn't find a database entry for ""
-You've used 0 entries,
+Warning--missing institution in chaum2016cmix
+Warning--empty journal in infeld2025echomix
+Warning--missing publisher in oram2001peer
+You've used 23 entries,
             2850 wiz_defined-function locations,
-            594 strings with 4473 characters,
-and the built_in function-call counts, 24 in all, are:
-= -- 0
-> -- 0
-< -- 0
-+ -- 0
-- -- 0
-* -- 2
-:= -- 7
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
+            732 strings with 8515 characters,
+and the built_in function-call counts, 12127 in all, are:
+= -- 962
+> -- 394
+< -- 13
++ -- 163
+- -- 138
+* -- 744
+:= -- 1576
+add.period$ -- 32
+call.type$ -- 23
+change.case$ -- 164
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 1
-format.name$ -- 0
-if$ -- 1
+cite$ -- 26
+duplicate$ -- 1092
+empty$ -- 1159
+format.name$ -- 156
+if$ -- 2642
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 6
-num.names$ -- 0
-pop$ -- 0
+int.to.str$ -- 23
+missing$ -- 218
+newline$ -- 75
+num.names$ -- 50
+pop$ -- 480
 preamble$ -- 1
-purify$ -- 0
+purify$ -- 114
 quote$ -- 0
-skip$ -- 1
+skip$ -- 303
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
-text.length$ -- 0
+substring$ -- 581
+swap$ -- 545
+text.length$ -- 13
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
-warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 5
-(There was 1 warning)
+type$ -- 90
+warning$ -- 3
+while$ -- 97
+width$ -- 25
+write$ -- 225
+(There were 4 warnings)

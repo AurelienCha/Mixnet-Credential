@@ -5,7 +5,7 @@ By forwarding messages through a sequence of cryptographic relays, they make it 
 The Sphinx packet format provides an efficient and secure foundation for such systems, offering compact packet processing, integrity protection, and unlinkability properties.
 
 However, deploying mixnets at large scale raises challenges beyond cryptographic anonymity. 
-A practical communication infrastructure may need to enforce policies related to service authorization, resource usage, or operational agreements.
+A practical communication infrastructure may need to enforce policies related to service authorization, resource usage, or operational agreements~\cite{oram2001peer,diaz2007accountable, naylor2014balancing,mirkovic2008building, backes2014backref, xu2012accountable}\todo{quickly check these sources}.
 For example, a mixnet provider may offer subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. 
 Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
 
@@ -15,8 +15,12 @@ A possible solution is to perform verification at the exit gateway, once the fin
 However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
 The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate mixnodes to learn the destination they are forwarding toward.
 
-This work explores a different approach: enabling privacy-preserving policy enforcement through destination-bound credentials.
-We propose an extension of the Sphinx packet format that enables a verifier to validate an authority-issued credential and verify its binding to the encrypted final destination, without revealing the destination itself.
+This work addresses this limitation by extending the Sphinx packet format with a privacy-preserving credential that is cryptographically bound to the encrypted destination. 
+Our construction relies on a threshold multi-authority model, where authorities hold shares of a distributed signing key, 
+and a client combines partial credentials from a sufficient subset of authorities without reconstructing the global secret key. 
+The credential is then bound to the encrypted destination contained inside the Sphinx header and re-randomized for each packet. 
+A mixnode can consequently verify that a packet carries a valid authorization for its encrypted destination without learning either the destination or the client's identity. 
+The credential is updated as the packet traverses the mixnet, to be checked at any intermediate hops and prevent linkability.
 
 Our goal is not to introduce destination surveillance into mixnets, but to enable privacy-preserving guarantees that communications are directed toward authorized endpoints. 
 Such a mechanism provides a middle ground between unrestricted anonymous transport and destination disclosure for policy enforcement.

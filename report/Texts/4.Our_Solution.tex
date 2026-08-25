@@ -32,15 +32,12 @@ where each chunk corresponds to a single header element represented by an EC poi
 Each network node along the packet route contributes for two chunks: one encoding its address and another encoding a per-hop integrity tag. 
 Therefore, a route of length $m$ is represented by $n = 2m + 1$ chunks, accounting for two chunks per network node and one additional chunk corresponding to the final destination.
 Some routing information, such as IP addresses, must be reversibly encoded as elliptic curve points. 
-To this end, DSphinx uses the Elligator mapping, which produces points computationally indistinguishable from randomly sampled group elements.
-\todo{To update no more Elligator since incompatible with pairing curves}.
 
 
 \subsection{Threshold Multi-Authority Setup}
-\todo{\href{https://en.wikipedia.org/wiki/Distributed_key_generation}{Update "distributed key generation" using "verifiable secret sharing" (VSS)}}
-
+\todo{Should we mention we could generalized to Verfifiable Secret Sharing (VSS) but to keep simple we limit to simple SS ?}
 We consider a distributed authority composed of $A$ independent authorities, where any subset of at least $t$ authorities can jointly issue valid credentials. 
-During system initialization, the authorities execute a standard distributed key generation (DKG) protocol based on verifiable secret sharing (VSS), resulting in a threshold signing key without ever reconstructing the corresponding secret.
+During system initialization, the authorities execute a standard distributed key generation (DKG) \cite{PedersenDKG, DKG} protocol based on Shamir secret sharing\cite{ShamirSS}, resulting in a threshold signing key without ever reconstructing the corresponding secret.
 
 More precisely, each authority $A_k$ is associated with a public identifier $x_k \in \mathbb{Z}_q$ and receives a secret signing share $y_k$. 
 Together, these shares define a secret polynomial $f$ of degree $t-1$, whose constant coefficient $ y=f(0) $ is the global signing key. 
@@ -59,7 +56,7 @@ Y,\;
 \end{equation}
 
 \subsection{Credential Issuance}
-
+\todo{mention NIZK ?}
 Credential issuance is performed once for each destination and allows a client to obtain a \emph{destination-bound} credential without revealing the destination to the authorities. 
 The issuance process consists of two steps: partial credential issuance and its aggregation.
 

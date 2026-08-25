@@ -1,0 +1,63 @@
+\section{Background and Related Work}\label{sec:related}
+
+\subsection{Decentralized Networks}
+
+Since Chaum's seminal work on untraceable communication in 1981~\cite{chaum-mix}, mixnets have been extensively studied as a mechanism for anonymous communication~\cite{piotrowska2017loopix, van2015vuvuzela, kwon2020xrd, lazar2018karaoke, cottrell1995mixmaster, alexopoulos2017MCMIX, chaum2016cmix, chaum-mix, danezis2003mixminion}.
+A mixnet is a network of servers, known as \emph{mixnodes}, that forward, delay, and shuffle messages to prevent adversaries from correlating input and output traffic. 
+Each packet traverses a sequence of mixnodes before reaching its final destination, as shown in Figure~\ref{fig:mixnet}.
+
+By combining traffic mixing with layered cryptographic encryption, mixnets can provide strong communication anonymity even against powerful traffic-analysis adversaries.
+Messages are divided into fixed-size packets and routing information is encrypted in multiple layers, ensuring that each mixnode learns only its immediate predecessor and successor.
+
+A cryptographic packet format is therefore an essential component of a mixnet, as it protects routing information and prevents packets from being tampered or linked across hops. 
+Modern mixnet designs build on these principles rely on the Sphinx packet format~\cite{sphinx}.
+
+\begin{figure}%[t]
+	\hspace{-9mm}
+	\resizebox{1.085\linewidth}{!}{\input{schema/mixnet.tex}}
+	\caption{Step-by-step tracing of two clients communicating with services through a 3-layer mixnet with two mixnodes (large circles) at each layer.}
+	\label{fig:mixnet}
+\end{figure}
+
+\subsection{Sphinx Packet Format}
+
+The \emph{Sphinx} packet format~\cite{sphinx} provides three essential security properties: per-hop confidentiality, per-hop integrity protection, and strong unlinkability.
+
+First, Sphinx ensures \emph{per-hop confidentiality} by encrypting routing information in layers, similar to classical onion routing.  
+Each mixnode learns only its immediate predecessor and successor, but gains no knowledge about the overall path, the sender, or the final destination.  
+
+Second, Sphinx provides \emph{per-hop integrity protection} through a cryptographic tag embedded in each layer of the header. 
+Any modification results in an integrity-tag verification failure at the mixnode, causing the packet to be discarded.
+This prevent adversaries from tampering with routing information.  
+
+Third, Sphinx offers \emph{strong unlinkability} by ensuring that packets entering and leaving a mixnode are computationally indistinguishable.  
+This is achieved by using fixed-size headers and payloads, and by re-randomizing cryptographic elements at every hop.
+Each hop transforms the packet into a fresh, uniformly distributed header, preventing an adversary from linking an incoming packet to its outgoing counterpart.
+
+These guarantees have made Sphinx the de facto standard for privacy-preserving routing in modern mixnet-based systems like Nym~\cite{nym} and Katzenpost~\cite{infeld2025echomix}.  
+Despite all properties provided by the Sphinx, it does not solve one of the anonymous communication challenge which is privacy-preserving acces control.
+To solve this, Sphinx can be combined with anonymous credentials.
+
+\subsection{Anonymous Credentials}
+
+Credential is a set of personal attributes bound to its owner by cryptographic means that are signed, and thereby certified, by the issuer (i.e. certifying party) \cite{Fisher_PET}.
+Credentials provide a mechanism for access-control by proving authorization or possession of certified attributes.
+Anonymous credentials are rerandomizable credentials which are able to demonstrate eligibility without revealing the identity of the credential holder.
+
+Anonymous credentials also often offers selective-disclosure property which allows proving only a subset of its attributes to a verifier and keep the remaining attributes hidden.
+In addition, instead of revealing the exact value of an attribute, anonymous credential can also enable the user to reveal only attribute property without revealing the attribute itself (e.g. age > 18, instead of age = 26).
+Therefore, these properties makes anonymous credentials particularly suitable for privacy-preserving access-control systems.
+
+Coconut~\cite{coconut} is a threshold issuance anonymous credential with selective disclosure designed for decentralized systems. 
+It combines selective disclosure credentials with threshold issuance, allowing a set of authorities to jointly issue credentials without requiring a single authority to hold the complete signing key. 
+A client can obtain partial credentials from multiple authorities and combine them into a valid credential, while the use of blinding and re-randomization prevents the authorities from linking credential issuance to subsequent presentations. 
+This distributed-trust model has made Coconut a useful building block for privacy-preserving access-control in mixnet deployments such as Nym.
+
+% HERE IS THE PROBLEM: proof of use
+Although Coconut credentials provide privacy-preserving authorization, they primarily offer a \emph{proof of possession}: a client can prove that it is authorized for a given destination without revealing its identity. 
+However, they do not ensure that the authorization is actually being used for the destination encoded inside the Sphinx packet. 
+Since the destination remains encrypted as the packet traverses the mixnet, a client could potentially present a credential for an authorized destination while constructing the packet to reach a different, unauthorized destination.
+This deception can only be detected at the exit gateway, after the packet has already consumed network resources. 
+This motivates extending the Sphinx packet format with a credential that is cryptographically bound to the encrypted destination. 
+Our construction allows mixnodes to verify that a packet carries valid authorization for its destination 
+without learning either the destination or the client's identity, while preserving the privacy properties of anonymous credentials.
