@@ -1,0 +1,75 @@
+\section{Security}
+
+We consider the security properties introduced by the credential extension and assume the security guarantees of the underlying DSphinx construction established in~\cite{DSphinx}. 
+In particular, we focus on the additional security requirements introduced by destination-bound credentials: robustness of the threshold credential system, credential soundness, and preservation of the privacy properties of the underlying packet format.
+We assume that the discrete logarithm problem is hard in the underlying elliptic-curve group and that the hash functions used by the construction are modeled as random oracles. 
+
+
+\subsection{Threshold Authority Security}
+
+Our credential system relies on a threshold set of $A$ authorities, of which at least $t$ are required to issue a valid credential. 
+We consider the case of malicious authorities during setup and credential issuance phases. 
+
+\subsubsection{Setup Phase}
+During setup, the authorities execute a Distributed Key Generation (DKG) protocol based on Shamir secret sharing. 
+The resulting signing key $y$ is never reconstructed by any individual authority, and each authority receives only a secret signing share.
+
+The security of this phase requires the underlying DKG to guarantee consistency of the distributed key shares in the presence of malicious participants. 
+In particular, a malicious authority must not be able to provide inconsistent shares that cause different honest subsets to derive different signing keys. 
+This property is not provided by plain Shamir secret sharing alone and therefore requires a verifiable distributed key-generation protocol, 
+for example one based on verifiable secret sharing~\cite{VSS, FeldmanVSS, PedersenDKG}.
+
+We consequently assume that the DKG with VSS provides the standard consistency and secrecy guarantees against the considered threshold adversary. 
+Under this assumption, any coalition of fewer than $t$ authorities learns no information sufficient to reconstruct the signing key $y$ or to forge credentials.
+
+\subsubsection{Credential Issuance}
+During normal operation, authorities issue partial credentials on blinded destinations after verifying the authorization proof associated with the request. 
+The resulting credential is reconstructed by Lagrange interpolation from at least $t$ valid partial credentials.
+
+Consequently, a malicious authority can prevent or delay credential issuance by refusing to respond or by returning an invalid partial credential, 
+but cannot prevent successful issuance as long as the client obtains valid partial credentials from at least $t$ honest authorities. 
+More generally, if the client contacts $t+\epsilon$ authorities, credential issuance succeeds in the presence of up to $\epsilon$ non-responsive or malicious authorities, 
+provided that at least $t$ contacted authorities return valid partial credentials.
+
+A coalition of $t$ or more authorities is outside this security guarantee: 
+such a coalition can reconstruct the distributed signing key and consequently issue arbitrary credentials. 
+This is inherent to the threshold trust model rather than a weakness specific to the proposed packet construction.
+
+
+\subsection{Credential Soundness}
+
+We require two properties from the credential mechanism. 
+First, an honestly issued credential must be accepted when used with the destination for which it was issued. 
+Second, a credential issued for a destination $\Delta$ must not be accepted for a different destination $\Delta'$.
+
+The first property follows directly from the correctness of the threshold signature and from the credential-binding and verification equations. 
+In particular, an honestly generated header-bound credential satisfies the pairing verification equation evaluated by an honest mixnode.
+The simulations in section \ref{sec:evaluation} confirm that the credential is accepted by honest mixnodes along its route.
+
+{\color{red}
+For the second property, there is an easy vulnerability to exploit...
+Let's imagine a malicious client want to get credential for an unauthorized destination $\Delta_{\textsf{unauthorized}}$ (i.e. blacklisted destination).
+He can just request credential for $\Delta_1$ and $\Delta_2$ such that $\Delta_{\textsf{unauthorized}} = \Delta_1 + \Delta_2$.
+Then sum the resulting credentials to get a credential for the unauthorized destination:
+$$ C_{\textsf{unauthorized}} = y\Delta_{\textsf{unauthorized}} = y \left(\Delta_1 + \Delta_2\right) = y\Delta_1 + y\Delta_2 = C_1 + C_2$$ 
+\todo[inline, color=red]{To fix or at least mitigate before submission}
+}
+
+\subsection{Credential Privacy}
+
+\subsubsection{Unlinkability} % technical - Badly explained but you understand the idea
+\todo[inline]{TODO: Could the credential be used to track a packet accros the mixnet ?}
+
+\subsubsection{Client Anonymity} % textuel
+% Can a verifier/mixnode determine who is presenting the credential?
+Since the credential is computed as \ref{eq:header_bound_credential}, it is solely linked to the packet header, and there is nothing to link it to the client in the current version.
+In future versions, it could be interesting to link anonymously the credential to the client in order to prevent credential sharing between clients, and it this case assessing the client anonimity would be important, but this is outside the scope of this article.
+
+
+\subsubsection{Destination Confidentiality} % technical
+% Does the credential give a mixnode information about the destination that DSphinx would otherwise hide?
+
+\subsubsection{Route Confidentiality} % technical
+% The last one is particularly interesting because the credential mechanism may introduce information that isn't present in ordinary Sphinx processing.
+
+
