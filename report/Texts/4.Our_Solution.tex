@@ -103,7 +103,7 @@ Using this nonce and the public keys of the nodes along the route, the client de
 \end{aligned}
 \right.
 \label{eq:shared_secret}
-\end{equation}
+\end{equation} \todo{Hash instead of Decode}
 Here, $\PK{i} = \sk{i} G$ is the public key of the $i^{\text{th}}$ node in the path, $p$ is the order of the prime subgroup, and $\InverseMap{\cdot}$ denotes the inverse mapping from elliptic curve points to scalars.
 The shared secret $s_i$ acts as a per-hop pseudorandom update that derives the next blinding factor $x_{i+1}$, ensuring that the cryptographic elements $\A{i}$ remain unlinkable across layers.
 
@@ -160,7 +160,7 @@ and a shared-secret-dependent contribution.
 For a route of length $m$, we define:
 \begin{equation}
     H =
-    \underbrace{\sum_{i=2}^{m} N_i}_{\text{mixnode contribution}}
+    \underbrace{\sum_{i=2}^{m} N_i}_{\text{route contribution}}
     +
     \underbrace{\sum_{j=1}^{m} s_j 
         \left(\sum_{k=1}^{m-j+1} G_{2k-1} \right)}_{\text{shared-secret contribution}}.
@@ -208,6 +208,7 @@ In particular, two packets carrying credentials for the same destination result 
     Circled numbers \eq[\color{red}x] refers to Equation x in the paper.}
     \label{fig:header-construction}
 \end{figure}
+\todo[inline]{For figure \ref{fig:header-construction} cite DSphinx otherwise autoplagiat ?}
 
 
 
