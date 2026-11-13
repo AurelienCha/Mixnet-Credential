@@ -7,12 +7,11 @@ from protocol.network import Network
 from cryptomath.lagrange import lagrange_interpolation
 from cryptomath.polynomial import Polynomial
 from cryptomath.ecc import Fr, G1, G2, hash_to_Fr
-from config.config import publish_authority_setup, AUTHORITIES, THRESHOLD, GENERATORS
+from config.config import publish_authority_setup, AUTHORITIES, THRESHOLD
 
 class Stage(StrEnum):
     SETUP_SHARES = "SHARES"
     SIGN_PARAM = "SIGN-PARAM"
-    SIGN_MIX = "SIGN-MIX"
     SIGN_CLIENT = "SIGN-CLIENT"
 
 class Authority:
@@ -29,7 +28,6 @@ class Authority:
         # Crypto
         self.id = hash_to_Fr(self.ip.encode())
         self.threshold = THRESHOLD
-        self.generators = GENERATORS
         self.secret_share = None
         self.rnd_polynomial = Polynomial([Fr().randomize() for _ in range(self.threshold)])
 
@@ -42,23 +40,21 @@ class Authority:
                 await self.setup_queue.put(message)
             case Stage.SIGN_PARAM:
                 await self.sign_queue.put(message)
-            case Stage.SIGN_MIX:
-                await self.send(ip, Stage.SIGN_MIX, self.sign_PK(message))  # message = PK -> sign PK
             case Stage.SIGN_CLIENT:
-                await self.send(ip, Stage.SIGN_CLIENT, self.sign(message)) 
-
-    @timing
-    def sign_PK(self, P):
-        return self.sign(P)
+                await self.send_credential(ip, message) 
+    
+    async def send_credential(self, ip, blinded_destination):
+        # TODO add ZK proof verification stuff
+        r = Fr().randomize()
+        credential = [blinded_destination * (self.secret_share + r), G1().base_point() * (self.secret_share + r), G2().base_point() * r]
+        await self.send(ip, Stage.SIGN_CLIENT, credential) # Credential = [Delta * (y+r), G1 * (y+r), G2 * r]
+    
         
     def sign(self, P):
         return P * self.secret_share
 
     def aggregate_secret_key(self, y_shares):
         self.secret_share = sum(y_shares, Fr(0))
-    
-    def sign_parameters(self):
-        return [self.id, self.sign(G2().base_point())] + [self.sign(G) for G in self.generators[::2]]
 
     async def collect(self, queue, n): # non-negligeable time ? (to verify)
         return [await queue.get() for _ in range(n)]
@@ -67,7 +63,7 @@ class Authority:
     async def setup(self):
         
         @timing
-        async def send_and_aggregate_shares():
+        async def send_and_aggregate_shares(): # Obtain its secret share
 
             # Send shares to each authorities
             await self.setup_queue.put(self.rnd_polynomial(self.id))
@@ -82,10 +78,10 @@ class Authority:
             self.aggregate_secret_key(y_shares)
                    
         @timing
-        async def sign_params():
+        async def sign_params(): # sign parameter -> Public key of the authority
 
             # Own partial sign
-            sign = self.sign_parameters()
+            sign = [self.id, self.sign(G2().base_point())] # (x, y)
             await self.sign_queue.put(sign)
 
             # Send its partial sign to peers (circular send)
@@ -96,17 +92,15 @@ class Authority:
             ))  
             
             # Wait enough partial signatures (and transform into list of points)
-            partial_signed_params = await self.collect(self.sign_queue, self.threshold)
-            x, *y_values = zip(*partial_signed_params)
-            points_list = [list(zip(x, vals)) for vals in y_values]
+            partial_signed_params = await self.collect(self.sign_queue, self.threshold) 
 
             # Lagrange interpolation
-            return [lagrange_interpolation(points) for points in points_list]
+            return lagrange_interpolation(partial_signed_params) # TODO now the only params is the Public key Y (change name in code for clarity)
 
         await send_and_aggregate_shares()
         signed_params = await sign_params()
         
-        return signed_params
+        return signed_params # TODO now the only params is the Public key Y (change name in code for clarity)
   
     async def start(self):
         await self.network.start()
@@ -126,10 +120,10 @@ async def main(ID):
     await asyncio.sleep(1)
 
     # == SETUP Authority ==
-    authority_PK, *signed_generators = await node.setup()
+    authority_PK = await node.setup()
 
     if ID == 1:  # One of the authority make signature public
-        publish_authority_setup(authority_pk=authority_PK, signed_generators=signed_generators)
+        publish_authority_setup(authority_pk=authority_PK)
 
     await asyncio.Event().wait()  # <- keeps program alive
 

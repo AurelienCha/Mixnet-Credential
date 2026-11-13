@@ -11,25 +11,22 @@ from protocol.network import Network
 from cryptomath.lagrange import lagrange_interpolation
 from cryptomath.ecc import Fr, G1, G2, hash_to_Fr, decode_ip
 
-from config.config import load_config, publish_mixnode, CREDENTIALS, GENERATORS, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from config.config import load_config, publish_mixnode, CREDENTIALS, THRESHOLD, AUTHORITIES, AUTHORITY_PK
 
 class Stage(StrEnum):
-    SIGN_MIX = "SIGN-MIX"
     HEADER = "HEADER"
 
 
 class Mixnode:
     def __init__(self, node_id: int):
         # Other
-        self.mixnodes = None
+        self.mixnodes = None # {N: {ip, PK}}
 
         # Network
         self.ip = f"127.0.10.{node_id}"
+        self.N = G1().base_point() * hash_to_Fr(self.ip.encode())
         self.network = Network(self.ip, self.handle_message)
         self.signature_queue: asyncio.Queue = asyncio.Queue() # TODO... instead of buffer
-
-        # Crypto
-        self.signed_generator_sum = SIGNED_GENERATOR_SUMS[-1] if CREDENTIALS else None
 
         self.secret_key = Fr().randomize()
         self.public_key = G1().base_point() * self.secret_key
@@ -43,12 +40,9 @@ class Mixnode:
 
     async def handle_message(self, ip: str, message_type: str, message: Any) -> None:
         match message_type:
-            case Stage.SIGN_MIX:
-                await self.signature_queue.put((hash_to_Fr(ip.encode()), message))
-
             case Stage.HEADER:
                 if not self.mixnodes:
-                    self.mixnodes = load_config().mixnodes
+                    self.mixnodes = load_config().mixnodes 
                 header: Header = message
                 next_ip, processed_header = self.process(header)
 
@@ -57,15 +51,6 @@ class Mixnode:
     # ========================================================
     # SETUP & PROCESS
     # ========================================================
-    
-    @timing
-    async def sign_public_key(self) -> G1:
-        for authority in sample(AUTHORITIES, k=THRESHOLD):
-            await self.send(authority, Stage.SIGN_MIX, self.public_key)
-
-        points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        return lagrange_interpolation(points)
-
 
     @timing
     def process(self, header: Header) -> tuple[str, Header]:
@@ -89,7 +74,7 @@ class Mixnode:
 
     # @timing
     def verify_credential(self, header: Header) -> None:
-        if (sum(header.beta[::2]) @ AUTHORITY_PK) != (header.credential @ G2().base_point()):
+        if (header.next_hop + sum(header.beta[::2])) @ (AUTHORITY_PK + header.R2) != (header.credential @ G2().base_point()):
             raise Exception("Credential verification failed")
 
     # @timing
@@ -106,10 +91,8 @@ class Mixnode:
 
     # @timing
     def decrypt_beta(self, header: Header, shared_secret: Fr) -> None:
-        chunks = [*header.beta, G1().clear(), G1().clear()]
-
-        for index, value in enumerate(chunks):
-            chunks[index] = value - GENERATORS[index] * shared_secret
+        chunks = header.beta + [G1().hash(shared_secret), header.next_hop]
+        chunks = [chunk * shared_secret for chunk in chunks]
 
         header.next_hop, header.gamma, *header.beta = chunks
 
@@ -118,13 +101,13 @@ class Mixnode:
         header.alpha *= shared_secret
 
     # @timing
-    def update_credential(self, header: Header, shared_secret: Fr) -> None:
-        next_hop = self.mixnodes.get(header.next_hop)
-        next_hop_signed_PK = next_hop.signed_public_key if next_hop else G1().randomize() # If not found, means final destination just randomize credential
-        header.credential -= (self.signed_generator_sum * shared_secret + next_hop_signed_PK)
+    def update_credential(self, header: Header, shared_secret: Fr) -> None: # TODO + Update R2
+        c = Fr().randomize()
+        header.credential = (header.credential * shared_secret) + ((header.next_hop + sum(header.beta[::2])) * c)
+        header.R2 += G2().base_point() * c
 
     # @timing
-    def get_next_hop(self, header: Header) -> str:
+    def get_next_hop(self, header: Header) -> str: # TODO
         next_hop = self.mixnodes.get(header.next_hop)
         return next_hop.ip if next_hop else decode_ip(header.next_hop)
 
@@ -143,7 +126,7 @@ async def main(node_id: int) -> None:
     await node.start()
 
     # == Publish Mixnode PK (and PK signed if CREDENTIALS) ==
-    await publish_mixnode(node, await node.sign_public_key() if CREDENTIALS else None)
+    await publish_mixnode(node)
     
     # == WAIT TO PROCESS PACKET ==
     await asyncio.Event().wait()  # <- keeps alive

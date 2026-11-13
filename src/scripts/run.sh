@@ -21,10 +21,10 @@ trap cleanup EXIT INT TERM
 # ==========================================
 
 PATH_LENGTH=5
-THRESHOLD=10
+THRESHOLD=7
 AUTHORITIES=20
 MIXNODES=20
-CLIENTS=3
+CLIENTS=5
 
 
 CREDENTIALS=1

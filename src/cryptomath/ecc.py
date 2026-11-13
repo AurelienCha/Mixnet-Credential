@@ -241,5 +241,5 @@ def hash_to_Fr(msg: bytes):
 ## Hashable ## (for python dict)
 ##############
 def hash_G1(self):
-    return int(sha256(self.serialize()).hexdigest(), 16)
+    return int(sha256(self.serialize()).hexdigest(), 16) # apply python hash on this so the output is 64 bits...
 G1.__hash__ = hash_G1

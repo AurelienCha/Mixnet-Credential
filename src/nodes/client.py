@@ -3,18 +3,20 @@ import argparse, asyncio, sys, hmac
 from enum import StrEnum
 from random import sample
 from hashlib import sha256
+from itertools import accumulate
+from operator import mul
 
 from utils.logging import timing, create_logger, LOGGING
 from protocol.header import Header
 from protocol.network import Network
 from cryptomath.lagrange import lagrange_interpolation
-from cryptomath.ecc import Fr, G1, hash_to_Fr, encode_ip
+from cryptomath.ecc import Fr, G1, G2, hash_to_Fr, encode_ip
 
-from config.config import CREDENTIALS, GENERATORS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, SIGNED_GENERATOR_SUMS
+from config.config import CREDENTIALS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES
 
 
 class Stage(StrEnum):
-    SIGN_CLIENT = "SIGN-CLIENT"
+    SIGN_CLIENT = "SIGN-CLIENT" # TODO update
     HEADER = "HEADER"
 
 
@@ -26,6 +28,7 @@ class Client:
         self.credentials: dict[str, G1] = {}
         self.signature_queue: asyncio.Queue = asyncio.Queue()
         self.received_packets = 0
+        
     
     
     # ========================================================
@@ -51,10 +54,11 @@ class Client:
 
     # @timing
     def select_mixnodes(self):
-        public_keys = sample(list(MIXNODES.keys()), k=PATH_LENGTH)
-        signed_public_keys = [MIXNODES[idx].signed_public_key for idx in public_keys]
-        first_hop = MIXNODES[public_keys[0]].ip
-        return (first_hop, public_keys, signed_public_keys)
+        # Mixnodes {G1(N): {"IP": str(ip), "PK": G1(PK)}}
+        route = sample(list(MIXNODES.keys()), k=PATH_LENGTH) 
+        route_ip = [MIXNODES[n].ip for n in route]
+        route_PK = [MIXNODES[n].PK for n in route] 
+        return route, route_ip, route_PK
 
     # ========================================================
     # SHARED SECRETS
@@ -80,21 +84,31 @@ class Client:
     @timing
     async def get_credential(self, destination: str) -> G1:
         salt = Fr().randomize()
-        destination = encode_ip(destination) * salt  # Blind signature
+        blinded_destination = encode_ip(destination) * salt  # Blind signature
 
         for authority in sample(AUTHORITIES, k=THRESHOLD):
-            await self.send(authority, Stage.SIGN_CLIENT, destination)
+            await self.send(authority, Stage.SIGN_CLIENT, blinded_destination)
         
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        return lagrange_interpolation(points) * ~salt  # Unblind signature
+        signed_blinded_Delta, R1, R2 = map(lagrange_interpolation, zip(*([(x, y) for y in values] for x, values in points)))
+        return [signed_blinded_Delta * ~salt, R1, R2]  # Unblind signature
+
+    def rerandomize_credential(self, credential: list[G1, G1, G2], Delta: G1) -> tuple[G1, G2]:
+        X, R1, R2 = credential
+        r = Fr().randomize()
+        R1 = R1 + G1().base_point() * r
+        R2 = R2 + G2().base_point() * r
+        X = X + Delta * r
+
+        return [X, R1, R2]
 
     # @timing
-    def update_credential(self, credential: G1, shared_secrets: list[Fr], signed_public_keys: list[G1]) -> G1:
-        return ( # TODO make it look more like article notation
-            credential
-            + sum([signed_public_keys[i] for i in range(-1, -PATH_LENGTH, -1)])  
-            + sum([SIGNED_GENERATOR_SUMS[i] * shared_secrets[-i-1] for i in range(PATH_LENGTH)])
-        )
+    def link_credential(self, credential: list[G1, G1, G2], shared_secrets: list[Fr], route_ip: list[str]) -> G1:
+        # Sign hops
+        Hops = [credential[1] * hash_to_Fr(ip.encode()) for ip in route_ip] + [credential[0]] 
+
+        # Link credential to path
+        return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))]) 
 
     # ========================================================
     # SEND PACKET
@@ -114,18 +128,22 @@ class Client:
         delta = self.encode_destination(destination_ip) 
 
         # Path
-        (first_hop, public_keys, signed_public_keys) = self.select_mixnodes()
+        route, route_ip, route_PK = self.select_mixnodes() # TODO get route (list of ip)
 
         # Shared secret
-        alpha, shared_secrets = self.derive_shared_secrets(public_keys)
+        alpha, shared_secrets = self.derive_shared_secrets(route_PK)
 
         # Credential
-        credential = self.update_credential(self.credentials[destination_ip], shared_secrets, signed_public_keys) if CREDENTIALS else None
+        if CREDENTIALS: # Credential = [(y+r)*Delta, R1, R2]
+            credential = self.rerandomize_credential(self.credentials[destination_ip], delta) 
+            credential[0] = self.link_credential(credential, shared_secrets, route_ip)
+        else:
+            credential = [None, None, None]
 
         # Compute Encryption Layer
-        beta, gamma = self.compute_layers(delta, public_keys, shared_secrets)
-
-        return (first_hop, Header(alpha=alpha, beta=beta, gamma=gamma, credential=credential))
+        layer = self.compute_layers(delta, route, shared_secrets) 
+           
+        return (MIXNODES[layer[0]].ip, Header(next_hop=layer[0], alpha=alpha, beta=layer[2:], gamma=layer[1], credential=credential[0], R2=credential[2])) # NEXT_HOP = layer[0] # TODO continue refactor
 
     # ============================================================
     # LAYER COMPUTATION
@@ -137,30 +155,44 @@ class Client:
         return G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
     # @timing
-    def initial_layer(self, destination: G1, shared_secrets: list[Fr]):
-        beta = [destination + GENERATORS[0] * shared_secrets[-1]] + [-sum([GENERATORS[BETA_SIZE + j - 2*i] * shared_secrets[i] for i in range(j//2, PATH_LENGTH-1)]) for j in range(BETA_SIZE-1)]
-        gamma = self.compute_gamma(beta,  shared_secrets[-1])
-        return beta, gamma
+    def preprocessing(self, shared_secrets: list[Fr], route: list[G1]): 
+        filler_chunks = []
+        for i in range(PATH_LENGTH-1):
+            # append
+            filler_chunks.append(G1().hash(shared_secrets[i]))
+            filler_chunks.append(route[i])
+            # encrypt
+            filler_chunks = [chunk * shared_secrets[i] for chunk in filler_chunks] # * s_i^-1
+
+        return filler_chunks
+    
+
 
     # @timing
-    def add_layer(self, next_hop: G1, beta: list[G1], gamma: G1, shared_secret: Fr):
+    def initial_layer(self, destination: G1, shared_secrets: list[Fr], route: list[G1]):
+        filler_chunks = self.preprocessing(shared_secrets, route)
 
-        next_beta = [next_hop, gamma, *beta[:BETA_SIZE]]
-        next_beta = [next_beta[i] +  GENERATORS[i] * shared_secret for i in range(BETA_SIZE)]
-
-        next_gamma = self.compute_gamma(next_beta, shared_secret)
-        return next_beta, next_gamma
+        beta = [destination * ~shared_secrets[-1]] + filler_chunks 
+        gamma = self.compute_gamma(beta, shared_secrets[-1])
+        N = route[-1]
+        return [N, gamma, *beta]
 
     # @timing
-    def compute_layers(self, destination: G1, mixes: list[G1], shared_secrets: list[Fr]):
-        beta, gamma = self.initial_layer(destination, shared_secrets)
+    def add_layer(self, next_hop: G1, layer: list[G1], shared_secret: Fr):
+        beta = [chunk * ~shared_secret for chunk in layer[:-2]] 
+        gamma = self.compute_gamma(beta, shared_secret)
+        N = next_hop
+        return [N, gamma, *beta]
 
-        for i in range(-2, -PATH_LENGTH-1, -1): # 1, 0
-            beta, gamma = self.add_layer(mixes[i+1], beta, gamma, shared_secrets[i])
+    # @timing
+    def compute_layers(self, destination: G1, route: list[G1], shared_secrets: list[Fr]):
 
-        return beta, gamma
+        layer = self.initial_layer(destination, shared_secrets, route)
 
+        for i in reversed(range(PATH_LENGTH-1)): 
+            layer = self.add_layer(route[i], layer, shared_secrets[i])
 
+        return layer
 
 # ============================================================
 # MAIN
@@ -198,7 +230,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--id", type=int, required=True, help="Client identifier")
-    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=5)
+    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=1)
     arguments = parser.parse_args()
 
     asyncio.run(main(arguments.id, arguments.packets))

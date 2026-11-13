@@ -25,26 +25,24 @@ CONFIG_PATH = Path(".config.json")
 @dataclass(slots=True)
 class MixnodeInfo:
     ip: str
-    signed_public_key: G1 | None = None  # Optional credential fields
+    PK: G1 
 
     @classmethod
     def from_json(cls, data: dict[str, str]) -> MixnodeInfo:
         return cls(
             ip=data["IP"],
-            signed_public_key=(G1().fromstr(data["sign_PK"].encode()) if CREDENTIALS else None),
+            PK=G1().fromstr(data["PK"].encode())
         )
 
 
 @dataclass(slots=True)
 class PublicConfig:
     path_length: int
-    generators: list[G1]
     nbr_mixnodes: int
     mixnodes: dict[str, Any]
 
     # Optional credential fields
     authority_pk: G2 | None = None
-    signed_generator_sums: list[G1] | None = None
     authorities: list[str] | None = None
     threshold: int | None = None
 
@@ -81,9 +79,8 @@ def load_config() -> PublicConfig:
 
     config = PublicConfig(
         path_length=raw["path_length"],
-        generators=[G1().fromstr(value.encode()) for value in raw["generators"]],
         nbr_mixnodes=raw["nbr_mixnodes"],
-        mixnodes={G1().fromstr(PK.encode()): MixnodeInfo.from_json(node) for PK, node in raw["mixnodes"].items()},
+        mixnodes={G1().fromstr(N.encode()): MixnodeInfo.from_json(node) for N, node in raw["mixnodes"].items()},
     )
 
     if CREDENTIALS:
@@ -91,18 +88,16 @@ def load_config() -> PublicConfig:
         config.threshold = raw["threshold"]
         try:
             config.authority_pk = G2().fromstr(raw["authority_PK"].encode())
-            config.signed_generator_sums = [G1().fromstr(value.encode()) for value in raw["signed_generator_sums"]]
         except:
             pass
 
     return config
 
 
-def publish_authority_setup(authority_pk: G2, signed_generators: list[G1]) -> None:
+def publish_authority_setup(authority_pk: G2) -> None:
     with LockedFile(CONFIG_PATH, "r+") as file:
         config = json.load(file)
 
-        config["signed_generator_sums"] = [str(sum(signed_generators[:i])) for i in range(1, len(signed_generators) + 1)]
         config["authority_PK"] = str(authority_pk)
 
         file.seek(0)
@@ -110,17 +105,12 @@ def publish_authority_setup(authority_pk: G2, signed_generators: list[G1]) -> No
         file.truncate()
 
 
-async def publish_mixnode(node: Mixnode, signed_public_key: G1 | None = None) -> None:
+async def publish_mixnode(node: Mixnode) -> None:
 
     with LockedFile(CONFIG_PATH, "r+") as file:
         config = json.load(file)
 
-        entry = {"IP": str(node.ip)}
-
-        if CREDENTIALS:
-            entry["sign_PK"] = str(signed_public_key)
-
-        config["mixnodes"][str(node.public_key)] = entry
+        config["mixnodes"][str(node.N)] = {"IP": node.ip, "PK":str(node.public_key)}
 
         file.seek(0)
         json.dump(config, file, indent=4)
@@ -133,9 +123,8 @@ async def publish_mixnode(node: Mixnode, signed_public_key: G1 | None = None) ->
 
 CONFIG = load_config()
 
-GENERATORS = CONFIG.generators
 NBR_MIXNODES = CONFIG.nbr_mixnodes
-MIXNODES = CONFIG.mixnodes  # {PK: {IP, PK_sign}}
+MIXNODES = CONFIG.mixnodes  # {G1(N): {"IP": str(ip), "PK": G1(PK)}}
 
 PATH_LENGTH = CONFIG.path_length
 BETA_SIZE = 2 * PATH_LENGTH - 1
@@ -144,4 +133,3 @@ BETA_SIZE = 2 * PATH_LENGTH - 1
 THRESHOLD = CONFIG.threshold
 AUTHORITIES = CONFIG.authorities
 AUTHORITY_PK = CONFIG.authority_pk
-SIGNED_GENERATOR_SUMS = CONFIG.signed_generator_sums
