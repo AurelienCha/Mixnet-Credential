@@ -4,25 +4,24 @@ We consider the security properties introduced by the credential extension and a
 In particular, we focus on the additional security requirements introduced by destination-bound credentials: robustness of the threshold credential system, credential soundness, and preservation of the privacy properties of the underlying packet format.
 We assume that the discrete logarithm problem is hard in the underlying elliptic-curve group and that the hash functions used by the construction are modeled as random oracles. 
 
-
 \subsection{Threshold Authority Security}
 
 Our credential system relies on a threshold set of $A$ authorities, of which at least $t$ are required to issue a valid credential. 
 We consider the case of malicious authorities during setup and credential issuance phases. 
 
-\subsubsection{Setup Phase}
+\paragraph{Setup Phase}
 During setup, the authorities execute a Distributed Key Generation (DKG) protocol based on Shamir secret sharing. 
 The resulting signing key $y$ is never reconstructed by any individual authority, and each authority receives only a secret signing share.
 
 The security of this phase requires the underlying DKG to guarantee consistency of the distributed key shares in the presence of malicious participants. 
 In particular, a malicious authority must not be able to provide inconsistent shares that cause different honest subsets to derive different signing keys. 
 This property is not provided by plain Shamir secret sharing alone and therefore requires a verifiable distributed key-generation protocol, 
-for example one based on verifiable secret sharing~\cite{VSS, FeldmanVSS, PedersenDKG}.
+for example one based on verifiable secret sharing (VSS)~\cite{VSS, FeldmanVSS, PedersenDKG}.
 
 We consequently assume that the DKG with VSS provides the standard consistency and secrecy guarantees against the considered threshold adversary. 
 Under this assumption, any coalition of fewer than $t$ authorities learns no information sufficient to reconstruct the signing key $y$ or to forge credentials.
 
-\subsubsection{Credential Issuance}
+\paragraph{Credential Issuance}
 During normal operation, authorities issue partial credentials on blinded destinations after verifying the authorization proof associated with the request. 
 The resulting credential is reconstructed by Lagrange interpolation from at least $t$ valid partial credentials.
 
@@ -33,43 +32,105 @@ provided that at least $t$ contacted authorities return valid partial credential
 
 A coalition of $t$ or more authorities is outside this security guarantee: 
 such a coalition can reconstruct the distributed signing key and consequently issue arbitrary credentials. 
-This is inherent to the threshold trust model rather than a weakness specific to the proposed packet construction.
+This is inherent to the threshold trust model rather than a weakness specific to the proposed scheme.
 
 
 \subsection{Credential Soundness}
 
-We require two properties from the credential mechanism. 
-First, an honestly issued credential must be accepted when used with the destination for which it was issued. 
-Second, a credential issued for a destination $\Delta$ must not be accepted for a different destination $\Delta'$.
+We distinguish correctness of honest execution from security against malicious clients. 
+An honestly issued credential must remain valid when used in a packet addressed to the destination for which it was issued. 
+Conversely, a malicious client should not be able to use credentials issued for other destinations to authorize delivery to an unauthorized destination. 
+We first establish correctness and a binding property for the prescribed header construction, then discuss the remaining requirements for credential-forgery resistance.
 
-The first property follows directly from the correctness of the threshold signature and from the credential-binding and verification equations. 
-In particular, an honestly generated header-bound credential satisfies the pairing verification equation evaluated by an honest mixnode.
-The simulations in section \ref{sec:evaluation} confirm that the credential is accepted by honest mixnodes along its route.
 
-{\color{red}
-For the second property, there is an easy vulnerability to exploit...
+\paragraph{Correctness}
+Let $\Delta$ be the encoded destination of an honestly constructed packet, and let $\SIGMA_{\Delta}=[y]\Delta$ be its destination-bound credential. 
+Recall that $w_j=\prod_{k=1}^{j-1}s_k$, with $w_1=1$. Expanding the reverse layer construction gives:
+\begin{equation*}
+    \XI_1
+    = \sum_{j=0}^{\ell}(\mathcal{L}_1)_{2j+1}
+    = [w_{\ell+1}^{-1}]\Delta
+      + \sum_{j=1}^{\ell}[w_j^{-1}]\ETA_j.
+\end{equation*}
+Using $\PSI_1=[y]\ZETA_1$ and
+$\ETA_j=[h_{\mathbb{F}_q}(IP_j)]\ZETA_1$, the header binding Equation~\eqref{eq:header_bound_credential} yields:
+\begin{equation*}
+    \begin{aligned}
+        \SIGMA_1
+        &= [w_{\ell+1}^{-1}]\SIGMA_{\Delta}
+           + \sum_{j=1}^{\ell}
+             [w_j^{-1}h_{\mathbb{F}_q}(IP_j)]\PSI_1 \\
+        &= [y]\left(
+             [w_{\ell+1}^{-1}]\Delta
+             + \sum_{j=1}^{\ell}[w_j^{-1}]\ETA_j
+           \right) \\
+        &= [y]\XI_1.
+    \end{aligned}
+\end{equation*}
+
+This relation is preserved during packet processing. 
+At hop $i$, the mixnode removes the first two elements of $\mathcal{L}_i$, appends $h_{\mathbb{G}}(s_i)$ and $\ETA_i$, and multiplies the resulting vector by $s_i$. 
+Consequently, the sum of the odd-indexed elements satisfies:
+\begin{equation*}
+    \XI_{i+1}
+    = [s_i]\left(\sum_{j=1}^{\ell}\beta_{2j-1}+\ETA_i\right)
+    = [s_i]\XI_i.
+\end{equation*}
+Since the credential is updated as $\SIGMA_{i+1}=[s_i]\SIGMA_i$, induction gives $\SIGMA_i=[y]\XI_i$ at every hop. 
+ilinearity then implies:
+\begin{equation*}
+    e(\SIGMA_i,\ZETA_2)
+    = e([y]\XI_i,\ZETA_2)
+    = e(\XI_i,[y]\ZETA_2)
+    = e(\XI_i,\PSI_2).
+\end{equation*}
+Thus, every honest mixnode accepts the credential of an honestly constructed packet.
+
+\paragraph{Credential-Forgery Resistance}
+Due to the fixed element in the credential verification equation~\ref{eq:credential_verification},
+the credential must satisfy $\SIGMA_i = [y] \XI_i$.
+Since the scalar value $x$, such that $\XI_i = x \ZETA_1$, is unknown due to the destination encoding (except if the final destination is a mixnode).
+Then the client cannot forge a credential from the public key $\PSI_1$ and must pass by the authorities.
+
 Let's imagine a malicious client want to get credential for an unauthorized destination $\Delta_{\textsf{unauthorized}}$ (i.e. blacklisted destination).
-He can just request credential for $\Delta_1$ and $\Delta_2$ such that $\Delta_{\textsf{unauthorized}} = \Delta_1 + \Delta_2$.
+He could request credential for $\Delta_1$ and $\Delta_2$ such that $\Delta_{\textsf{unauthorized}} = \Delta_1 + \Delta_2$.
 Then sum the resulting credentials to get a credential for the unauthorized destination:
-$$ C_{\textsf{unauthorized}} = y\Delta_{\textsf{unauthorized}} = y \left(\Delta_1 + \Delta_2\right) = y\Delta_1 + y\Delta_2 = C_1 + C_2$$ 
-\todo[inline, color=red]{To fix or at least mitigate before submission}
-}
+$$ \SIGMA_{\textsf{unauthorized}} = [y]\Delta_{\textsf{unauthorized}} = [y] \left(\Delta_1 + \Delta_2\right) = [y]\Delta_1 + [y]\Delta_2 = \SIGMA_{\Delta_1} + \SIGMA_{\Delta_2}.$$
+However, this attack requires both $\Delta_1$ and $\Delta_2$ to be valid encodings of authorized destinations. 
+In particular, their $x$-coordinates must satisfy the prescribed padding constraints. 
+Otherwise, verification of the corresponding zero-knowledge proofs would fail, and the authorities would reject the credential requests.
+
+These constraints restrict the points available to the adversary, but do not by themselves establish resistance to this attack. 
+A formal security argument requires further analysis of the destination encoding, including the choice of padding parameters.
+
+Alternatively, an adversary could attempt to derive a credential for an unauthorized destination by finding a scalar $x$ such that $\SIGMA_{\textsf{unauthorized}} = [x]\SIGMA_\Delta$.
+Since credentials satisfy $\SIGMA_\Delta = [y]\Delta$, this requires $\Delta_{\textsf{unauthorized}} = [x]\Delta$.
+Finding such a scalar is an instance of the elliptic-curve discrete logarithm problem.
 
 \subsection{Credential Privacy}
 
-\subsubsection{Unlinkability} % technical - Badly explained but you understand the idea
-\todo[inline]{TODO: Could the credential be used to track a packet accros the mixnet ?}
+We consider passive observations of honestly generated, authorized packets.
+We examine the impact of the credential mechanism on packet unlinkability, client anonymity, destination confidentiality, and its reusability.
 
-\subsubsection{Client Anonymity} % textuel
-% Can a verifier/mixnode determine who is presenting the credential?
-Since the credential is computed as \ref{eq:header_bound_credential}, it is solely linked to the packet header, and there is nothing to link it to the client in the current version.
-In future versions, it could be interesting to link anonymously the credential to the client in order to prevent credential sharing between clients, and it this case assessing the client anonimity would be important, but this is outside the scope of this article.
+\paragraph{Unlinkability}
+At each hop, the credential is updated as $\SIGMA_{i+1}=[s_i]\SIGMA_i$, using the same factor as $\ALPHA_{i+1}=[s_i]\ALPHA_i$ in the original Sphinx packet.
+All header elements belong to $\mathbb{G}_1$, while credential verification uses the fixed parameters $\ZETA_2$ and $\PSI_2 = [y]\ZETA_2$ in $\mathbb{G}_2$.
+In a Type-3 pairing setting, two header components cannot be paired directly, since both belong to $\mathbb{G}_1$.
+These observations support the intended unlinkability, but do not by themselves establish that the credential and pairing operation provide no additional linking advantage.
 
+\paragraph{Client Anonymity}
+The credential contains no client identifier or client-specific public key.
+For a given destination, clients obtain the same unblinded credential $\SIGMA_\Delta=[y]\Delta$, and header binding introduces no client information.
+Therefore client anonymity continues to depend on the privacy guarantees of the underlying mixnet, and not the credential.
 
-\subsubsection{Destination Confidentiality} % technical
-% Does the credential give a mixnode information about the destination that DSphinx would otherwise hide?
+\paragraph{Destination Confidentiality}
+For a destination point $\Delta$, choosing $b$ uniformly from $\mathbb{F}_q$ makes $\widetilde{\Delta}=[b]\Delta$ independent of $\Delta$.
+The zero-knowledge proof reveals no additional information beyond the policy outcome.
+During forwarding, the destination component in $\mathcal{L}$ and its contribution to $\SIGMA$ are scaled by the inverse product of the remaining hop secrets. 
+Destination confidentiality thus relies on these remaining shared secrets, until the final mixnode removes the last factor and recovers the destination.
 
-\subsubsection{Route Confidentiality} % technical
-% The last one is particularly interesting because the credential mechanism may introduce information that isn't present in ordinary Sphinx processing.
-
-
+\paragraph{Reusability}
+The destination-bound credential $\SIGMA_\Delta$ is independent of the selected route and can subsequently be bound to any valid route.
+The binding in Equation~\eqref{eq:header_bound_credential} depends on the hop secrets, which are derived from the client's fresh random nonce.
+Consequently, reusing the same credential along the same route with a fresh nonce rerandomizes the header-bound credential.
+This establishes rerandomization under credential reuse.

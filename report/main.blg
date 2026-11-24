@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99e (TeX Live 2026/Arch Linux)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: splncs04.bst
+Database file #1: bib.bib
+Warning--missing institution in chaum2016cmix
+Warning--empty journal in infeld2025echomix
+Warning--missing publisher in oram2001peer
+You've used 26 entries,
+            2850 wiz_defined-function locations,
+            758 strings with 9396 characters,
+and the built_in function-call counts, 14025 in all, are:
+= -- 1125
+> -- 450
+< -- 15
++ -- 187
+- -- 158
+* -- 862
+:= -- 1816
+add.period$ -- 39
+call.type$ -- 26
+change.case$ -- 187
+chr.to.int$ -- 0
+cite$ -- 29
+duplicate$ -- 1262
+empty$ -- 1335
+format.name$ -- 178
+if$ -- 3067
+int.to.chr$ -- 0
+int.to.str$ -- 26
+missing$ -- 251
+newline$ -- 84
+num.names$ -- 56
+pop$ -- 545
+preamble$ -- 1
+purify$ -- 130
+quote$ -- 0
+skip$ -- 354
+stack$ -- 0
+substring$ -- 691
+swap$ -- 631
+text.length$ -- 15
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 102
+warning$ -- 3
+while$ -- 111
+width$ -- 28
+write$ -- 261
+(There were 3 warnings)
