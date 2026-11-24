@@ -1,0 +1,25 @@
+\centering
+\begin{tikzpicture}
+
+    \node (H) at (0,2) {$\mathcal{H}_i = $};
+    \node (alpha) [block=1] at (H.east) {$\ALPHA_{i}$};
+    \node (N) [block=1] at (alpha.east) {$\ETA_i$};
+    \node (gamma) [block=1] at (N.east) {$\GAMMA_{i}$};
+    \node (Bi) [block=5] at (gamma.east) {$\mathcal{B}_i$};
+    \node (Sigma) [block=1] at (Bi.east) {$\SIGMA_{i}$};
+
+    \node (B) [block=5, anchor=south west, yshift=5pt] at (Bi.north west)  {};
+    \foreach \j in {1,...,4} {
+        \draw[dotline] ($(B.north west) + (\j*\width, 0)$) -- ($(B.south west) + (\j*\width, 0)$) {}; 
+    }
+    \node (beta_1) [blockspace=1] at (B.west)  {$\beta_{\scriptscriptstyle 1}$};
+    \node (beta_2) [blockspace=1] at (beta_1.east)  {$\ldots$};
+    \node (beta_3) [blockspace=1] at (beta_2.east)  {$\beta_{\scriptscriptstyle j}$};
+    \node (beta_4) [blockspace=1] at (beta_3.east)  {$\ldots$};
+    \node (beta_5) [blockspace=1] at (beta_4.east)  {$\beta_{\scriptscriptstyle 2\ell-1}$};
+    \node[anchor=east] at (B.west) {$\mathcal{B}_i = $};
+
+    % Notes
+    \draw [decorate, decoration={brace, amplitude=3pt, mirror, raise=4pt}] (N.215) -- (Bi.south east) node[midway, below=8pt] {$\mathcal{L}_i$};
+
+\end{tikzpicture}

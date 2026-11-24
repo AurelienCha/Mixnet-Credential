@@ -77,7 +77,9 @@
 
 \tikzset{    
     % shape
-    block/.style={draw, ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    ovale/.style={ellipse, draw, ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    blockspace/.style={ultra thin, minimum width = #1*\width, minimum height = \height, inner sep = 0pt, anchor = west},
+    block/.style={draw, blockspace = #1},
     inblock/.style={block = #1, densely dotted}, % dash pattern=on 1pt off 1pt, 
     zero_pad/.style={block = #1, fill = unHighlight, fill opacity=0.3},
     HMAC/.style={draw, ellipse, minimum width = \width, minimum height = \height, inner sep = 0pt, anchor = center},
@@ -98,3 +100,43 @@
     }
     \hspace{-2mm}
 }
+
+\newcommand{\blindsign}[1]{ \mathord{\scalebox{1.4}{$\blind{\SIGMA}$}}_{#1} }
+
+\newcommand{\cred}[1]{ \mathord{\scalebox{1.4}{$C$}}_{#1} }
+
+
+\newcommand{\blind}[1]{\widetilde{#1}}
+
+
+\renewcommand{\paragraph}[1]{\medskip\noindent{\textbf{#1.}}}
+
+
+\newlength{\greekcapheight}
+
+\newcommand{\CapGreek}[1]{%
+  \mathord{\mathpalette\CapGreekAux{#1}}%
+}
+
+\newcommand{\CapGreekAux}[2]{%
+  \begingroup
+  \mathsurround=0pt\relax
+  \settoheight{\greekcapheight}{$#1 N$}%
+  \resizebox{7pt}{\greekcapheight}{$#1#2$}%
+  \endgroup
+}
+
+\newcommand{\ALPHA}{\CapGreek{\alpha}}
+\newcommand{\BETA}{\CapGreek{\beta}}
+\newcommand{\GAMMA}{\CapGreek{\gamma}}
+\newcommand{\ETA}{\CapGreek{\eta}}
+\newcommand{\ZETA}{\CapGreek{\zeta}}
+% \newcommand{\NU}{\CapGreek{\nu}}
+\newcommand{\KAPPA}{\CapGreek{\kappa}}
+\newcommand{\PHI}{\CapGreek{\phi}}
+\newcommand{\PSI}{\CapGreek{\psi}}
+% \newcommand{\THETA}{\CapGreek{\theta}}
+\newcommand{\XI}{\CapGreek{\xi}}
+\newcommand{\SIGMA}{\CapGreek{\sigma}}
+\newcommand{\RHO}{\CapGreek{\rho}}
+% \newcommand{\UPSILON}{\CapGreek{\upsilon}}
