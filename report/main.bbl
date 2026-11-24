@@ -1,84 +1,242 @@
-\begin{thebibliography}{10}
-\providecommand{\url}[1]{\texttt{#1}}
-\providecommand{\urlprefix}{URL }
-\providecommand{\doi}[1]{https://doi.org/#1}
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\bibitem{alexopoulos2017MCMIX}
-Alexopoulos, N., Kiayias, A., Talviste, R., Zacharias, T.: Mcmix: Anonymous messaging via secure multiparty computation. In: 26th USENIX Security Symposium (USENIX Security 17) (2017)
+\begin{thebibliography}{26}
 
-\bibitem{backes2014backref}
-Backes, M., Clark, J., Kate, A., Simeonovski, M., Druschel, P.: Backref: Accountability in anonymous communication networks. In: International Conference on Applied Cryptography and Network Security. pp. 380--400. Springer (2014)
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
 
-\bibitem{DSphinx}
-Chassagne, A., {Mota Leal Dias}, M., {Ben Guirat}, I., Mühlberg, J., Dricot, J.: Dsphinx: A decentralized path selection for decentralized networks. In: Computer Security. {ESORICS} 2026 International Workshops - {CBT} 2026, Rome, Italy, September 14-18, 2026. Lecture Notes in Computer Science, Springer (2026)
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
 
-\bibitem{chaum-mix}
-Chaum, D.: Untraceable electronic mail, return addresses, and digital pseudonyms. Commun. {ACM}  \textbf{24}(2),  84--88 (1981)
+\bibitem[Alexopoulos et~al\mbox{.}(2017)]%
+        {alexopoulos2017MCMIX}
+\bibfield{author}{\bibinfo{person}{Nikolaos Alexopoulos}, \bibinfo{person}{Aggelos Kiayias}, \bibinfo{person}{Riivo Talviste}, {and} \bibinfo{person}{Thomas Zacharias}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{MCMix: Anonymous Messaging via Secure Multiparty Computation}. In \bibinfo{booktitle}{\emph{26th USENIX Security Symposium (USENIX Security 17)}}.
+\newblock
 
-\bibitem{chaum2016cmix}
-Chaum, D., Javani, F., Kate, A., Krasnova, A., Ruiter, J., Sherman, A.T., Das, D.: cmix: Anonymization by high-performance scalable mixing. Tech. rep. (2016)
 
-\bibitem{VSS}
-Chor, B., Goldwasser, S., Micali, S., Awerbuch, B.: Verifiable secret sharing and achieving simultaneity in the presence of faults. 26th Annual Symposium on Foundations of Computer Science (sfcs 1985) pp. 383--395 (1985), \url{https://api.semanticscholar.org/CorpusID:12004245}
+\bibitem[Backes et~al\mbox{.}(2014)]%
+        {backes2014backref}
+\bibfield{author}{\bibinfo{person}{Michael Backes}, \bibinfo{person}{Jeremy Clark}, \bibinfo{person}{Aniket Kate}, \bibinfo{person}{Milivoj Simeonovski}, {and} \bibinfo{person}{Peter Druschel}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{BackRef: Accountability in anonymous communication networks}. In \bibinfo{booktitle}{\emph{International Conference on Applied Cryptography and Network Security}}. Springer, \bibinfo{pages}{380--400}.
+\newblock
 
-\bibitem{cottrell1995mixmaster}
-Cottrell, L.: Mixmaster and remailer attacks (1995)
 
-\bibitem{danezis2003mixminion}
-Danezis, G., Dingledine, R., Mathewson, N.: {Mixminion: Design of a Type III Anonymous Remailer Protocol}. In: Proceedings of the 2003 IEEE Symposium on Security and Privacy. IEEE (2003)
+\bibitem[Chassagne et~al\mbox{.}(2026)]%
+        {DSphinx}
+\bibfield{author}{\bibinfo{person}{Aurelien Chassagne}, \bibinfo{person}{Manuel {Mota Leal Dias}}, \bibinfo{person}{Iness {Ben Guirat}}, \bibinfo{person}{{Jan Tobias} Mühlberg}, {and} \bibinfo{person}{{Jean-Michel} Dricot}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{DSphinx: A Decentralized Path Selection for Decentralized Networks}. In \bibinfo{booktitle}{\emph{Computer Security. {ESORICS} 2026 International Workshops - {CBT} 2026, Rome, Italy, September 14-18, 2026}} \emph{(\bibinfo{series}{Lecture Notes in Computer Science})}. \bibinfo{publisher}{Springer}.
+\newblock
 
-\bibitem{sphinx}
-Danezis, G., Goldberg, I.: Sphinx: A compact and provably secure mix format. In: 2009 30th IEEE Symposium on Security and Privacy (2009)
 
-\bibitem{nym}
-Diaz, C., Halpin, H., Kiayias, A.: The nym network (2021)
+\bibitem[Chaum(1981)]%
+        {chaum-mix}
+\bibfield{author}{\bibinfo{person}{David Chaum}.} \bibinfo{year}{1981}\natexlab{}.
+\newblock \showarticletitle{Untraceable Electronic Mail, Return Addresses, and Digital Pseudonyms}.
+\newblock \bibinfo{journal}{\emph{Commun. {ACM}}} \bibinfo{volume}{24}, \bibinfo{number}{2} (\bibinfo{year}{1981}), \bibinfo{pages}{84--88}.
+\newblock
 
-\bibitem{diaz2007accountable}
-Diaz, C., Preneel, B.: Accountable anonymous communication. In: Security, Privacy, and Trust in Modern Data Management, pp. 239--253. Springer (2007)
 
-\bibitem{FeldmanVSS}
-Feldman, P.: A practical scheme for non-interactive verifiable secret sharing. In: Proceedings of the 28th {{Annual Symposium}} on {{Foundations}} of {{Computer Science}}. pp. 427--438. {{SFCS}} '87, IEEE Computer Society, USA (Oct 1987). \doi{10.1109/SFCS.1987.4}
+\bibitem[Chaum et~al\mbox{.}(2016)]%
+        {chaum2016cmix}
+\bibfield{author}{\bibinfo{person}{David Chaum}, \bibinfo{person}{Farid Javani}, \bibinfo{person}{Aniket Kate}, \bibinfo{person}{Anna Krasnova}, \bibinfo{person}{Joeri Ruiter}, \bibinfo{person}{Alan~T Sherman}, {and} \bibinfo{person}{Debajyoti Das}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{cMix: Anonymization by high-performance scalable mixing}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport}.
+\newblock
 
-\bibitem{Fisher_PET}
-Fischer-Hbner, S., Berthold, S.: Chapter 43 - privacy-enhancing technologies. In: Vacca, J.R. (ed.) Computer and Information Security Handbook (Second Edition), chap.~43, pp. 755--772. Morgan Kaufmann, Boston, second edition edn. (2013). \doi{https://doi.org/10.1016/B978-0-12-394397-2.00043-X}
 
-\bibitem{van2015vuvuzela}
-Hooff, J.V.D., Lazar, D., Zaharia, M., Zeldovich, N.: Vuvuzela: Scalable private messaging resistant to traffic analysis. In: Proceedings of the 25th Symposium on Operating Systems Principles (2015)
+\bibitem[Chor et~al\mbox{.}(1985)]%
+        {VSS}
+\bibfield{author}{\bibinfo{person}{Benny Chor}, \bibinfo{person}{Shafi Goldwasser}, \bibinfo{person}{Silvio Micali}, {and} \bibinfo{person}{Baruch Awerbuch}.} \bibinfo{year}{1985}\natexlab{}.
+\newblock \showarticletitle{Verifiable secret sharing and achieving simultaneity in the presence of faults}.
+\newblock \bibinfo{journal}{\emph{26th Annual Symposium on Foundations of Computer Science (sfcs 1985)}} (\bibinfo{year}{1985}), \bibinfo{pages}{383--395}.
+\newblock
+\urldef\tempurl%
+\url{https://api.semanticscholar.org/CorpusID:12004245}
+\showURL{%
+\tempurl}
 
-\bibitem{infeld2025echomix}
-Infeld, E.J., Stainton, D., Ryge, L., Hacker, T.: Echomix: a strong anonymity system with messaging  (2025)
 
-\bibitem{DKG}
-Kate, A., Huang, Y., Goldberg, I.: Distributed {{Key Generation}} in the {{Wild}} (2012)
+\bibitem[Cottrell(1995)]%
+        {cottrell1995mixmaster}
+\bibfield{author}{\bibinfo{person}{Lance Cottrell}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \bibinfo{title}{Mixmaster and remailer attacks}.
+\newblock
 
-\bibitem{kwon2020xrd}
-Kwon, A., Lu, D., Devadas, S.: {XRD}: {S}calable messaging system with cryptographic privacy. In: 17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20) (2020)
 
-\bibitem{lazar2018karaoke}
-Lazar, D., Gilad, Y., Zeldovich, N.: Karaoke: {D}istributed private messaging immune to passive traffic analysis. In: 13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18) (2018)
+\bibitem[Danezis et~al\mbox{.}(2003)]%
+        {danezis2003mixminion}
+\bibfield{author}{\bibinfo{person}{George Danezis}, \bibinfo{person}{Roger Dingledine}, {and} \bibinfo{person}{Nick Mathewson}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{{Mixminion: Design of a Type III Anonymous Remailer Protocol}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2003 IEEE Symposium on Security and Privacy}}. IEEE.
+\newblock
 
-\bibitem{mirkovic2008building}
-Mirkovic, J., Reiher, P.: Building accountability into the future internet. In: 2008 4th Workshop on Secure Network Protocols. pp. 45--51. IEEE (2008)
 
-\bibitem{naylor2014balancing}
-Naylor, D., Mukerjee, M.K., Steenkiste, P.: Balancing accountability and privacy in the network. ACM SIGCOMM Computer Communication Review  \textbf{44}(4),  75--86 (2014)
+\bibitem[Danezis and Goldberg(2009)]%
+        {sphinx}
+\bibfield{author}{\bibinfo{person}{George Danezis} {and} \bibinfo{person}{Ian Goldberg}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Sphinx: A Compact and Provably Secure Mix Format}. In \bibinfo{booktitle}{\emph{2009 30th IEEE Symposium on Security and Privacy}}.
+\newblock
 
-\bibitem{oram2001peer}
-Oram, A.: Peer-to-Peer: Harnessing the power of disruptive technologies (2001)
 
-\bibitem{PedersenDKG}
-Pedersen, T.P.: Non-{{Interactive}} and {{Information-Theoretic Secure Verifiable Secret Sharing}}. In: Feigenbaum, J. (ed.) Advances in {{Cryptology}} --- {{CRYPTO}} '91. pp. 129--140. Springer, Berlin, Heidelberg (1992). \doi{10.1007/3-540-46766-1_9}
+\bibitem[Diaz et~al\mbox{.}(2021)]%
+        {nym}
+\bibfield{author}{\bibinfo{person}{Claudia Diaz}, \bibinfo{person}{Harry Halpin}, {and} \bibinfo{person}{Aggelos Kiayias}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{title}{The Nym Network}.
+\newblock
 
-\bibitem{piotrowska2017loopix}
-Piotrowska, A.M., Hayes, J., Elahi, T., Meiser, S., Danezis, G.: The loopix anonymity system. In: 26th USENIX Security Symposium (USENIX Security 17) (2017)
 
-\bibitem{ShamirSS}
-Shamir, A.: How to share a secret. Communications of the ACM  \textbf{22}(11),  612--613 (Nov 1979). \doi{10.1145/359168.359176}
+\bibitem[Diaz and Preneel(2007)]%
+        {diaz2007accountable}
+\bibfield{author}{\bibinfo{person}{Claudia Diaz} {and} \bibinfo{person}{Bart Preneel}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Accountable anonymous communication}.
+\newblock In \bibinfo{booktitle}{\emph{Security, Privacy, and Trust in Modern Data Management}}. \bibinfo{publisher}{Springer}, \bibinfo{pages}{239--253}.
+\newblock
 
-\bibitem{coconut}
-Sonnino, A., {Al-Bassam}, M., Bano, S., Meiklejohn, S., Danezis, G.: Coconut: {{Threshold Issuance Selective Disclosure Credentials}} with {{Applications}} to {{Distributed Ledgers}} (Mar 2020). \doi{10.48550/arXiv.1802.07344}
 
-\bibitem{xu2012accountable}
-Xu, G., Aguilera, L., Guan, Y.: Accountable anonymity: A proxy re-encryption based anonymous communication system. In: 2012 IEEE 18th International Conference on Parallel and Distributed Systems. pp. 109--116. IEEE (2012)
+\bibitem[Feldman(1987)]%
+        {FeldmanVSS}
+\bibfield{author}{\bibinfo{person}{Paul Feldman}.} \bibinfo{year}{1987}\natexlab{}.
+\newblock \showarticletitle{A Practical Scheme for Non-Interactive Verifiable Secret Sharing}. In \bibinfo{booktitle}{\emph{Proceedings of the 28th {{Annual Symposium}} on {{Foundations}} of {{Computer Science}}}} \emph{(\bibinfo{series}{{{SFCS}} '87})}. \bibinfo{publisher}{IEEE Computer Society}, \bibinfo{address}{USA}, \bibinfo{pages}{427--438}.
+\newblock
+\href{https://doi.org/10.1109/SFCS.1987.4}{doi:\nolinkurl{10.1109/SFCS.1987.4}}
+
+
+\bibitem[Fischer-Hbner and Berthold(2013)]%
+        {Fisher_PET}
+\bibfield{author}{\bibinfo{person}{Simone Fischer-Hbner} {and} \bibinfo{person}{Stefan Berthold}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Chapter 43 - Privacy-Enhancing Technologies}.
+\newblock In \bibinfo{booktitle}{\emph{Computer and Information Security Handbook (Second Edition)} (\bibinfo{edition}{second edition} ed.)}, \bibfield{editor}{\bibinfo{person}{John~R. Vacca}} (Ed.). \bibinfo{publisher}{Morgan Kaufmann}, \bibinfo{address}{Boston}, Chapter~43, \bibinfo{pages}{755--772}.
+\newblock
+\showISBNx{978-0-12-394397-2}
+\href{https://doi.org/10.1016/B978-0-12-394397-2.00043-X}{doi:\nolinkurl{10.1016/B978-0-12-394397-2.00043-X}}
+
+
+\bibitem[Hooff et~al\mbox{.}(2015)]%
+        {van2015vuvuzela}
+\bibfield{author}{\bibinfo{person}{Jelle Van~Den Hooff}, \bibinfo{person}{David Lazar}, \bibinfo{person}{Matei Zaharia}, {and} \bibinfo{person}{Nickolai Zeldovich}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Vuvuzela: Scalable private messaging resistant to traffic analysis}. In \bibinfo{booktitle}{\emph{Proceedings of the 25th Symposium on Operating Systems Principles}}.
+\newblock
+
+
+\bibitem[Infeld et~al\mbox{.}(2025)]%
+        {infeld2025echomix}
+\bibfield{author}{\bibinfo{person}{Ewa~J Infeld}, \bibinfo{person}{David Stainton}, \bibinfo{person}{Leif Ryge}, {and} \bibinfo{person}{Threebit Hacker}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Echomix: a Strong Anonymity System with Messaging}.
+\newblock  (\bibinfo{year}{2025}).
+\newblock
+
+
+\bibitem[Kate et~al\mbox{.}(2012)]%
+        {DKG}
+\bibfield{author}{\bibinfo{person}{Aniket Kate}, \bibinfo{person}{Yizhou Huang}, {and} \bibinfo{person}{Ian Goldberg}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \bibinfo{title}{Distributed {{Key Generation}} in the {{Wild}}}.
+\newblock
+
+
+\bibitem[Kwon et~al\mbox{.}(2020)]%
+        {kwon2020xrd}
+\bibfield{author}{\bibinfo{person}{Albert Kwon}, \bibinfo{person}{David Lu}, {and} \bibinfo{person}{Srinivas Devadas}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{XRD}: {S}calable messaging system with cryptographic privacy}. In \bibinfo{booktitle}{\emph{17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20)}}.
+\newblock
+
+
+\bibitem[Lazar et~al\mbox{.}(2018)]%
+        {lazar2018karaoke}
+\bibfield{author}{\bibinfo{person}{David Lazar}, \bibinfo{person}{Yossi Gilad}, {and} \bibinfo{person}{Nickolai Zeldovich}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Karaoke: {D}istributed private messaging immune to passive traffic analysis}. In \bibinfo{booktitle}{\emph{13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}}.
+\newblock
+
+
+\bibitem[Mirkovic and Reiher(2008)]%
+        {mirkovic2008building}
+\bibfield{author}{\bibinfo{person}{Jelena Mirkovic} {and} \bibinfo{person}{Peter Reiher}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Building accountability into the future Internet}. In \bibinfo{booktitle}{\emph{2008 4th Workshop on Secure Network Protocols}}. IEEE, \bibinfo{pages}{45--51}.
+\newblock
+
+
+\bibitem[Naylor et~al\mbox{.}(2014)]%
+        {naylor2014balancing}
+\bibfield{author}{\bibinfo{person}{David Naylor}, \bibinfo{person}{Matthew~K Mukerjee}, {and} \bibinfo{person}{Peter Steenkiste}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Balancing accountability and privacy in the network}.
+\newblock \bibinfo{journal}{\emph{ACM SIGCOMM Computer Communication Review}} \bibinfo{volume}{44}, \bibinfo{number}{4} (\bibinfo{year}{2014}), \bibinfo{pages}{75--86}.
+\newblock
+
+
+\bibitem[Oram(2001)]%
+        {oram2001peer}
+\bibfield{author}{\bibinfo{person}{Andy Oram}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Peer-to-Peer: Harnessing the power of disruptive technologies}}.
+\newblock
+
+
+\bibitem[Pedersen(1992)]%
+        {PedersenDKG}
+\bibfield{author}{\bibinfo{person}{Torben~Pryds Pedersen}.} \bibinfo{year}{1992}\natexlab{}.
+\newblock \showarticletitle{Non-{{Interactive}} and {{Information-Theoretic Secure Verifiable Secret Sharing}}}. In \bibinfo{booktitle}{\emph{Advances in {{Cryptology}} --- {{CRYPTO}} '91}}, \bibfield{editor}{\bibinfo{person}{Joan Feigenbaum}} (Ed.). \bibinfo{publisher}{Springer}, \bibinfo{address}{Berlin, Heidelberg}, \bibinfo{pages}{129--140}.
+\newblock
+\showISBNx{978-3-540-46766-3}
+\href{https://doi.org/10.1007/3-540-46766-1_9}{doi:\nolinkurl{10.1007/3-540-46766-1_9}}
+
+
+\bibitem[Piotrowska et~al\mbox{.}(2017)]%
+        {piotrowska2017loopix}
+\bibfield{author}{\bibinfo{person}{Ania~M Piotrowska}, \bibinfo{person}{Jamie Hayes}, \bibinfo{person}{Tariq Elahi}, \bibinfo{person}{Sebastian Meiser}, {and} \bibinfo{person}{George Danezis}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{The loopix anonymity system}. In \bibinfo{booktitle}{\emph{26th USENIX Security Symposium (USENIX Security 17)}}.
+\newblock
+
+
+\bibitem[Shamir(1979)]%
+        {ShamirSS}
+\bibfield{author}{\bibinfo{person}{Adi Shamir}.} \bibinfo{year}{1979}\natexlab{}.
+\newblock \showarticletitle{How to Share a Secret}.
+\newblock \bibinfo{journal}{\emph{Commun. ACM}} \bibinfo{volume}{22}, \bibinfo{number}{11} (\bibinfo{date}{Nov.} \bibinfo{year}{1979}), \bibinfo{pages}{612--613}.
+\newblock
+\showISSN{0001-0782}
+\href{https://doi.org/10.1145/359168.359176}{doi:\nolinkurl{10.1145/359168.359176}}
+
+
+\bibitem[Sonnino et~al\mbox{.}(2020)]%
+        {coconut}
+\bibfield{author}{\bibinfo{person}{Alberto Sonnino}, \bibinfo{person}{Mustafa {Al-Bassam}}, \bibinfo{person}{Shehar Bano}, \bibinfo{person}{Sarah Meiklejohn}, {and} \bibinfo{person}{George Danezis}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Coconut: {{Threshold Issuance Selective Disclosure Credentials}} with {{Applications}} to {{Distributed Ledgers}}}.
+\newblock
+\showeprint{1802.07344}~[cs.CR]
+\href{https://doi.org/10.48550/arXiv.1802.07344}{doi:\nolinkurl{10.48550/arXiv.1802.07344}}
+
+
+\bibitem[Xu et~al\mbox{.}(2012)]%
+        {xu2012accountable}
+\bibfield{author}{\bibinfo{person}{Gang Xu}, \bibinfo{person}{Leonardo Aguilera}, {and} \bibinfo{person}{Yong Guan}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Accountable anonymity: A proxy re-encryption based anonymous communication system}. In \bibinfo{booktitle}{\emph{2012 IEEE 18th International Conference on Parallel and Distributed Systems}}. IEEE, \bibinfo{pages}{109--116}.
+\newblock
+
 
 \end{thebibliography}

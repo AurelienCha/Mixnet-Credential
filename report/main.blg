@@ -1,50 +1,93 @@
 This is BibTeX, Version 0.99e (TeX Live 2026/Arch Linux)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
-The style file: splncs04.bst
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=8) to 100 items from 50.
+Reallocated singl_function (elt_size=8) to 100 items from 50.
+Reallocated wiz_functions (elt_size=8) to 6000 items from 3000.
 Database file #1: bib.bib
-Warning--missing institution in chaum2016cmix
-Warning--empty journal in infeld2025echomix
-Warning--missing publisher in oram2001peer
+Reallocated singl_function (elt_size=8) to 100 items from 50.
+Reallocated wiz_functions (elt_size=8) to 9000 items from 6000.
+Reallocated glb_str_ptr (elt_size=8) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=8) to 20 items from 10.
+Reallocated singl_function (elt_size=8) to 100 items from 50.
+Warning--empty publisher in alexopoulos2017MCMIX
+Warning--empty address in alexopoulos2017MCMIX
+Warning--page numbers missing in both pages and numpages fields in alexopoulos2017MCMIX
+Warning--empty publisher in backes2014backref
+Warning--empty address in backes2014backref
+Warning--empty address in DSphinx
+Warning--page numbers missing in both pages and numpages fields in DSphinx
+Warning--empty institution in chaum2016cmix
+Warning--no number and no volume in VSS
+Warning--empty publisher in danezis2003mixminion
+Warning--empty address in danezis2003mixminion
+Warning--page numbers missing in both pages and numpages fields in danezis2003mixminion
+Warning--empty publisher in sphinx
+Warning--empty address in sphinx
+Warning--page numbers missing in both pages and numpages fields in sphinx
+Warning--empty address in diaz2007accountable
+Warning--empty publisher in van2015vuvuzela
+Warning--empty address in van2015vuvuzela
+Warning--page numbers missing in both pages and numpages fields in van2015vuvuzela
+Warning--no journal in infeld2025echomix
+Warning--no number and no volume in infeld2025echomix
+Warning--page numbers missing in both pages and numpages fields in infeld2025echomix
+Warning--empty publisher in kwon2020xrd
+Warning--empty address in kwon2020xrd
+Warning--page numbers missing in both pages and numpages fields in kwon2020xrd
+Warning--empty publisher in lazar2018karaoke
+Warning--empty address in lazar2018karaoke
+Warning--page numbers missing in both pages and numpages fields in lazar2018karaoke
+Warning--empty publisher in mirkovic2008building
+Warning--empty address in mirkovic2008building
+Warning--empty publisher in oram2001peer
+Warning--empty address in oram2001peer
+Warning--empty publisher in piotrowska2017loopix
+Warning--empty address in piotrowska2017loopix
+Warning--page numbers missing in both pages and numpages fields in piotrowska2017loopix
+Warning--empty publisher in xu2012accountable
+Warning--empty address in xu2012accountable
 You've used 26 entries,
-            2850 wiz_defined-function locations,
-            758 strings with 9396 characters,
-and the built_in function-call counts, 14025 in all, are:
-= -- 1125
-> -- 450
-< -- 15
-+ -- 187
-- -- 158
-* -- 862
-:= -- 1816
-add.period$ -- 39
+            6273 wiz_defined-function locations,
+            1684 strings with 23077 characters,
+and the built_in function-call counts, 27196 in all, are:
+= -- 3035
+> -- 858
+< -- 1
++ -- 284
+- -- 312
+* -- 1904
+:= -- 2679
+add.period$ -- 122
 call.type$ -- 26
-change.case$ -- 187
-chr.to.int$ -- 0
-cite$ -- 29
-duplicate$ -- 1262
-empty$ -- 1335
-format.name$ -- 178
-if$ -- 3067
-int.to.chr$ -- 0
-int.to.str$ -- 26
-missing$ -- 251
-newline$ -- 84
-num.names$ -- 56
-pop$ -- 545
+change.case$ -- 184
+chr.to.int$ -- 26
+cite$ -- 63
+duplicate$ -- 2575
+empty$ -- 1810
+format.name$ -- 372
+if$ -- 6402
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 89
+newline$ -- 242
+num.names$ -- 186
+pop$ -- 1094
 preamble$ -- 1
-purify$ -- 130
+purify$ -- 390
 quote$ -- 0
-skip$ -- 354
+skip$ -- 950
 stack$ -- 0
-substring$ -- 691
-swap$ -- 631
-text.length$ -- 15
+substring$ -- 1930
+swap$ -- 211
+text.length$ -- 39
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 102
-warning$ -- 3
-while$ -- 111
-width$ -- 28
-write$ -- 261
-(There were 3 warnings)
+type$ -- 695
+warning$ -- 37
+while$ -- 153
+width$ -- 0
+write$ -- 523
+(There were 37 warnings)

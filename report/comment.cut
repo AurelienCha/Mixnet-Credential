@@ -1,0 +1,34 @@
+Mandatory section for PoPETs 2027. Does NOT count towards page limit. MUST have
+exactly this title and placement (between acknowledgements and references) or
+risk desk rejection.
+
+The goal of this section is to disclose the use of any AI-based tools (e.g.,
+ChatGPT, Cursor, Claude Code, FigureLabs) used in the process of producing the
+paper. If you have not used any AI-based tools, do not remove this section.
+Instead, add a single sentence, ``AI-based tools were not used in this work,''
+or similar.
+
+If you have used AI-based tools to improve writing, please acknowledge it here.
+For example, ``The authors used generative AI-based tools to revise the text,
+improve flow, and correct any typos, grammatical errors, and awkward phrasing.''
+If figures have been significantly or completely generated with AI-based tools,
+list the figures here and attribute the AI use in the caption of each figure.
+
+If you used AI-based tools as part of your research methodology, describe it
+thoroughly in the text of the paper, and simply acknowledge it here. For
+example, "As described in Section 4, AI-based tools were used to assist with
+data labeling by generating initial annotations.''
+
+Describe any other AI use here. For example, ``AI-based tools were used to
+search for additional related work'', ``AI-based tools were used for
+pre-submission review'', or ``AI-based tools were used in the artifact
+development and to verify that the methods section of the paper correctly
+describes the codebase''. We encourage transparency to help reviewers assess
+your work and for fellow scientists to learn about the ethical and constructive
+use of AI in the scientific process.
+
+Finally, if you answered yes to any of the cases above or have used AI in any
+other way, you are responsible for the accuracy, originality, and integrity of
+the output of all AI-based tools. As such, indicate this in this section. For
+example, ``We have manually verified and are responsible for the accuracy,
+originality, and integrity of the output of all AI-based tools.''
