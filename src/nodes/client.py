@@ -1,18 +1,18 @@
 from __future__ import annotations
 import argparse, asyncio, sys, hmac
 from enum import StrEnum
-from random import sample
+from random import SystemRandom
+sample = SystemRandom().sample
 from hashlib import sha256
 from itertools import accumulate
 from operator import mul
-
 from utils.logging import timing, create_logger, LOGGING
 from protocol.header import Header
 from protocol.network import Network
 from cryptomath.lagrange import lagrange_interpolation
 from cryptomath.ecc import Fr, G1, G2, hash_to_Fr, encode_ip
 
-from config.config import CREDENTIALS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES
+from config.config import CREDENTIALS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, AUTHORITY_PK_G1
 
 
 class Stage(StrEnum):
@@ -90,25 +90,37 @@ class Client:
             await self.send(authority, Stage.SIGN_CLIENT, blinded_destination)
         
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
-        signed_blinded_Delta, R1, R2 = map(lagrange_interpolation, zip(*([(x, y) for y in values] for x, values in points)))
-        return [signed_blinded_Delta * ~salt, R1, R2]  # Unblind signature
-
-    def rerandomize_credential(self, credential: list[G1, G1, G2], Delta: G1) -> tuple[G1, G2]:
-        X, R1, R2 = credential
-        r = Fr().randomize()
-        R1 = R1 + G1().base_point() * r
-        R2 = R2 + G2().base_point() * r
-        X = X + Delta * r
-
-        return [X, R1, R2]
+        signed_blinded_Delta = lagrange_interpolation(points)
+        return signed_blinded_Delta * ~salt  # Unblind signature
 
     # @timing
-    def link_credential(self, credential: list[G1, G1, G2], shared_secrets: list[Fr], route_ip: list[str]) -> G1:
-        # Sign hops
-        Hops = [credential[1] * hash_to_Fr(ip.encode()) for ip in route_ip] + [credential[0]] 
+    # def link_credential(self, credential: G1, shared_secrets: list[Fr], route_ip: list[str]) -> G1:
+    #     # Sign hops
+    #     Hops = [AUTHORITY_PK_G1 * hash_to_Fr(ip.encode()) for ip in route_ip] + [credential] 
 
-        # Link credential to path
-        return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))]) 
+    #     # Link credential to path
+    #     return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))])
+
+    def link_credential(
+        self,
+        credential: G1,
+        shared_secrets: list[Fr],
+        route_ip: list[str],
+    ) -> G1:
+        if not route_ip or len(route_ip) != len(shared_secrets):
+            raise ValueError("Route and shared-secret lengths must agree")
+
+        # AUTHORITY_PK_G1 = [y] zeta_1; AUTHORITY_PK remains [y] zeta_2.
+        sigma = G1().base_point() * Fr(0)
+        inverse_prefix = Fr(1)  # w_i^{-1}, initially w_1^{-1} = 1.
+        for ip, shared_secret in zip(route_ip, shared_secrets):
+            if shared_secret == Fr(0):
+                raise ValueError("Shared secrets must be nonzero")
+            address_scalar = hash_to_Fr(ip.encode())
+            sigma = sigma + AUTHORITY_PK_G1 * (address_scalar * inverse_prefix)
+            inverse_prefix = inverse_prefix * ~shared_secret
+
+        return sigma + credential * inverse_prefix 
 
     # ========================================================
     # SEND PACKET
@@ -134,16 +146,15 @@ class Client:
         alpha, shared_secrets = self.derive_shared_secrets(route_PK)
 
         # Credential
-        if CREDENTIALS: # Credential = [(y+r)*Delta, R1, R2]
-            credential = self.rerandomize_credential(self.credentials[destination_ip], delta) 
-            credential[0] = self.link_credential(credential, shared_secrets, route_ip)
+        if CREDENTIALS: # Credential = [y]*Delta
+            credential = self.link_credential(self.credentials[destination_ip], shared_secrets, route_ip)
         else:
-            credential = [None, None, None]
+            credential = None
 
         # Compute Encryption Layer
         layer = self.compute_layers(delta, route, shared_secrets) 
-           
-        return (MIXNODES[layer[0]].ip, Header(next_hop=layer[0], alpha=alpha, beta=layer[2:], gamma=layer[1], credential=credential[0], R2=credential[2])) # NEXT_HOP = layer[0] # TODO continue refactor
+
+        return (MIXNODES[layer[0]].ip, Header(next_hop=layer[0], alpha=alpha, beta=layer[2:], gamma=layer[1], credential=credential)) # NEXT_HOP = layer[0] # TODO continue refactor
 
     # ============================================================
     # LAYER COMPUTATION

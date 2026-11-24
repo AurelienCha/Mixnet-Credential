@@ -1,5 +1,7 @@
 import argparse, json
-from random import randint,seed
+
+from random import SystemRandom
+sample = SystemRandom().sample
 
 from mclbn256 import G1, G2, GT, Fr
 

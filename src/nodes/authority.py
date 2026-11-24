@@ -46,8 +46,8 @@ class Authority:
     async def send_credential(self, ip, blinded_destination):
         # TODO add ZK proof verification stuff
         r = Fr().randomize()
-        credential = [blinded_destination * (self.secret_share + r), G1().base_point() * (self.secret_share + r), G2().base_point() * r]
-        await self.send(ip, Stage.SIGN_CLIENT, credential) # Credential = [Delta * (y+r), G1 * (y+r), G2 * r]
+        credential = self.sign(blinded_destination)
+        await self.send(ip, Stage.SIGN_CLIENT, credential)
     
         
     def sign(self, P):
@@ -81,27 +81,30 @@ class Authority:
         async def sign_params(): # sign parameter -> Public key of the authority
 
             # Own partial sign
-            sign = [self.id, self.sign(G2().base_point())] # (x, y)
-            await self.sign_queue.put(sign)
+            partial = [self.id, self.sign(G1().base_point()), self.sign(G2().base_point())] # (x, G1, G2)
+            await self.sign_queue.put(partial)
 
             # Send its partial sign to peers (circular send)
             selected_peers = islice(self.peers, self.threshold - 1)
             await asyncio.gather(*(    
-                self.send(peer_ip, Stage.SIGN_PARAM, sign.copy())
+                self.send(peer_ip, Stage.SIGN_PARAM, partial.copy())
                 for peer_ip in selected_peers
             ))  
             
             # Wait enough partial signatures (and transform into list of points)
-            partial_signed_params = await self.collect(self.sign_queue, self.threshold) 
+            partials = await self.collect(self.sign_queue, self.threshold) 
+
+            Y1 = lagrange_interpolation([(x, p1) for x, p1, _ in partials])
+            Y2 = lagrange_interpolation([(x, p2) for x, _, p2 in partials])
 
             # Lagrange interpolation
-            return lagrange_interpolation(partial_signed_params) # TODO now the only params is the Public key Y (change name in code for clarity)
+            return (Y1, Y2)
 
         await send_and_aggregate_shares()
-        signed_params = await sign_params()
+        Y1, Y2 = await sign_params()
         
-        return signed_params # TODO now the only params is the Public key Y (change name in code for clarity)
-  
+        return (Y1, Y2)
+
     async def start(self):
         await self.network.start()
 
@@ -120,10 +123,10 @@ async def main(ID):
     await asyncio.sleep(1)
 
     # == SETUP Authority ==
-    authority_PK = await node.setup()
+    authority_PK_G1, authority_PK = await node.setup()
 
     if ID == 1:  # One of the authority make signature public
-        publish_authority_setup(authority_pk=authority_PK)
+        publish_authority_setup(authority_pk=authority_PK, authority_pk_g1=authority_PK_G1)
 
     await asyncio.Event().wait()  # <- keeps program alive
 

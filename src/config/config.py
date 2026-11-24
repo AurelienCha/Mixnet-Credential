@@ -42,6 +42,7 @@ class PublicConfig:
     mixnodes: dict[str, Any]
 
     # Optional credential fields
+    authority_pk_g1: G1 | None = None
     authority_pk: G2 | None = None
     authorities: list[str] | None = None
     threshold: int | None = None
@@ -88,17 +89,19 @@ def load_config() -> PublicConfig:
         config.threshold = raw["threshold"]
         try:
             config.authority_pk = G2().fromstr(raw["authority_PK"].encode())
+            config.authority_pk_g1 = G1().fromstr(raw["authority_PK_G1"].encode())
         except:
             pass
 
     return config
 
 
-def publish_authority_setup(authority_pk: G2) -> None:
+def publish_authority_setup(authority_pk: G2, authority_pk_g1: G1) -> None:
     with LockedFile(CONFIG_PATH, "r+") as file:
         config = json.load(file)
 
         config["authority_PK"] = str(authority_pk)
+        config["authority_PK_G1"] = str(authority_pk_g1)
 
         file.seek(0)
         json.dump(config, file, indent=4)
@@ -133,3 +136,4 @@ BETA_SIZE = 2 * PATH_LENGTH - 1
 THRESHOLD = CONFIG.threshold
 AUTHORITIES = CONFIG.authorities
 AUTHORITY_PK = CONFIG.authority_pk
+AUTHORITY_PK_G1 = CONFIG.authority_pk_g1

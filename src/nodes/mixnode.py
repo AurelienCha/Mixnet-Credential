@@ -2,7 +2,8 @@ from __future__ import annotations
 import asyncio, argparse, sys, hmac
 from typing import Any
 from enum import StrEnum
-from random import sample
+from random import SystemRandom
+sample = SystemRandom().sample
 from hashlib import sha256
 
 from utils.logging import timing, create_logger
@@ -74,7 +75,7 @@ class Mixnode:
 
     # @timing
     def verify_credential(self, header: Header) -> None:
-        if (header.next_hop + sum(header.beta[::2])) @ (AUTHORITY_PK + header.R2) != (header.credential @ G2().base_point()):
+        if (header.next_hop + sum(header.beta[::2])) @ (AUTHORITY_PK) != (header.credential @ G2().base_point()):
             raise Exception("Credential verification failed")
 
     # @timing
@@ -101,10 +102,9 @@ class Mixnode:
         header.alpha *= shared_secret
 
     # @timing
-    def update_credential(self, header: Header, shared_secret: Fr) -> None: # TODO + Update R2
-        c = Fr().randomize()
-        header.credential = (header.credential * shared_secret) + ((header.next_hop + sum(header.beta[::2])) * c)
-        header.R2 += G2().base_point() * c
+    def update_credential(self, header: Header, shared_secret: Fr) -> None: 
+        header.credential = (header.credential * shared_secret)
+
 
     # @timing
     def get_next_hop(self, header: Header) -> str: # TODO

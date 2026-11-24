@@ -208,19 +208,31 @@ G2.__rshift__ = from_G2
 ## MAP ##
 #########
 
+
+IP_PADDING_BITS = 253 - 32 # - ip 
+IP_COUNTER_LIMIT = pow(2,6)
+
 # 253 bits (not 256, because BN uses a prime of 254 bits)
 def encode_ip(ip: str) -> G1: 
-    global OP_COUNT; 
-    OP_COUNT["MAP"] += 1
+    # global OP_COUNT; 
+    # OP_COUNT["MAP"] += 1
     a, b, c, d = map(int, ip.split('.'))
     ip = (a << 24) | (b << 16) | (c << 8) | d
-    return G1().mapfrom(Fr((ip << (221))))# + secrets.randbits(221))) # padding: 221 = (256 - 3) - 32 # TODO -> Nop, not possible
+    padded_ip = ip << (IP_PADDING_BITS) # ZEROES padding
+
+    point =  G1().mapfrom(Fr((padded_ip)))
+    x = value = int(point.tostr().split()[1].decode(), 16)
+    if x >= padded_ip + IP_COUNTER_LIMIT:
+        raise Exception("IP encoding exceed the try-and-increment limit ({IP_COUNTER_LIMIT})")
+    
+    return point
+
 
 def decode_ip(point: G1) -> str: # IP-Point to IPv4
     """Decode an IP address embedded inside a G1 point."""
-    global OP_COUNT; 
-    OP_COUNT["UNMAP"] += 1
-    value = int(point.tostr().split()[1].decode(), 16) >> 221
+    # global OP_COUNT; 
+    # OP_COUNT["UNMAP"] += 1
+    value = int(point.tostr().split()[1].decode(), 16) >> IP_PADDING_BITS
     return f"{(value >> 24) & 255}.{(value >> 16) & 255}.{(value >> 8) & 255}.{value & 255}"
 
 ##########
