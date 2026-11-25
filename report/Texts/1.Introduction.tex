@@ -8,9 +8,7 @@ In this paper we address the challenge of preventing abuse of exit nodes, an iss
 
 The main motivation of exit policies in Anonymous Communication Networks is to prevent network abuse, and protect the mixnodes operators from the legal risks.
 Additionally, a mixnet system may need to offer a subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. This has been proposed by Nym whitepaper but not yet implemented~\cite{nym}. 
-To the best of our knowledge all existing anonymous communication network perform verification at the exit gateway, once the final destination information is available. Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies.
-
-However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
+To the best of our knowledge all existing anonymous communication network perform verification at the exit gateway, once the final destination information is available. Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies. However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
 
 
 The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate nodes to learn the destination they are forwarding toward. Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
@@ -25,9 +23,7 @@ and a client combines partial credentials from a sufficient subset of authoritie
 The credential is then bound to the encrypted destination contained inside the Sphinx header and re-randomized for each packet. 
 A mixnode can consequently verify that a packet carries a valid authorization for its encrypted destination without learning either the destination or the client's identity. 
 The credential is updated as the packet traverses the mixnet, to be checked at any intermediate hops and prevent linkability.
-
-The goal is not to introduce destination surveillance, but to enable privacy-preserving guarantees that communications are directed toward authorized endpoints. 
-Such a mechanism provides a middle ground between unrestricted anonymous transport and destination disclosure for policy enforcement.
+Simply put, the main goal of this paper is to provide guarantees that traffic is routed toward authorized destinations while protecting user privacy.
 \newline Our contributions are summarized as follows:
 \todo{phrase contributions}
 
