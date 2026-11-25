@@ -17,7 +17,7 @@ venv/
 .env/
 
 # Ignore tex generation
-*.pdf
+report/main.pdf
 *.fdb_latexmk
 *.log
 *.aux
