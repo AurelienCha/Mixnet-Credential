@@ -16,6 +16,14 @@ __pycache__/
 venv/
 .env/
 
-report/main.fdb_latexmk
-report/main.log
-report/main.pdf 
+# Ignore tex generation
+*.pdf
+*.fdb_latexmk
+*.log
+*.aux
+*.bbl
+*.blg
+*.fls
+*.out
+*.gz
+

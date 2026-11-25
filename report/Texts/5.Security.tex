@@ -92,10 +92,10 @@ the credential must satisfy $\SIGMA_i = [y] \XI_i$.
 Since the scalar value $x$, such that $\XI_i = x \ZETA_1$, is unknown due to the destination encoding (except if the final destination is a mixnode).
 Then the client cannot forge a credential from the public key $\PSI_1$ and must pass by the authorities.
 
-Let's imagine a malicious client want to get credential for an unauthorized destination $\Delta_{\textsf{unauthorized}}$ (i.e. blacklisted destination).
-He could request credential for $\Delta_1$ and $\Delta_2$ such that $\Delta_{\textsf{unauthorized}} = \Delta_1 + \Delta_2$.
+Let's imagine a malicious client want to get credential for an unauthorized destination $\Delta'$ (i.e. blacklisted destination).
+He could request credential for $\Delta_1$ and $\Delta_2$ such that $\Delta' = \Delta_1 + \Delta_2$.
 Then sum the resulting credentials to get a credential for the unauthorized destination:
-$$ \SIGMA_{\textsf{unauthorized}} = [y]\Delta_{\textsf{unauthorized}} = [y] \left(\Delta_1 + \Delta_2\right) = [y]\Delta_1 + [y]\Delta_2 = \SIGMA_{\Delta_1} + \SIGMA_{\Delta_2}.$$
+$$ \SIGMA_{\Delta'} = [y]\Delta' = [y] \left(\Delta_1 + \Delta_2\right) = [y]\Delta_1 + [y]\Delta_2 = \SIGMA_{\Delta_1} + \SIGMA_{\Delta_2}.$$
 However, this attack requires both $\Delta_1$ and $\Delta_2$ to be valid encodings of authorized destinations. 
 In particular, their $x$-coordinates must satisfy the prescribed padding constraints. 
 Otherwise, verification of the corresponding zero-knowledge proofs would fail, and the authorities would reject the credential requests.
@@ -103,8 +103,8 @@ Otherwise, verification of the corresponding zero-knowledge proofs would fail, a
 These constraints restrict the points available to the adversary, but do not by themselves establish resistance to this attack. 
 A formal security argument requires further analysis of the destination encoding, including the choice of padding parameters.
 
-Alternatively, an adversary could attempt to derive a credential for an unauthorized destination by finding a scalar $x$ such that $\SIGMA_{\textsf{unauthorized}} = [x]\SIGMA_\Delta$.
-Since credentials satisfy $\SIGMA_\Delta = [y]\Delta$, this requires $\Delta_{\textsf{unauthorized}} = [x]\Delta$.
+Alternatively, an adversary could attempt to derive a credential for an unauthorized destination by finding a scalar $x$ such that $\SIGMA_{\Delta'} = [x]\SIGMA_\Delta$.
+Since credentials satisfy $\SIGMA_\Delta = [y]\Delta$, this requires $\Delta' = [x]\Delta$.
 Finding such a scalar is an instance of the elliptic-curve discrete logarithm problem.
 
 \subsection{Credential Privacy}
