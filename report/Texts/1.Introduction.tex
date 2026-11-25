@@ -1,29 +1,31 @@
 \section{Introduction}
 
-Mixnets are a fundamental technology for privacy-preserving communication. 
-By forwarding messages through a sequence of cryptographic relays, they make it difficult for adversaries to link senders and receivers while providing strong anonymity guarantees.
-The Sphinx packet format provides an efficient and secure foundation for such systems, offering compact packet processing, integrity protection, and unlinkability properties.
+Mixnets is a type of anonymous communication networks that provides privacy for users on the network layer against strong adversaries. 
+They achieve this via two main mechanisms: (i) delaying the messages inside the servers, also called mixnodes, such that different messages are mixed together in order to prevent a network adversary from correlating the inputs with the outputs based on timing and (ii) providing cryptographic guarantees through a packet format such as Sphinx~\cite{sphinx}, which enables secure and compact packet processing by ensuring fixed packet sizes and hiding the full routing information to achieve unlinkability. Several mixned-based systems have been proposed in the literature and many have been deployed~\cite{chaum-mix,piotrowska2017loopix,nym,danezis2003mixminion, van2015vuvuzela,lazar2018karaoke, cottrell1995mixmaster,chaum2016cmix, kwon2020xrd}. Nym is the only mixnet-based system to have recently achieved adoption at the scale of thousands of daily messages~\cite{nym}
 
-However, deploying mixnets at large scale raises challenges beyond cryptographic anonymity. 
-A practical communication infrastructure may need to enforce policies related to service authorization, resource usage, or operational agreements~\cite{oram2001peer,diaz2007accountable, naylor2014balancing,mirkovic2008building, backes2014backref, xu2012accountable}. 
-For example, a mixnet provider may offer subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. 
-Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
+Deploying mixnets at large scale is complex and raises several challenges, such as choosing the optimal parameters of the network~\cite{benguirat2022mixnet}, enhancing performance while keeping anonymity~\cite{das2018anonymity, ben2024blending} as well as more operational challenges such as the reputation of the nodes and managing exit policies~\cite{oram2001peer,diaz2007accountable, naylor2014balancing,mirkovic2008building, backes2014backref, xu2012accountable}.
+In this paper we address the challenge of preventing abuse of exit nodes, an issue that has been discussed since the early work of anonymous communication networks. As noted by Danezis et al, ‘exit abuse is a serious barrier to wide-scale remailer deployment’~\cite{danezis2003mixminion}.
 
-Current mixnet architectures provide limited support for such requirements. 
-Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies.
-A possible solution is to perform verification at the exit gateway, once the final destination information is available. 
-However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
-The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate mixnodes to learn the destination they are forwarding toward.
+The main motivation of exit policies in Anonymous Communication Networks is to prevent network abuse, and protect the mixnodes operators from the legal risks.
+Additionally, a mixnet system may need to offer a subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. This has been proposed by Nym whitepaper but not yet implemented~\cite{nym}. 
+To the best of our knowledge all existing anonymous communication network perform verification at the exit gateway, once the final destination information is available. Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies. However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
 
-This work addresses this limitation by extending the Sphinx packet format with a privacy-preserving credential that is cryptographically bound to the encrypted destination. 
+
+The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate nodes to learn the destination they are forwarding toward. Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
+
+
+
+
+
+This work addresses this by extending the Sphinx packet format with a privacy-preserving credential that is cryptographically bound to the encrypted destination. 
 Our construction relies on a threshold multi-authority model, where authorities hold shares of a distributed signing key, 
 and a client combines partial credentials from a sufficient subset of authorities without reconstructing the global secret key. 
 The credential is then bound to the encrypted destination contained inside the Sphinx header and re-randomized for each packet. 
 A mixnode can consequently verify that a packet carries a valid authorization for its encrypted destination without learning either the destination or the client's identity. 
 The credential is updated as the packet traverses the mixnet, to be checked at any intermediate hops and prevent linkability.
-
-Our goal is not to introduce destination surveillance into mixnets, but to enable privacy-preserving guarantees that communications are directed toward authorized endpoints. 
-Such a mechanism provides a middle ground between unrestricted anonymous transport and destination disclosure for policy enforcement.
+Simply put, the main goal of this paper is to provide guarantees that traffic is routed toward authorized destinations while protecting user privacy.
+\newline Our contributions are summarized as follows:
+\todo{phrase contributions}
 
 % \medskip
 % \noindent In summary, our main contributions are as follows:

@@ -6,14 +6,13 @@
 
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amsfonts} %,amssymb
-\usepackage{graphicx}
+%\usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{bmpsize}
 \usepackage{lipsum}
 
 \usepackage{balance}
 \usepackage{float}
-\usepackage[dvipsnames]{xcolor}
 \usepackage{tabularx}
 \usepackage[textsize=footnotesize, textwidth=35mm]{todonotes} % \todo and \todo[inline]
 \presetkeys{todonotes}{fancyline}{}
@@ -49,7 +48,9 @@
 
 % The "title" command has an optional parameter, allowing the author to define a
 % "short title" to be used in page headers.
-\title[Destination-based policy enforcement in Mixnets]{Destination-based policy enforcement in Mixnets: Extending Sphinx Packets with Anonymous Credential}
+\title[Exit Policy in Mixnets]{Exit Policy in Mixnets: Extending Sphinx Packets with Anonymous Credential}
+
+%\title[Destination-based policy enforcement in Mixnets]{Destination-based policy enforcement in Mixnets: Extending Sphinx Packets with Anonymous Credential}
 
 % The "author" command and its associated commands are used to define the
 % authors and their affiliations.
@@ -108,7 +109,7 @@
 
 % Keywords. The author(s) should pick words that accurately describe the work
 % being presented. Separate the keywords with commas.
-\keywords{Sphinx, Anonymous Credentials, Mixnet, Decentralized networks}
+\keywords{Sphinx, Anonymous Credentials, Mixnet}
 
 \maketitle
 
@@ -159,12 +160,18 @@
 \newcommand{\artifact}[0]{\url{https://github.com/}}
 
 \nocite{sphinx}
+
+\todo[inline]{CfP: The core contribution must be relevant to real-world privacy applications. The first page must clearly state how the work is relevant to real-world privacy applications. Relevance to real-world privacy applications must also be present throughout the entire paper by dedicating a substantial portion of the submission to work that is traditionally considered practical or applied.
+}
+
 \input{Texts/1.Introduction}
 \input{Texts/2.Background}
 \input{Texts/3.System_Model}
 \input{Texts/4.Our_Solution}
 \input{Texts/5.Security}
 % \input{Texts/6.Implementation}
+
+\todo[inline]{12 pages until here.}
 
 \appendix
 
