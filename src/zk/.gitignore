@@ -1,0 +1,6 @@
+/build/
+/.zk-cache/
+/.zk-workflow.lock/
+/node_modules/
+__pycache__/
+*.pyc

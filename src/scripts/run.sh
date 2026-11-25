@@ -20,11 +20,11 @@ trap cleanup EXIT INT TERM
 # Default Parameters
 # ==========================================
 
-PATH_LENGTH=5
-THRESHOLD=7
-AUTHORITIES=20
-MIXNODES=20
-CLIENTS=1
+PATH_LENGTH=3
+THRESHOLD=3
+AUTHORITIES=3
+MIXNODES=3
+CLIENTS=3
 
 
 CREDENTIALS=1
@@ -68,6 +68,7 @@ tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG & >/dev/null 2>&1 &
 # ==========================================
 
 python3 -m scripts.configuration --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES --clients $CLIENTS || exit 1
+# bash "$ROOT/zk/setup.sh" "$AUTHORITIES" || exit 1
 
 # ==========================================
 # START AUTHORITIES
@@ -133,7 +134,7 @@ while true; do
     now=$(date +%s)
 
     # Exit if no UDP activity for 5 seconds
-    if (( now - last >= 3)); then
+    if (( now - last >= 5)); then
         mv .config.json logs/config.json
         killall tshark
         exit 0

@@ -13,7 +13,7 @@ SERIALIZERS = {
     'G2': ("G2", lambda value: value.serialize()),
     'Fr': ("Fr", lambda value: value.serialize()),
     'str': ("str", lambda value: value),
-    'int': ("int", lambda value: value),
+    'int': ("int", lambda value: value)
 }
 
 
@@ -23,7 +23,7 @@ DESERIALIZERS = {
     "G2": lambda value: G2().deserialize(value),
     "Fr": lambda value: Fr().deserialize(value),
     "str": lambda value: value,
-    "int": lambda value: int(value),
+    "int": lambda value: int(value)
 }
 
 # ============================================================

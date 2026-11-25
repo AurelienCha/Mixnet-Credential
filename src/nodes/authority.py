@@ -42,12 +42,21 @@ class Authority:
                 await self.sign_queue.put(message)
             case Stage.SIGN_CLIENT:
                 await self.send_credential(ip, message) 
+
+
+    async def verify_proof(self, zk_file):
+        process = await asyncio.create_subprocess_exec("snarkjs", "groth16", "verify", "zk/verification_key.json", f"zk/{zk_file}_public.json", f"zk/{zk_file}_proof.json")
+        return (await process.wait()) == 0
     
-    async def send_credential(self, ip, blinded_destination):
-        # TODO add ZK proof verification stuff
-        r = Fr().randomize()
-        credential = self.sign(blinded_destination)
-        await self.send(ip, Stage.SIGN_CLIENT, credential)
+    async def send_credential(self, ip, message):
+        blinded_destination, zk_file = message
+        # TODO should first verify that "blinded_destination" is the same has in the proof.json (but not the case now because of our curves incompatibility trick) 
+        
+        if await self.verify_proof(zk_file):
+            credential = self.sign(blinded_destination)
+            await self.send(ip, Stage.SIGN_CLIENT, credential)
+        else:
+            raise Exception("ZK proof invalid")
     
         
     def sign(self, P):

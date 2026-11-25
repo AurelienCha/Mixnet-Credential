@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse, asyncio, sys, hmac
 from enum import StrEnum
 from random import SystemRandom
+from secrets import randbelow
 sample = SystemRandom().sample
 from hashlib import sha256
 from itertools import accumulate
@@ -11,9 +12,9 @@ from protocol.header import Header
 from protocol.network import Network
 from cryptomath.lagrange import lagrange_interpolation
 from cryptomath.ecc import Fr, G1, G2, hash_to_Fr, encode_ip
+from cryptomath.babyjub import Babyjub_encode_ip
 
 from config.config import CREDENTIALS, MIXNODES, PATH_LENGTH, BETA_SIZE, THRESHOLD, AUTHORITIES, AUTHORITY_PK, AUTHORITY_PK_G1
-
 
 class Stage(StrEnum):
     SIGN_CLIENT = "SIGN-CLIENT" # TODO update
@@ -80,14 +81,33 @@ class Client:
     # ========================================================
     # CREDENTIALS
     # ========================================================
+    @timing
+    async def generate_proof(self, destination: str, r: int):
+        from time import sleep
+
+        zk_blinded_point = Babyjub_encode_ip(destination) * r
+
+        a, b, c, d = map(int, destination.split("."))
+        ip = (a << 24) | (b << 16) | (c << 8) | d
+
+        prefix = f"{zk_blinded_point.x}"
+        
+        process = await asyncio.create_subprocess_exec("bash", "./zk/generate_proof.sh", str(ip), str(r), prefix)
+        await process.wait()     # Wait for termination
+
+        return prefix
 
     @timing
     async def get_credential(self, destination: str) -> G1:
-        salt = Fr().randomize()
+        # Same nonzero 253-bit range as your ZK circuit.
+        r = randbelow(1 << 253)
+        zk_file = await self.generate_proof(destination, r)
+
+        salt = Fr(r)
         blinded_destination = encode_ip(destination) * salt  # Blind signature
 
         for authority in sample(AUTHORITIES, k=THRESHOLD):
-            await self.send(authority, Stage.SIGN_CLIENT, blinded_destination)
+            await self.send(authority, Stage.SIGN_CLIENT, [blinded_destination, zk_file]) # TRICK: Send the encoding in both curve # TODO find compatible curves
         
         points = [await self.signature_queue.get() for _ in range(THRESHOLD)]
         signed_blinded_Delta = lagrange_interpolation(points)
@@ -101,12 +121,7 @@ class Client:
     #     # Link credential to path
     #     return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))])
 
-    def link_credential(
-        self,
-        credential: G1,
-        shared_secrets: list[Fr],
-        route_ip: list[str],
-    ) -> G1:
+    def link_credential(self, credential: G1, shared_secrets: list[Fr], route_ip: list[str]) -> G1:
         if not route_ip or len(route_ip) != len(shared_secrets):
             raise ValueError("Route and shared-secret lengths must agree")
 
