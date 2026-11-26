@@ -1,43 +1,26 @@
 \section{Introduction}
 
-Mixnets is a type of anonymous communication networks that provides privacy for users on the network layer against strong adversaries. 
-They achieve this via two main mechanisms: (i) delaying the messages inside the servers, also called mixnodes, such that different messages are mixed together in order to prevent a network adversary from correlating the inputs with the outputs based on timing and (ii) providing cryptographic guarantees through a packet format such as Sphinx~\cite{sphinx}, which enables secure and compact packet processing by ensuring fixed packet sizes and hiding the full routing information to achieve unlinkability. Several mixned-based systems have been proposed in the literature and many have been deployed~\cite{chaum-mix,piotrowska2017loopix,nym,danezis2003mixminion, van2015vuvuzela,lazar2018karaoke, cottrell1995mixmaster,chaum2016cmix, kwon2020xrd}. Nym is the only mixnet-based system to have recently achieved adoption at the scale of thousands of daily messages~\cite{nym}
+Managing exit policies has been a significant challenge in Anonymous Communication Networks (ACNs) since their inception~\cite{oram2001peer}. As noted by Danezis et al., ``exit abuse is a serious barrier to wide-scale remailer deployment''~\cite{danezis2003mixminion}. On the one hand, no centralized entity should be able to correlate a user with their final destination. On the other hand, system providers and node operators are often held responsible for illegal traffic routed through their infrastructure. Our main motivation in this work is therefore to mitigate network abuse and protect node operators from legal risks.
 
-Deploying mixnets at large scale is complex and raises several challenges, such as choosing the optimal parameters of the network~\cite{benguirat2022mixnet}, enhancing performance while keeping anonymity~\cite{das2018anonymity, ben2024blending} as well as more operational challenges such as the reputation of the nodes and managing exit policies~\cite{oram2001peer,diaz2007accountable, naylor2014balancing,mirkovic2008building, backes2014backref, xu2012accountable}.
-In this paper we address the challenge of preventing abuse of exit nodes, an issue that has been discussed since the early work of anonymous communication networks. As noted by Danezis et al, ‘exit abuse is a serious barrier to wide-scale remailer deployment’~\cite{danezis2003mixminion}.
+To the best of our knowledge, existing anonymous communication networks either do not enforce exit policies or enforce them at the exit gateway, once the final destination information becomes available. Tor distributes exit policies through its directory system and allows exit relay operators to restrict outgoing connections based on destination IP addresses and ports~\cite{onion-routing96}. Similarly, mixnet-based systems such as Mixminion and Nym perform traffic filtering at the exit nodes~\cite{danezis2003mixminion, nym}. Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether it complies with the network's policies. However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and computational resources.
 
-The main motivation of exit policies in Anonymous Communication Networks is to prevent network abuse, and protect the mixnodes operators from the legal risks.
-Additionally, a mixnet system may need to offer a subscription-based access where users pay for the ability to anonymously communicate with a set of authorized destinations. This has been proposed by Nym whitepaper but not yet implemented~\cite{nym}. 
-To the best of our knowledge all existing anonymous communication network perform verification at the exit gateway, once the final destination information is available. Since intermediate mixnodes do not learn the final destination during packet processing, they cannot verify whether the destination satisfies the network's policies. However, this postpones policy enforcement until the traffic has already traversed the mixnet and consumed bandwidth and relay resources.
-
-
-The key challenge is therefore to enable early rejection of unauthorized traffic without requiring intermediate nodes to learn the destination they are forwarding toward. Such a model requires a mechanism to verify that traffic is directed toward an authorized destination without revealing it.
+Anonymous communication networks rely on either volunteer operators, as in Tor, or financially incentivized operators as in Nym. In both cases, allocating resources to unauthorized traffic is undesirable. This is particularly relevant in mixnets such as Nym, where routing is packet-based and operators therefore the computational cost of performing public-key operations for every packet is high. The key challenge is to enable the early rejection of unauthorized traffic without learning the final destination. This requires a scheme that allows intermediate nodes to verify that traffic is directed toward an authorized destination without revealing it.
+ % Additionally, mixnet-based systems may offer subscription-based access models in which users pay for the ability to communicate anonymously with a set of authorized destinations. Such a model was proposed in the Nym whitepaper but has not yet been implemented~\cite{nym}.
 
 
 
+In this work, we address this challenge by extending the Sphinx packet format with a privacy-preserving credential that is cryptographically bound to the encrypted destination. Our construction relies on a threshold multi-authority model, in which authorities hold shares of a distributed signing key, and a client combines partial credentials obtained from a sufficient subset of authorities without reconstructing the global secret key. The credential is then bound to the encrypted destination contained within the Sphinx header and re-randomized for each packet. A mixnode can consequently verify that a packet carries a valid authorization for its encrypted destination without learning either the destination or the client's identity. The credential is updated as the packet traverses the mixnet, enabling verification at intermediate hops while preserving unlinkability.
 
+%The primary objective of this work is to provide privacy-preserving guarantees that communications are directed exclusively toward authorized destinations.
 
-This work addresses this by extending the Sphinx packet format with a privacy-preserving credential that is cryptographically bound to the encrypted destination. 
-Our construction relies on a threshold multi-authority model, where authorities hold shares of a distributed signing key, 
-and a client combines partial credentials from a sufficient subset of authorities without reconstructing the global secret key. 
-The credential is then bound to the encrypted destination contained inside the Sphinx header and re-randomized for each packet. 
-A mixnode can consequently verify that a packet carries a valid authorization for its encrypted destination without learning either the destination or the client's identity. 
-The credential is updated as the packet traverses the mixnet, to be checked at any intermediate hops and prevent linkability.
-Simply put, the main goal of this paper is to provide guarantees that traffic is routed toward authorized destinations while protecting user privacy.
-\newline Our contributions are summarized as follows:
-\todo{phrase contributions}
+In summary, our main contributions are as follows:
 
-% \medskip
-% \noindent In summary, our main contributions are as follows:
-% \begin{itemize}[topsep=1pt, itemsep=1pt]
-% 	%
-% 	\item Anonymous Credential design for \emph{DSphinx} (an adaptation of the Sphinx packet format)
-% 	%
-% 	\item We release a Python benchmark\footnote{\artifact} for measuring latency and computational overhead.
-% 	%
-% 	\item Security ?
-% 	%
-% 	\item Extra features ?
-% \end{itemize}
-
-%This paper is organized as follows... 
+\begin{itemize}
+	
+	\item We design a privacy-preserving scheme for enforcing exit policies in Anonymous Communication Networks. We believe that our scheme will enhance the adoption of privacy networks.
+	
+	\item We provide a detailed security analysis considering passive and active network adversaries, corrupted routing nodes.
+	
+	\item We release a benchmark\footnote{link} for measuring latency and computational overhead, implemented in both Python and Rust.
+	
+\end{itemize}
