@@ -53,7 +53,6 @@ class Client:
     # PATH SELECTION
     # ========================================================
 
-    # @timing
     def select_mixnodes(self):
         # Mixnodes {G1(N): {"IP": str(ip), "PK": G1(PK)}}
         route = sample(list(MIXNODES.keys()), k=PATH_LENGTH) 
@@ -65,7 +64,6 @@ class Client:
     # SHARED SECRETS
     # ========================================================
 
-    # @timing
     def derive_shared_secrets(self, public_keys: list[G1]) -> list[Fr]:
         nonce = Fr().randomize()
         alpha = G1().base_point() * nonce
@@ -81,10 +79,9 @@ class Client:
     # ========================================================
     # CREDENTIALS
     # ========================================================
+
     @timing
     async def generate_proof(self, destination: str, r: int):
-        from time import sleep
-
         zk_blinded_point = Babyjub_encode_ip(destination) * r
 
         a, b, c, d = map(int, destination.split("."))
@@ -121,6 +118,7 @@ class Client:
     #     # Link credential to path
     #     return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))])
 
+    @timing
     def link_credential(self, credential: G1, shared_secrets: list[Fr], route_ip: list[str]) -> G1:
         if not route_ip or len(route_ip) != len(shared_secrets):
             raise ValueError("Route and shared-secret lengths must agree")
@@ -145,7 +143,6 @@ class Client:
         first_hop, header = self.build_packet(destination_ip)
         await self.send(first_hop, Stage.HEADER, header)
     
-    # @timing 
     def encode_destination(self, ip: str) -> G1:  # TODO:  make a list of destination en their encoding
         return encode_ip(ip)
 
@@ -175,12 +172,10 @@ class Client:
     # LAYER COMPUTATION
     # ============================================================
 
-    # @timing
     def compute_gamma(self, betas: list[G1], shared_secret: Fr) -> G1:
         concatenate_encoding = b"".join(beta.serialize() for beta in betas) 
         return G1().hash(hmac.new(shared_secret.serialize(), concatenate_encoding, sha256).digest())
 
-    # @timing
     def preprocessing(self, shared_secrets: list[Fr], route: list[G1]): 
         filler_chunks = []
         for i in range(PATH_LENGTH-1):
@@ -193,8 +188,6 @@ class Client:
         return filler_chunks
     
 
-
-    # @timing
     def initial_layer(self, destination: G1, shared_secrets: list[Fr], route: list[G1]):
         filler_chunks = self.preprocessing(shared_secrets, route)
 
@@ -203,14 +196,12 @@ class Client:
         N = route[-1]
         return [N, gamma, *beta]
 
-    # @timing
     def add_layer(self, next_hop: G1, layer: list[G1], shared_secret: Fr):
         beta = [chunk * ~shared_secret for chunk in layer[:-2]] 
         gamma = self.compute_gamma(beta, shared_secret)
         N = next_hop
         return [N, gamma, *beta]
 
-    # @timing
     def compute_layers(self, destination: G1, route: list[G1], shared_secrets: list[Fr]):
 
         layer = self.initial_layer(destination, shared_secrets, route)
@@ -245,7 +236,7 @@ async def main(node_id: int, nbr_packets: int) -> None:
         for _ in range(nbr_packets)
     ))
 
-    while True:
+    while client.received_packets < nbr_packets:
         await asyncio.sleep(0.1)
 
 # ============================================================
@@ -256,7 +247,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--id", type=int, required=True, help="Client identifier")
-    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=1)
+    parser.add_argument("-x", "--packets", type=int, required=False, help="Send x packets", default=5)
     arguments = parser.parse_args()
 
     asyncio.run(main(arguments.id, arguments.packets))

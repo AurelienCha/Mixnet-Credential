@@ -12,7 +12,8 @@ clear
 
 rm -rf benchmark/data/logs/
 
-THRESHOLD=(5 10 15 20 25 30 35 40 45 50) 
+# THRESHOLD=(5 10 15 20 25 30 35 40 45 50) 
+THRESHOLD=(5 10 20 40) 
 total_runs=${#THRESHOLD[@]}
 i=0
 for t in "${THRESHOLD[@]}"; do  # THRESHOLD
@@ -43,7 +44,10 @@ python benchmark/run_original_sphinx.py
 # First compute the number of runs
 
 # Parameters values
-PATH_LENGTH=(3 4 5 6 7 9 11 13)
+# PATH_LENGTH=(3 4 5 6 7 9 11 13)
+# THRESHOLD=(5 10 20) 
+# ENTITIES=(25 50) # for NBR_MIXNODES & NBR_AUTHORITIES
+PATH_LENGTH=(3 5 7 9)
 THRESHOLD=(5 10 20) 
 ENTITIES=(25 50) # for NBR_MIXNODES & NBR_AUTHORITIES
 
@@ -55,8 +59,10 @@ total_runs=$((PATH_SIZE * SIZE_ENTITIES**2 * ( 1 + THRESHOLD_SIZE * SIZE_ENTITIE
 
 i=0
 # Run all tests
-for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
-    for m in "${ENTITIES[@]}"; do  # NBR_MIXNODES
+for m in "${ENTITIES[@]}"; do  # NBR_MIXNODES
+    make -C ./zk clean
+    ./zk/setup.sh $m
+    for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
         for c in "${ENTITIES[@]}"; do  # NBR_CLIENTS
 
             # NO CREDENTIALS
@@ -93,8 +99,8 @@ python benchmark/gather_timing_data.py timing.csv
 ##############
 
 echo "Plotting the graphs..."
-python benchmark/computation_time.py
-python benchmark/computation_overhead.py
+python benchmark/plot_computation_time.py
+# python benchmark/plot_computation_overhead.py
 python benchmark/plot_scaling.py
 python benchmark/plot_setup.py
 
@@ -103,7 +109,7 @@ python benchmark/plot_setup.py
 ######################
 
 end=$(date +%s)
-echo "Benchmark finished in $((end - start)) sec\n"
+echo "Benchmark finished in $((end - start)) sec"
 echo "Raw data (csv file) saved in benchmark/data"
 echo "Results (png file) saved in benchmark/results"
 

@@ -43,7 +43,7 @@ class Authority:
             case Stage.SIGN_CLIENT:
                 await self.send_credential(ip, message) 
 
-
+    @timing
     async def verify_proof(self, zk_file):
         process = await asyncio.create_subprocess_exec("snarkjs", "groth16", "verify", "zk/verification_key.json", f"zk/{zk_file}_public.json", f"zk/{zk_file}_proof.json")
         return (await process.wait()) == 0
@@ -71,7 +71,6 @@ class Authority:
     @timing
     async def setup(self):
         
-        @timing
         async def send_and_aggregate_shares(): # Obtain its secret share
 
             # Send shares to each authorities
@@ -86,7 +85,6 @@ class Authority:
             y_shares = await self.collect(self.setup_queue, len(self.peers) + 1)
             self.aggregate_secret_key(y_shares)
                    
-        @timing
         async def sign_params(): # sign parameter -> Public key of the authority
 
             # Own partial sign

@@ -16,7 +16,9 @@ TMP_FILES = $(filter-out $(SETUP_FILES),$(wildcard *.ptau *.zkey))
 TMP_FILES += input.json witness.wtns
 
 
-all: run ## Run the setup and remove temporary files
+all: 
+	clean
+	run 
 	@$(MAKE) --no-print-directory rm_tmp_files
 
 run: ## Run the trusted setup

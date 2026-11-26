@@ -105,5 +105,3 @@ snarkjs groth16 prove circuit_final.zkey witness.wtns proof.json public.json
 ########################
 
 snarkjs groth16 verify verification_key.json public.json proof.json
-
-snarkjs groth16 verify verification_key.json 16937308711342903569326178973316892831150299428734892750260112584028824662645_public.json 16937308711342903569326178973316892831150299428734892750260112584028824662645_proof.json

@@ -68,7 +68,6 @@ tshark -l -i lo -f "udp port 5000" > $NETWORK_LOG & >/dev/null 2>&1 &
 # ==========================================
 
 python3 -m scripts.configuration --path_length $PATH_LENGTH --threshold $THRESHOLD --authorities $AUTHORITIES --mixnodes $MIXNODES --clients $CLIENTS || exit 1
-# bash "$ROOT/zk/setup.sh" "$AUTHORITIES" || exit 1
 
 # ==========================================
 # START AUTHORITIES
@@ -133,10 +132,14 @@ while true; do
     last=$(stat -c %Y $NETWORK_LOG)
     now=$(date +%s)
 
-    # Exit if no UDP activity for 5 seconds
-    if (( now - last >= 5)); then
+    client_count=$(pgrep -fc '[n]odes\.client' || true)  # couting the remaining number of client intstances running
+
+    # Exit if no more client.py instances or no UDP activity for 30 seconds
+    if (( client_count == 0 || now - last >= 30 )); then
+        printf 'Running clients: %s\n' "$client_count"
         mv .config.json logs/config.json
         killall tshark
+        find . -type f \( -name '*_proof.json' -o -name '*_public.json' \) -delete
         exit 0
     fi
 

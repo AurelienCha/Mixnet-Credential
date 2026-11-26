@@ -103,15 +103,16 @@ def generate(ip, nonce):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ip',type=str,default=6)
+    parser.add_argument('--ip',type=str,default=None)
     parser.add_argument('--nonce',type=str,default=None,
                         help='1 <= nonce < 2^253; defaults to fresh OS randomness')
     parser.add_argument('--output',default='input.json')
     parser.add_argument('--quiet',action='store_true')
     args = parser.parse_args()
+    ip = args.ip if args.ip is not None else secrets.randbelow(2**32)-1
     nonce = args.nonce if args.nonce is not None else secrets.randbelow(2**NONCE_BITS-1)+1
     try:
-        data, selected = generate(int(args.ip), int(nonce))
+        data, selected = generate(int(ip), int(nonce))
     except ValueError as exc:
         parser.error(str(exc))
     with open(args.output,'w') as f:
