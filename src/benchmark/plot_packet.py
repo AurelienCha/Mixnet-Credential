@@ -98,23 +98,23 @@ def combined_client_times(measurements, credential, source):
 
 
 def panel_curves(sphinx, measurements, sphinx_column, function, sphinx_path, data_path):
-    """Build one baseline curve and the two requested credential curves."""
-    label = f"Original Sphinx ({sphinx_column})"
-    baseline = mean_times(sphinx, "path_length", sphinx_column, sphinx_path, label)
-    curves = [(label, baseline, "o", "#0072B2")]
-    for credential, marker, color in ((1, "s", "#D55E00"), (0, "^", "#009E73")):
+    """Build curves in the reference legend order, with matching colors and markers."""
+    baseline = mean_times(sphinx, "path_length", sphinx_column, sphinx_path, "Sphinx")
+    curves = []
+    for credential, label, marker, color in (
+        (1, "DSphinx + Credentials", "o", "#DD8452"),
+        (0, "DSphinx", "X", "#4C72B0"),
+    ):
         if function == "build_packet":
-            operation = "build_packet" if credential == 1 else "build_packet"
-            label = f"{operation} (CREDENTIAL={credential})"
             series = combined_client_times(measurements, credential, data_path)
         else:
             selected = measurements.loc[
                 (measurements["function"] == function)
                 & (measurements["CREDENTIAL"] == credential)
             ]
-            label = f"{function} (CREDENTIAL={credential})"
             series = mean_times(selected, "PATH_LENGTH", "CPU_time_ms", data_path, label)
         curves.append((label, series, marker, color))
+    curves.append(("Sphinx", baseline, "s", "#55A868"))
     return curves
 
 
@@ -182,7 +182,7 @@ def main():
         if not args.show:
             matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import MaxNLocator
+        from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
         figures = []
@@ -195,23 +195,36 @@ def main():
                 if not series.empty:
                     ax.plot(
                         series.index, series.values, label=label,
-                        marker=marker, color=color, linewidth=1.4, markersize=3.5,
+                        marker=marker, color=color, linewidth=1.4,
+                        markersize=3.5 if marker == "s" else 5,
+                        linestyle="-", markeredgecolor="white", markeredgewidth=0.5,
                     )
                     path_lengths.update(series.index)
-            ax.set_title(title, fontsize=9)
-            ax.set_xlabel("Path length", fontsize=8)
-            ax.set_ylabel("Mean execution time (ms)", fontsize=8)
+            ax.set_xlabel("Path length (number of hops)", fontsize=8)
+            ax.set_ylabel("Computation time (ms)", fontsize=8)
             ax.tick_params(labelsize=8)
             # Reserve room above the data for the three-line legend.
             max_time = max(float(series.max()) for _, series, _, _ in curves if not series.empty)
-            ax.set_ylim(0, 1.4 * max_time if max_time > 0 else 1)
-            ax.grid(True, alpha=0.25)
-            ax.legend(loc="upper left", fontsize=7, framealpha=1)
-            if len(path_lengths) <= 15:
+            ax.set_ylim(0, max(1, 1.4 * max_time))
+            ax.set_axisbelow(True)
+            ax.grid(False, axis="both", which="both")
+            ax.grid(True, axis="y", which="major", color="#EAEAEA", linewidth=0.6)
+            ax.legend(
+                title="Protocol", loc="upper left", fontsize=7,
+                title_fontsize=7, framealpha=1,
+            )
+            if len(path_lengths) <= 15 and all(
+                float(length).is_integer() for length in path_lengths
+            ):
                 ax.set_xticks(sorted(path_lengths))
             else:
-                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            ax.set_xlim(left=min_path_length)
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=6, integer=True, min_n_ticks=1))
+            ax.xaxis.set_major_formatter(StrMethodFormatter("{x:.0f}"))
+            ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.0f}"))
+            # Keep the first markers fully visible, as in the reference image.
+            x_padding = 0.05 * max(1, max(path_lengths) - min_path_length)
+            ax.set_xlim(left=min_path_length - x_padding)
 
             fig.savefig(output, dpi=300)
             print(f"Saved {output.resolve()}")

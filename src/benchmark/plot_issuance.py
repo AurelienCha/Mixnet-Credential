@@ -30,7 +30,7 @@ def numeric_column(frame, column, source):
 
 
 def mean_times(frame, names, x_column, time_column, scale, source):
-    """Return sorted means in seconds for the specified function name(s)."""
+    """Return sorted means in milliseconds for the specified function name(s)."""
     selected = frame.loc[frame["function"].isin(names), [x_column, time_column]].copy()
     if selected.empty:
         print(
@@ -76,7 +76,8 @@ def batched_mean_times(frame, names, thresholds, source):
         for index, threshold in enumerate(thresholds)
         for _ in range(batch_size + (index < extra_rows))
     ]
-    return mean_times(selected, names, "THRESHOLD", "cpu_time_s", 1.0, source)
+    # ZK measurements are recorded in seconds; display them in milliseconds.
+    return mean_times(selected, names, "THRESHOLD", "cpu_time_s", 1000.0, source)
 
 
 def main():
@@ -96,22 +97,22 @@ def main():
             raise ValueError(f"{args.threshold}: no THRESHOLD values found.")
         curves = [
             (
-                "verify",
+                "Verify proof",
                 batched_mean_times(zk, ["verify", "verify_proof"], thresholds, args.zk),
-                "o", "#0072B2",
+                "v", "#CC79A7",  # Magenta downward triangles.
             ),
             (
-                "proof",
+                "Generate proof",
                 batched_mean_times(zk, ["proof", "proof_generation"], thresholds, args.zk),
-                "s", "#D55E00",
+                "*", "#B59B00",  # Gold stars.
             ),
             (
-                "get_credentials",
+                "DSphinx protocol",
                 mean_times(
                     threshold, ["get_credential", "get_credentials"],
-                    "THRESHOLD", "CPU_time_ms", 0.001, args.threshold,
+                    "THRESHOLD", "CPU_time_ms", 1.0, args.threshold,
                 ),
-                "^", "#009E73",
+                "h", "#595959",  # Dark gray hexagons.
             ),
         ]
         if all(series.empty for _, series, _, _ in curves):
@@ -121,20 +122,32 @@ def main():
         if not args.show:
             matplotlib.use("Agg")  # Save files on machines without a graphical display.
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import MaxNLocator, StrMethodFormatter
 
         fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
         for label, series, marker, color in curves:
             if not series.empty:
-                ax.plot(series.index, series.values, marker=marker, color=color, label=label, linewidth=1.8)
-        ax.set_xlabel("Threshold (THRESHOLD)")
-        ax.set_ylabel("Mean execution time (seconds)")
-        ax.set_title("Execution time vs. threshold")
-        ax.set_ylim(bottom=0)
-        ax.grid(True, alpha=0.25)
-        ax.legend()
+                ax.plot(
+                    series.index, series.values, marker=marker, color=color,
+                    label=label, linewidth=1.8, linestyle="-",
+                    markersize=8 if marker == "*" else 6,
+                    markeredgecolor="white", markeredgewidth=0.8,
+                )
+        ax.set_xlabel(r"Reconstruction threshold $t$")
+        ax.set_ylabel("Computation time (ms)")
+        ax.set_ylim(0, max(1, ax.get_ylim()[1]))
+        ax.set_axisbelow(True)
+        ax.grid(False, axis="both", which="both")
+        ax.grid(True, axis="y", which="major", color="#EAEAEA", linewidth=0.8)
+        ax.legend(loc="best", framealpha=1)
         # Show the measured thresholds exactly when the axis has room for them.
-        if len(thresholds) <= 15:
+        if len(thresholds) <= 15 and all(float(value).is_integer() for value in thresholds):
             ax.set_xticks(thresholds)
+        else:
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=1))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=6, integer=True, min_n_ticks=1))
+        ax.xaxis.set_major_formatter(StrMethodFormatter("{x:.0f}"))
+        ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.0f}"))
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(args.output, dpi=300)
