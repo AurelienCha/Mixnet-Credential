@@ -28,7 +28,7 @@ class Header:
     def from_encoded(cls, message: list[Any]) -> "DefaultHeader":
         if len(message) == 2*PATH_LENGTH + 3:
             next_hop, alpha, *beta, gamma, credential = [G1().deserialize(value) for value in message]
-        elif len(message) == 2*PATH_LENGTH + 1:
+        elif len(message) == 2*PATH_LENGTH + 2:
             next_hop, alpha, *beta, gamma = [G1().deserialize(value) for value in message]
             credential = None
         else:

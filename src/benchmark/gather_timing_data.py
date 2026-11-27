@@ -5,7 +5,7 @@ from pathlib import Path
 
 file = sys.argv[1] if len(sys.argv)==2 else "timing.csv"
 OUTPUT = "benchmark/data/" + file
-SHORT_NAME ={'p': 'PATH_LENGTH', 'm': 'NBR_MIXNODES', 'c': 'NBR_CLIENT', 't':'THRESHOLD', 'a':'NBR_AUTHORITIES', 'z':'CREDENTIAL'}
+SHORT_NAME ={'p': 'PATH_LENGTH', 't':'THRESHOLD', 'z':'CREDENTIAL'}
 
 # Get all CSV files
 root_dir = Path("benchmark/data/logs")
@@ -18,11 +18,11 @@ for file in csv_files:
     df = pd.read_csv(file, names=["timestamp", "entity", "entity_id", "direction", "DESTINATION", "DESTINATION_ID", "type", "Hash", "function", "CPU_time_ms", "wall_time_ms", "credential"])
 
     # Drop unused columns
-    df.drop(columns=["direction", "DESTINATION", "DESTINATION_ID", "type", "Hash"], inplace=True)
+    df.drop(columns=["entity", "entity_id", "direction", "DESTINATION", "DESTINATION_ID", "type", "Hash", "wall_time_ms"], inplace=True)
 
     # Extract time
     df["CPU_time_ms"] = df["CPU_time_ms"].str.extract(r"([\d.]+)").astype(float)
-    df["wall_time_ms"] = df["wall_time_ms"].str.extract(r"([\d.]+)").astype(float)
+    # df["wall_time_ms"] = df["wall_time_ms"].str.extract(r"([\d.]+)").astype(float)
 
     # Keep only rows with timing info
     df = df[df["CPU_time_ms"].notna()]

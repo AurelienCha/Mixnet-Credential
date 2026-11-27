@@ -1,35 +1,66 @@
 #!/bin/bash
 
+# Becnhamark with for each run
+# - 10 clients sending themselves 10 packets
+# - 20 mixnodes
+# - 50 authorities
+
 src="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$src"
 export PYTHONPATH="$src:$PYTHONPATH"
 start=$(date +%s)
 clear
 
-################ SMALL BENCHMARK #################
-## Varying Threshold on DSphinx with Credential ##
-##################################################
+make -C zk clean
+./zk/circuit_gen.sh
+
+##########################################################
+###################### THRESHOLD #########################
+##########################################################
+# Compare the three protocols under varying parameters:  #
+# - Setup (DKG + ZK)                                     #
+# - Credential Issuance (with ZK)                        #
+##########################################################
 
 rm -rf benchmark/data/logs/
 
-# THRESHOLD=(5 10 15 20 25 30 35 40 45 50) 
-THRESHOLD=(5 10 20 40) 
-total_runs=${#THRESHOLD[@]}
-i=0
+# Use your existing t, or accept it as the first script argument.
+t=1
+cpu_csv="benchmark/data/zk_cpu_times.csv"
+rm -f "$cpu_csv"
+
+# Write the header only for a new or empty file.
+if [[ ! -s "$cpu_csv" ]]; then
+    printf 'function,t,cpu_time_s\n' > "$cpu_csv"
+fi
+
+time_step() {
+    local stage="$1"
+    local param="$3"
+    shift
+    local TIMEFORMAT="$stage, $param, %3R"
+    { time "$@" >/dev/null 2>&1; } 2>>"$cpu_csv"
+}
+
+THRESHOLD=(5 10 15 20 25 30 35 40 45 50) 
 for t in "${THRESHOLD[@]}"; do  # THRESHOLD
-    i=$((i + 1))
-    echo "Run: $i / $total_runs"
-    ./scripts/run.sh -p 5 -m 50 -c 50 -t $t -a 50 -z 1 -v 0
-    dir=benchmark/data/logs/p5_m50_c50_t${t}_a50_z1 
+    echo "Run -- THRESHOLD: $t"
+    time_step tau ./zk/tau_ceremony.sh $t
+    time_step crs ./zk/common_reference_string.sh $t
+    cd "$src"
+    ./scripts/run.sh -p 5 -m 20 -c 10 -t $t -a 50 -z 1 -v 0
+    dir=benchmark/data/logs/t${t}_p5_z1
     mkdir -p $dir
     mv logs/* -t $dir
 done
 
 echo "Gathering CSV files..."
-python benchmark/gather_timing_data.py setup_runtime.csv
+python benchmark/gather_timing_data.py threshold.csv
+
+exit 
 
 ##########################################################
-##################### MAIN BENCHMARK #####################
+##################### PATH LENGTH ########################
 ##########################################################
 # Compare the three protocols under varying parameters:  #
 # - Sphinx from Danezis(baseline)                        #
@@ -39,77 +70,54 @@ python benchmark/gather_timing_data.py setup_runtime.csv
 
 cd "$src"
 rm -rf benchmark/data/logs/
-python benchmark/run_original_sphinx.py
+python3 benchmark/run_original_sphinx.py
 
 # First compute the number of runs
 
-# Parameters values
-# PATH_LENGTH=(3 4 5 6 7 9 11 13)
-# THRESHOLD=(5 10 20) 
-# ENTITIES=(25 50) # for NBR_MIXNODES & NBR_AUTHORITIES
-PATH_LENGTH=(3 5 7 9)
-THRESHOLD=(5 10 20) 
-ENTITIES=(25 50) # for NBR_MIXNODES & NBR_AUTHORITIES
+PATH_LENGTH=(3 4 5 6 7)
 
-# Compute the number of runs
-PATH_SIZE=${#PATH_LENGTH[@]}
-THRESHOLD_SIZE=${#THRESHOLD[@]}
-SIZE_ENTITIES=${#ENTITIES[@]}
-total_runs=$((PATH_SIZE * SIZE_ENTITIES**2 * ( 1 + THRESHOLD_SIZE * SIZE_ENTITIES ) ))
-
-i=0
 # Run all tests
-for m in "${ENTITIES[@]}"; do  # NBR_MIXNODES
-    make -C ./zk clean
-    ./zk/setup.sh $m
-    for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
-        for c in "${ENTITIES[@]}"; do  # NBR_CLIENTS
+for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
+    echo "Run -- PATH LENGTH: $p"
+    # NO CREDENTIALS
+    ./scripts/run.sh -p $p -m 20 -c 10 -t 5 -a 50 -z 0 -v 0
+    dir=benchmark/data/logs/t5_p${p}_z0 
+    mkdir -p $dir
+    mv logs/* -t $dir
 
-            # NO CREDENTIALS
-            i=$((i + 1))
-            echo "Run: $i / $total_runs"
-            ./scripts/run.sh -p $p -m $m -c $c -z 0 -v 0
-            dir=benchmark/data/logs/p${p}_m${m}_c${c}_t0_a0_z0 #$(date +'%Y-%m-%d_%H:%M:%S')
-            mkdir -p $dir
-            mv logs/* -t $dir
-
-            # WITH CREDENTIALS
-            for t in "${THRESHOLD[@]}"; do  # THRESHOLD
-                for a in "${ENTITIES[@]}"; do  # NBR_AUTHORITIES
-
-                    # WITH CREDENTIALS
-                    i=$((i + 1))
-                    echo "Run: $i / $total_runs"
-                    ./scripts/run.sh -p $p -m $m -c $c -t $t -a $a -z 1 -v 0
-                    dir=benchmark/data/logs/p${p}_m${m}_c${c}_t${t}_a${a}_z1 #$(date +'%Y-%m-%d_%H:%M:%S')
-                    mkdir -p $dir
-                    mv logs/* -t $dir
-                done
-            done
-        done
-    done
+    # WITH CREDENTIALS
+    ./scripts/run.sh -p $p -m 20 -c 10 -t 5 -a 50 -z 1 -v 0
+    dir=benchmark/data/logs/t5_p${p}_z1 
+    mkdir -p $dir
+    mv logs/* -t $dir
 done
 
-
 echo "Gathering all CSV files..."
-python benchmark/gather_timing_data.py timing.csv
+python benchmark/gather_timing_data.py pathLength.csv
+
+###########
+## PROOF ##
+###########
+echo "Simulate ZK proof..."
+cd "zk"
+./benchmark_proof.sh
+cd "$src"
 
 ##############
 ## PLOTTING ##
 ##############
 
 echo "Plotting the graphs..."
-python benchmark/plot_computation_time.py
-# python benchmark/plot_computation_overhead.py
-python benchmark/plot_scaling.py
 python benchmark/plot_setup.py
+python benchmark/plot_issuance.py
+python benchmark/plot_packet.py
 
 ######################
 ## END OF BENCHMARK ##
 ######################
 
+make -C ./zk clean
 end=$(date +%s)
 echo "Benchmark finished in $((end - start)) sec"
 echo "Raw data (csv file) saved in benchmark/data"
 echo "Results (png file) saved in benchmark/results"
-

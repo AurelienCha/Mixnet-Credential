@@ -43,9 +43,9 @@ class Authority:
             case Stage.SIGN_CLIENT:
                 await self.send_credential(ip, message) 
 
-    @timing
+    # @timing
     async def verify_proof(self, zk_file):
-        process = await asyncio.create_subprocess_exec("snarkjs", "groth16", "verify", "zk/verification_key.json", f"zk/{zk_file}_public.json", f"zk/{zk_file}_proof.json")
+        process = await asyncio.create_subprocess_exec("bash", "./zk/verify_proof.sh", "verification_key.json", f"{zk_file}_public.json", f"{zk_file}_proof.json")
         return (await process.wait()) == 0
     
     async def send_credential(self, ip, message):
