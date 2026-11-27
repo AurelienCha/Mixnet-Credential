@@ -19,8 +19,7 @@ The \emph{Sphinx} packet format~\cite{sphinx} provides three essential security 
 These guarantees have made Sphinx the de facto standard for privacy-preserving routing in modern mixnet-based systems like Nym~\cite{nym} and Katzenpost~\cite{infeld2025echomix}. %Despite all properties provided by the Sphinx, it does not solve one of the anonymous communication challenge which is exit policy enforcement. 
 
 
-\subsection{Exit policies}
-Exit policy has been a serious challenge in Anonymous Communication Networks~\cite{oram2001peer} since their inception. On one hand, there should not be any centralized entity that can correlate the user to its final destination, on the other hand system providers as well as nodes operators are often held responsible for illegal traffic being routed through them. Tor distributes exit policies through its directory system and allow exit relay operators to restrict outgoing connections based on destination IP addresses and ports~\cite{onion-routing96}. Similarly in Mixminion, a mixnet-based system apply filtering traffic at the exit nodes~\cite{danezis2003mixminion}.
+\subsection{Anonymous Credentials}
 
 
 Credential is a set of personal attributes bound to its owner by cryptographic means that are signed, and thereby certified, by the issuer (i.e. certifying party) \cite{Fisher_PET}.
