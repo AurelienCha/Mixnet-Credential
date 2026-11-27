@@ -1,81 +1,111 @@
 \section{Performance evaluation}\label{sec:evaluation}
 
-We evaluate the computational overhead introduced by DSphinx and by the destination-bound credential mechanism, as well as their scalability with respect to the main system parameters. 
-We implemented a Python prototype\footnote{\artifact} to compare three configurations: DSphinx with credentials, vanilla DSphinx, and the original Sphinx packet construction of Danezis, which we use as a baseline.
+We evaluate the computational cost of DSphinx and its destination-bound credential mechanism across three stages: system setup, credential issuance, and packet construction and processing. 
+Our experiments examine sensitivity to the reconstruction threshold $t$ and the path length $\ell$, distinguishing setup and issuance costs from recurring per-packet computation.
 
-All measurements reported in this section were obtained on a 13th Gen Intel Core i7-13700HX CPU running at 3.70 GHz. 
-Unless otherwise stated, the benchmark simulates a network of 50 clients, 50 mixnodes, and 50 credential authorities, with each client sending five messages to itself.
+\subsection{Implementation and experimental setup}
 
-\subsection{Parameter sensitivity}
+We implement a Python prototype\footnote{\artifact} using \texttt{mclbn256} for BN256 group and pairing operations. 
+The zero-knowledge component uses Groth16 through \texttt{snarkjs}, with circuits compiled using Circom. 
+Elliptic-curve operations within the circuit use Baby Jubjub.
 
-We first perform a preliminary sensitivity analysis to identify the parameters that most strongly affect the computational cost of each protocol phase. 
-For each phase and parameter $x$, we fit the empirical power-law model
-$
-T(x) \propto x^\lambda
-$
-using a linear regression in log-log space. The exponent $\lambda$ characterizes the observed scaling, with values close to $0$, $1$, and $2$ indicating approximately constant, linear, and quadratic behavior, respectively. The coefficient of determination $R^2$ indicates the goodness of fit.
+All measurements report CPU time and were obtained on a 13th-generation Intel Core i7-13700HX processor running at $3.70\,\mathrm{GHz}$. 
+The prototype executes a multithreaded simulation on a single machine, with 20 mixnodes, 50 authorities, and 10 clients. 
+Each client requests a credential for its own address and subsequently sends 10 packets to that address over randomly sampled routes, yielding 100 packets per run. 
+Figures report mean CPU times for the corresponding operations and parameter settings. 
+These component measurements do not establish end-to-end network latency or system throughput.
 
-As shown in Figure~\ref{im:scaling}, the clearest dependencies are observed for the path length $m$ and reconstruction threshold $k$.
-Header Construction exhibits near-quadratic scaling with $m$ ($\lambda=2.03$, $R^2=0.88$), while Setup and Credential Issuance exhibit approximately linear-to-superlinear scaling with the threshold ($\lambda=1.32$, $R^2=0.86$ and $\lambda=1.03$, $R^2=0.71$, respectively). 
-The remaining parameters show weak fits and provide little evidence of consistent scaling.
-We therefore focus the remainder of the evaluation on the path length $m$ and reconstruction threshold $k$.
+For the fixed blacklist of five addresses used in our experiments, circuit compilation takes approximately $0.38 \mathrm{s}$ and produces $5 375$ constraints. 
+The circuit fits within a Powers of Tau setup with exponent 13, corresponding to a capacity of $2^{13}=8 192$ constraints. 
+Circuit compilation is performed once for this blacklist configuration.
 
+\paragraph{Prototype limitation.}
+Credential issuance requires a proof of the relation $\blind{\Delta}=r\Delta$, where $\Delta$ encodes the destination $d$ on the BN256 curve used in the packet header. 
+However, the Baby Jubjub arithmetic used by our Circom circuit cannot directly express this relation over BN256. 
+Addressing this mismatch requires either implementing non-native BN256 arithmetic within the circuit, introducing additional circuit complexity, or selecting compatible curves between the header encoding and the proof system.
+We leave this integration to future work.
+
+For benchmarking, we therefore use an intermediate approach.
+The client encodes the destination on both curves and includes both representations in its credential request. 
+The authority verifies the proof using the Baby Jubjub representation and, if verification succeeds, signs the BN256 representation.
+
+This approach is used exclusively for performance evaluation.
+The proof does not establish that the two representations correspond to the same destination, making the workaround unsuitable for deployment. 
+In our experiments, both representations are generated from the same destination by construction, allowing the remaining protocol operations to be executed without modification. 
+The measurements therefore capture these operations, but exclude the cost of enforcing consistency between the two representations. 
+Replacing this workaround with a compatible curve configuration is a necessary step toward a complete implementation.
+
+\subsection{System setup}
+
+System setup comprises Distributed Key Generation (DKG), a Powers of Tau ceremony (PoT), and circuit-specific Groth16 setup togenerate the Common Reference String (CRS). 
+Issued credentials remains valid as long as $\PSI_2$ is valid.
+Therefore, an epoch-based deployment can repeat DKG to rotate $\PSI_1$ and $\PSI_2$, and require clients to obtain credentials for the new epoch.
+The Powers of Tau ceremony is generated once but new contribution can be added.
+The CRS need to be rerun after circuit modification (i.e. changing the hardcoded blacklist) or when new contributions are added to the PoT.
+
+Let $c$ denote the number of setup contributions. 
+This parameter is independent of the reconstruction threshold $t$; but we set $c=t$ in the setup experiments. 
+For the evaluated circuit, the measured trends are approximately:
+\begin{align*}
+    T_{\mathrm{PoT}}(c) &\approx (47 + 3c)\,\mathrm{s},\\
+    T_{\mathrm{CRS}}(c) &\approx (14 + c)\,\mathrm{s}.
+\end{align*}
+
+As shown in Figure~\ref{im:setup_time}, DKG accounts for a comparatively small fraction of setup computation across the tested thresholds. 
+The total setup cost ranges from approximately $70\,\mathrm{s}$ to $270\,\mathrm{s}$, reaching the latter value at $t=50$. 
+Thus, setup is dominated by the zero-knowledge part, mainly the PoT. 
 \begin{figure}
-    \includegraphics[width=\linewidth]{Images/scaling.png}
-    \caption{
-    Empirical scaling of the protocol phases with respect to the main system parameters.
-    Each cell shows the scaling exponent $\lambda$, with its goodness of fit $R^2$.
-    }
-    \label{im:scaling}
-\end{figure}
-
-
-\subsection{Packet construction and processing}
-
-For the first experiment, we compare the computational cost of packet's header generation at the client and packet processing at a mixnode for DSphinx with credential, vanilla DSphinx, and the Sphinx baseline. 
-We vary the path length $m$ from 3 to 7 hops with a fixed reconstruction threshold $k=20$.
-This range follows the maximum path length supported by the original Sphinx implementation used as our baseline. 
-The results are shown in Figure~\ref{im:computation_time}.
-
-From the client perspective, DSphinx requires approximately two to three times more computation than the Sphinx baseline for header generation.
-Nevertheless, the absolute cost remains below 12 ms for a seven-hop path.
-Adding the credential introduces only a small additional cost, primarily associated with the credential-binding operation of Equation~\eqref{eq:header_bound_credential}.
-
-At the mixnode, vanilla DSphinx introduces an additional cost of approximately 1 ms compared with Sphinx, while credential verification adds approximately 2 ms. 
-Although this corresponds to an absolute overhead of less than 3 ms, the relative overhead is substantial because baseline Sphinx packet processing remains approximately constant at 0.2 ms in our experiment. 
-Therefore the credential version requires approximately 10-15 times more computation than the Sphinx baseline. 
-The dominant source of this additional cost is the two pairing operations required for credential verification in Equation~\eqref{eq:credential_verification}.
-
-\begin{figure}
-    \includegraphics[width=\linewidth]{Images/computation_time.png}
-    \caption{Computation time for packet's header generation at the client and packet processing at a mixnode as a function of the path length $m$, ranging from 3 to 7 hops.}
-    \label{im:computation_time}
-\end{figure}
-
-\subsection{Setup and credential issuance}
-
-We next evaluate the additional procedures required by our scheme, the system setup and credential issuance. 
-The setup is performed once during system initialization, whereas credential issuance is performed by a client for each destination for which it requires a destination-bound credential.
-As indicated by Figure~\ref{im:scaling}, the reconstruction threshold $k$ is the dominant parameter for these operations. 
-We therefore vary $k$ while fixing the path length to $m=5$. 
-Figure~\ref{im:setup_time} presents the corresponding execution times.
-
-The setup procedure is the most computationally expensive operation in our scheme. 
-For $k=50$, it requires up to approximately 500 ms in our prototype. 
-This cost is incurred only once during initialization.
-The measured cost is primarily attributed to the Lagrange-polynomial interpolation of degree $k-1$ used to authenticate the public parameters.
-
-Credential issuance requires approximately 10-70 ms at the client, including the request and the aggregation of the partial credentials returned by the authorities. 
-In this experiment, the computational cost at an authority is negligible because we consider only the basic credential-issuance operation and do not include the verification of the authorization proof that would be required in a complete deployment. 
-In the current prototype, an authority therefore performs a single elliptic-curve multiplication.
-These results indicate that the main additional cost introduced by the credential mechanism occurs during setup and at mixnodes during credential verification, whereas the client-side cost of credential issuance remains in the millisecond range.
-
-\begin{figure}
+    \centering
     \includegraphics[width=\linewidth]{Images/setup.png}
-    \caption{Computation time introduced by the setup procedure and by credential issuance as a function of the reconstruction threshold $k$.
-    Setup is performed once, whereas credential issuance is performed by a client to obtain a destination-bound credential.}
+    \caption{CPU time for DKG and ZK setup (PoT and CRS) as a function of the threshold $t$, where we consider $t$ contributions to each zero-knowledge setup phase.}
     \label{im:setup_time}
 \end{figure}
 
+\subsection{Credential issuance}
 
+We separate credential issuance into client-side proof generation, proof verification by an authority, and the DSphinx specific credential-acquisition computation, including share aggregation.
 
+For the fixed circuit, proof generation and verification is constant and require approximately $1.8\,\mathrm{s}$ and $0.45\,\mathrm{s}$ of CPU time, respectively. 
+In the simulation, the client generates a proof once per run, while each participating authority verifies the proof when processing a credential request. 
+The verification cost is therefore a per-authority measurement.
+
+The DSphinx-specific computation increases with $t$, from approximately $50\,\mathrm{ms}$ at the smallest tested threshold to $250\,\mathrm{ms}$ at $t=50$ (Figure~\ref{im:credential_issuance}). 
+This growth reflects the additional work required to aggregate authority shares using Lagrange interpolation. 
+Proof generation is the most expensive operation in the credential issuance phase. 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{Images/credential_issuance.png}
+    \caption{CPU time for client-side proof generation, proof verification at one authority, and DSphinx-specific credential-acquisition computation as a function of the reconstruction threshold $t$.}
+    \label{im:credential_issuance}
+\end{figure}
+
+\subsection{Packet construction and processing}
+
+We compare packet-header construction at the client (Figure~\ref{im:packet_time_client}) and per-packet processing at a mixnode (Figure~\ref{im:packet_time_mixnode}) for three configurations: 
+Sphinx, DSphinx without credentials, and DSphinx with destination-bound credentials. 
+We vary the path length $\ell$ from three to seven hops. 
+The upper bound reflects the maximum path length supported by the Sphinx implementation used as our baseline. 
+
+\todo[inline]{Need to rerun this part of the benchmark alone to remove the noise and have final result values...}
+At the client, DSphinx requires approximately two to three times the CPU time of Sphinx for header construction. 
+The measured cost nevertheless remains below $12\,\mathrm{ms}$ for a seven-hop path. 
+Enabling credentials introduces a comparatively small additional cost, primarily associated with the credential-binding operation in Equation~\eqref{eq:header_bound_credential}.
+
+At a mixnode, DSphinx adds approximately $1$ or $2\,\mathrm{ms}$ relative to Sphinx, and credential verification adds a further approximately $2\,\mathrm{ms}$. 
+Although the additional cost is on the order of a few milliseconds per packet, it is substantial relative to the baseline:  Sphinx processing remains approximately constant at $0.2\,\mathrm{ms}$ in these experiments. 
+Credential-enabled processing therefore requires roughly an order of magnitude more computation than Sphinx. 
+The two pairing operations in Equation~\eqref{eq:credential_verification} account for the dominant credential verification cost.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{Images/packet_time_client.png}
+    \caption{Mean CPU time for packet-header construction at the client as a function of the path length $\ell$, from three to seven hops.}
+    \label{im:packet_time_client}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{Images/packet_time_mixnode.png}
+    \caption{Mean CPU time for processing one packet at a mixnode as a function of the path length $\ell$, from three to seven hops.}
+    \label{im:packet_time_mixnode}
+\end{figure}
