@@ -57,7 +57,6 @@ done
 echo "Gathering CSV files..."
 python benchmark/gather_timing_data.py threshold.csv
 
-exit 
 
 ##########################################################
 ##################### PATH LENGTH ########################
@@ -80,13 +79,13 @@ PATH_LENGTH=(3 4 5 6 7)
 for p in "${PATH_LENGTH[@]}"; do  # PATH_LENGTH
     echo "Run -- PATH LENGTH: $p"
     # NO CREDENTIALS
-    ./scripts/run.sh -p $p -m 20 -c 10 -t 5 -a 50 -z 0 -v 0
+    ./scripts/run.sh -p $p -m 10 -c 5 -t 5 -a 5 -z 0 -v 0
     dir=benchmark/data/logs/t5_p${p}_z0 
     mkdir -p $dir
     mv logs/* -t $dir
 
     # WITH CREDENTIALS
-    ./scripts/run.sh -p $p -m 20 -c 10 -t 5 -a 50 -z 1 -v 0
+    ./scripts/run.sh -p $p -m 10 -c 5 -t 5 -a 5 -z 1 -v 0
     dir=benchmark/data/logs/t5_p${p}_z1 
     mkdir -p $dir
     mv logs/* -t $dir

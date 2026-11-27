@@ -118,7 +118,7 @@ class Client:
     #     # Link credential to path
     #     return sum([Hop * ~s_prod for (Hop, s_prod) in zip(Hops, accumulate(shared_secrets, mul, initial=Fr(1)))])
 
-    # @timing
+    @timing
     def link_credential(self, credential: G1, shared_secrets: list[Fr], route_ip: list[str]) -> G1:
         if not route_ip or len(route_ip) != len(shared_secrets):
             raise ValueError("Route and shared-secret lengths must agree")

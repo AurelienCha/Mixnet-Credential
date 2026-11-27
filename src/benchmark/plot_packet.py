@@ -1,29 +1,3 @@
-#!/usr/bin/env python3
-"""Compare packet construction and processing in two separate column-sized figures.
-
-Both input files store times in MILLISECONDS; no unit conversion is applied.
-Repeated measurements are averaged separately for each path length and curve.
-The case-sensitive CREDENTIAL column selects 0/1, not the credential column.
-
-Client: original Sphinx package_time and build_packet with CREDENTIAL=1 and 0.
-Mixnode: original Sphinx process_time and process with CREDENTIAL=1 and 0.
-Only path lengths >= 3 are included, and both x-axes start at 3.
-
-Install:
-    python -m pip install pandas matplotlib
-
-Run from the project directory (uses benchmark/data and benchmark/results):
-    python plot_path_length_comparison.py
-
-Or supply paths explicitly:
-    python plot_path_length_comparison.py --path-length pathLength.csv \\
-        --sphinx original_sphinx_time.csv --output packet_time.pdf
-
-The output filename is a base name. For example, --output packet_time.pdf
-saves packet_time_client.pdf and packet_time_mixnode.pdf. The default outputs
-are benchmark/results/packet_time_client.png and packet_time_mixnode.png.
-"""
-
 import argparse
 import math
 from pathlib import Path
@@ -70,18 +44,76 @@ def mean_times(frame, path_column, time_column, source, label):
     return selected.groupby(path_column, sort=True)[time_column].mean()
 
 
+def combined_client_times(measurements, credential, source):
+    """Add matching linkage means only for CREDENTIAL=1, then average builds."""
+    selected = measurements.loc[measurements["CREDENTIAL"] == credential]
+    build = selected.loc[selected["function"] == "build_packet"].copy()
+    label = f"build_packet (CREDENTIAL={credential})"
+    if credential != 1 or build.empty:
+        return mean_times(build, "PATH_LENGTH", "CPU_time_ms", source, label)
+
+    link = selected.loc[selected["function"] == "link_credential"].copy()
+    if link.empty:
+        print(
+            f"Warning: {source}: no link_credential rows for CREDENTIAL=1; "
+            "skipping the combined client curve.",
+            file=sys.stderr,
+        )
+        return pd.Series(dtype=float)
+
+    keys = [
+        column for column in ("credential", "THRESHOLD", "PATH_LENGTH", "CREDENTIAL")
+        if column in measurements.columns
+    ]
+    for frame in (build, link):
+        for column in keys + ["CPU_time_ms"]:
+            frame[column] = numeric_column(frame, column, source)
+        if (frame["CPU_time_ms"] < 0).any():
+            raise ValueError(f"{source}: negative client execution time for CREDENTIAL=1.")
+
+    link_means = (
+        link.groupby(keys, as_index=False, dropna=False)["CPU_time_ms"].mean()
+        .rename(columns={"CPU_time_ms": "_link_time_ms"})
+    )
+    combined = build.merge(
+        link_means, on=keys, how="left", sort=False, validate="many_to_one"
+    )
+    missing = combined["_link_time_ms"].isna()
+    if missing.any():
+        print(
+            f"Warning: {source}: {int(missing.sum())} build_packet measurement(s) "
+            "with CREDENTIAL=1 have no link_credential timing with matching "
+            "parameters; omitting these incomplete totals.",
+            file=sys.stderr,
+        )
+        combined = combined.loc[~missing].copy()
+    if combined.empty:
+        return pd.Series(dtype=float)
+
+    combined["CPU_time_ms"] = combined["CPU_time_ms"] + combined["_link_time_ms"]
+    return mean_times(
+        combined, "PATH_LENGTH", "CPU_time_ms", source,
+        "build_packet + link_credential (CREDENTIAL=1)",
+    )
+
+
 def panel_curves(sphinx, measurements, sphinx_column, function, sphinx_path, data_path):
     """Build one baseline curve and the two requested credential curves."""
     label = f"Original Sphinx ({sphinx_column})"
     baseline = mean_times(sphinx, "path_length", sphinx_column, sphinx_path, label)
     curves = [(label, baseline, "o", "#0072B2")]
     for credential, marker, color in ((1, "s", "#D55E00"), (0, "^", "#009E73")):
-        selected = measurements.loc[
-            (measurements["function"] == function)
-            & (measurements["CREDENTIAL"] == credential)
-        ]
-        label = f"{function} (CREDENTIAL={credential})"
-        series = mean_times(selected, "PATH_LENGTH", "CPU_time_ms", data_path, label)
+        if function == "build_packet":
+            operation = "build_packet" if credential == 1 else "build_packet"
+            label = f"{operation} (CREDENTIAL={credential})"
+            series = combined_client_times(measurements, credential, data_path)
+        else:
+            selected = measurements.loc[
+                (measurements["function"] == function)
+                & (measurements["CREDENTIAL"] == credential)
+            ]
+            label = f"{function} (CREDENTIAL={credential})"
+            series = mean_times(selected, "PATH_LENGTH", "CPU_time_ms", data_path, label)
         curves.append((label, series, marker, color))
     return curves
 
@@ -112,7 +144,7 @@ def main():
         )
         sphinx = read_csv(args.sphinx, ["path_length", "package_time", "process_time"])
         measurements = measurements.loc[
-            measurements["function"].isin(["build_packet", "process"])
+            measurements["function"].isin(["build_packet", "link_credential", "process"])
         ].copy()
         measurements["CREDENTIAL"] = numeric_column(
             measurements, "CREDENTIAL", args.path_length
